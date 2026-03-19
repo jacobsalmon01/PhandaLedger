@@ -17,7 +17,7 @@
 
   --text-gold:      #d4b45a;
   --text-parchment: #c9b99a;
-  --text-dim:       #8a7d6b;
+  --text-dim:       #a09580;
   --text-bright:    #e8dcc8;
 
   --accent-red:     #9b2c2c;
@@ -34,18 +34,18 @@
   --font-body:      'Gentium Book Plus', 'Palatino Linotype', Georgia, serif;
   --font-mono:      'Source Code Pro', Consolas, 'Courier New', monospace;
 
-  --gap-xs: 4px;
-  --gap-sm: 8px;
-  --gap-md: 12px;
-  --gap-lg: 20px;
-  --gap-xl: 28px;
+  --gap-xs: 6px;
+  --gap-sm: 10px;
+  --gap-md: 14px;
+  --gap-lg: 24px;
+  --gap-xl: 32px;
 }
 
 /* ── Reset ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html {
-  font-size: 14px;
+  font-size: 16px;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -78,8 +78,8 @@ body::after {
 
 /* ── Sidebar ── */
 .sidebar {
-  width: 230px;
-  min-width: 230px;
+  width: 280px;
+  min-width: 280px;
   display: flex;
   flex-direction: column;
   background: var(--bg-panel);
@@ -96,7 +96,7 @@ body::after {
 .sidebar-title {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   letter-spacing: 0.25em;
   text-transform: uppercase;
   color: var(--text-gold);
@@ -126,7 +126,7 @@ body::after {
   transition: background 0.15s, border-color 0.15s;
   gap: var(--gap-sm);
   user-select: none;
-  min-height: 74px;
+  min-height: 80px;
 }
 
 .pc-item:hover { background: var(--bg-hover); }
@@ -138,9 +138,9 @@ body::after {
 
 /* Sidebar portrait thumbnail */
 .pc-portrait {
-  width: 52px;
-  height: 52px;
-  min-width: 52px;
+  width: 58px;
+  height: 58px;
+  min-width: 58px;
   border: 1px solid var(--border-frame);
   background: var(--bg-surface);
   overflow: hidden;
@@ -187,7 +187,7 @@ body::after {
 
 .pc-item__name {
   font-family: var(--font-display);
-  font-size: 0.82rem;
+  font-size: 0.975rem;
   font-weight: 700;
   color: var(--text-bright);
   white-space: nowrap;
@@ -197,7 +197,7 @@ body::after {
 
 .pc-item__meta {
   font-family: var(--font-body);
-  font-size: 0.68rem;
+  font-size: 0.825rem;
   color: var(--text-dim);
   white-space: nowrap;
   overflow: hidden;
@@ -211,7 +211,7 @@ body::after {
 
 .pc-item__hp {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   white-space: nowrap;
   margin-top: 2px;
 }
@@ -255,7 +255,7 @@ body::after {
 
 .rest-section__label {
   font-family: var(--font-display);
-  font-size: 0.48rem;
+  font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -271,8 +271,8 @@ body::after {
 }
 
 .sr-pip {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   border: 1.5px solid var(--border-frame);
   background: var(--bg-deep);
@@ -288,7 +288,7 @@ body::after {
 /* Last long rest timestamp */
 .last-long-rest {
   font-family: var(--font-body);
-  font-size: 0.62rem;
+  font-size: 0.775rem;
   color: var(--text-dim);
   opacity: 0.65;
   padding: 0 2px;
@@ -303,7 +303,7 @@ body::after {
   background: var(--bg-surface);
   border: 1px solid var(--border-inner);
   font-family: var(--font-display);
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -369,7 +369,7 @@ body::after {
 
 .lr-modal__title {
   font-family: var(--font-display);
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -378,7 +378,7 @@ body::after {
 
 .lr-modal__subtitle {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   color: var(--text-dim);
 }
 
@@ -391,7 +391,7 @@ body::after {
 
 .lr-modal__label {
   font-family: var(--font-display);
-  font-size: 0.5rem;
+  font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -405,7 +405,7 @@ body::after {
   border: 1px solid var(--border-inner);
   color: var(--text-bright);
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   padding: 6px 8px;
   outline: none;
   transition: border-color 0.15s;
@@ -418,7 +418,7 @@ body::after {
 
 .lr-modal__warning {
   font-family: var(--font-body);
-  font-size: 0.72rem;
+  font-size: 0.875rem;
   color: var(--hp-wounded);
   background: rgba(200, 164, 78, 0.07);
   border: 1px solid rgba(200, 164, 78, 0.2);
@@ -436,7 +436,7 @@ body::after {
 
 .lr-modal__btn {
   font-family: var(--font-display);
-  font-size: 0.58rem;
+  font-size: 0.725rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -490,7 +490,7 @@ body::after {
   border: 1px solid var(--border-frame);
   color: var(--text-gold);
   font-family: var(--font-display);
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -519,7 +519,7 @@ body::after {
   background: var(--bg-surface);
   border: 1px solid var(--border-inner);
   font-family: var(--font-display);
-  font-size: 0.58rem;
+  font-size: 0.725rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -555,7 +555,7 @@ body::after {
 /* Error message shown inline under the buttons */
 .ie-error {
   font-family: var(--font-body);
-  font-size: 0.68rem;
+  font-size: 0.825rem;
   color: var(--accent-red);
   background: rgba(155, 44, 44, 0.08);
   border: 1px solid rgba(155, 44, 44, 0.25);
@@ -567,7 +567,7 @@ body::after {
 /* Confirmation modal — character preview list */
 .ie-modal-desc {
   font-family: var(--font-body);
-  font-size: 0.78rem;
+  font-size: 0.925rem;
   color: var(--text-parchment);
   line-height: 1.5;
 }
@@ -599,12 +599,12 @@ body::after {
   color: var(--text-dim);
   font-style: italic;
   font-family: var(--font-body);
-  font-size: 0.72rem;
+  font-size: 0.875rem;
 }
 
 .ie-char-list__name {
   font-family: var(--font-display);
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--text-bright);
@@ -612,7 +612,7 @@ body::after {
 
 .ie-char-list__meta {
   font-family: var(--font-body);
-  font-size: 0.62rem;
+  font-size: 0.775rem;
   color: var(--text-dim);
   flex: 1;
   white-space: nowrap;
@@ -661,7 +661,7 @@ body::after {
 }
 
 .empty-state__text {
-  font-size: 0.9rem;
+  font-size: 1.05rem;
   max-width: 280px;
   line-height: 1.5;
 }
@@ -673,7 +673,7 @@ body::after {
 
 .section__heading {
   font-family: var(--font-display);
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -685,7 +685,7 @@ body::after {
 
 .section__heading::before {
   content: '\25C6\0020';
-  font-size: 0.5rem;
+  font-size: 0.65rem;
   color: var(--border-gold-dim);
 }
 
@@ -712,9 +712,9 @@ body::after {
 /* ── Portrait ── */
 .char-portrait-area {
   position: relative;
-  width: 88px;
-  height: 88px;
-  min-width: 88px;
+  width: 100px;
+  height: 100px;
+  min-width: 100px;
   cursor: pointer;
   border: 2px solid var(--border-frame);
   background: var(--bg-surface);
@@ -766,7 +766,7 @@ body::after {
   background: rgba(14, 12, 10, 0.85);
   border: none;
   color: #d46a6a;
-  font-size: 0.9rem;
+  font-size: 1.05rem;
   line-height: 1;
   padding: 2px 5px;
   cursor: pointer;
@@ -782,7 +782,7 @@ body::after {
   background: rgba(14, 12, 10, 0.85);
   border: none;
   color: var(--text-gold);
-  font-size: 0.85rem;
+  font-size: 1rem;
   line-height: 1;
   padding: 2px 5px;
   cursor: pointer;
@@ -801,7 +801,7 @@ body::after {
 
 .char-name-input {
   font-family: var(--font-display);
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   font-weight: 900;
   background: transparent;
   border: none;
@@ -835,7 +835,7 @@ body::after {
 
 .field__label {
   font-family: var(--font-display);
-  font-size: 0.55rem;
+  font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -844,11 +844,11 @@ body::after {
 
 .field__input {
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 1.05rem;
   background: var(--bg-input);
   border: 1px solid var(--border-inner);
   color: var(--text-parchment);
-  padding: 4px 8px;
+  padding: 6px 10px;
   outline: none;
   transition: border-color 0.15s;
 }
@@ -863,7 +863,7 @@ body::after {
 
 .field__computed {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   color: var(--text-gold);
   text-align: center;
   padding: 4px 8px;
@@ -875,7 +875,7 @@ body::after {
 .attr-skills-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 0 6px;
+  gap: 0 10px;
   align-items: start;
 }
 
@@ -901,8 +901,8 @@ body::after {
 .attr-check-row {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 3px;
+  gap: 5px;
+  padding: 3px 4px;
   background: none;
   border: 1px solid transparent;
   cursor: pointer;
@@ -918,8 +918,8 @@ body::after {
 }
 
 .attr-check-row__dot {
-  width: 7px;
-  height: 7px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   border: 1.5px solid var(--border-frame);
   background: var(--bg-deep);
@@ -935,7 +935,7 @@ body::after {
 
 .attr-check-row__name {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: 0.01em;
   color: var(--text-dim);
@@ -952,7 +952,7 @@ body::after {
 
 .attr-check-row__bonus {
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--text-dim);
   flex-shrink: 0;
@@ -973,7 +973,7 @@ body::after {
 
 .ability-card__label {
   font-family: var(--font-display);
-  font-size: 0.5rem;
+  font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -982,7 +982,7 @@ body::after {
 
 .ability-card__score {
   font-family: var(--font-mono);
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   font-weight: 600;
   text-align: center;
   width: 100%;
@@ -1000,7 +1000,7 @@ body::after {
 
 .ability-card__mod {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: var(--text-gold);
 }
@@ -1019,14 +1019,14 @@ body::after {
 }
 
 .ac-shield-svg {
-  width: 58px;
-  height: 70px;
+  width: 68px;
+  height: 82px;
   display: block;
 }
 
 .ac-shield__label {
   font-family: var(--font-display);
-  font-size: 7px;
+  font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.2em;
   fill: var(--text-dim);
@@ -1035,7 +1035,7 @@ body::after {
 
 .ac-shield__number {
   font-family: var(--font-mono);
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 700;
   fill: var(--text-bright);
 }
@@ -1057,7 +1057,7 @@ body::after {
 
 .armor-type-btn {
   font-family: var(--font-display);
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1106,7 +1106,7 @@ body::after {
 
 .shield-btn {
   font-family: var(--font-display);
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1142,13 +1142,13 @@ body::after {
 
 .defense-formula__text {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   color: var(--text-dim);
 }
 
 .defense-formula__total {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: var(--text-gold);
   margin-top: 2px;
@@ -1171,7 +1171,7 @@ body::after {
 
 .hp-display__label {
   font-family: var(--font-display);
-  font-size: 0.55rem;
+  font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -1225,7 +1225,7 @@ body::after {
 }
 
 .hp-bar {
-  height: 18px;
+  height: 24px;
   background: var(--bg-deep);
   border: 1px solid var(--border-inner);
   overflow: hidden;
@@ -1246,7 +1246,7 @@ body::after {
 
 .hp-bar__text {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   color: var(--text-dim);
   text-align: right;
 }
@@ -1262,7 +1262,7 @@ body::after {
 
 .hp-quick-btns__label {
   font-family: var(--font-display);
-  font-size: 0.55rem;
+  font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -1272,7 +1272,7 @@ body::after {
 
 .hp-quick-btn {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   font-weight: 600;
   padding: 3px 8px;
   border: 1px solid var(--border-inner);
@@ -1297,7 +1297,7 @@ body::after {
 
 .hp-custom__input {
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   width: 50px;
   text-align: center;
   padding: 3px 4px;
@@ -1311,7 +1311,7 @@ body::after {
 
 .hp-custom__btn {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   font-weight: 600;
   padding: 3px 10px;
   border: 1px solid var(--border-inner);
@@ -1381,7 +1381,7 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .spell-long-rest-btn {
   font-family: var(--font-display);
-  font-size: 0.55rem;
+  font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1423,7 +1423,7 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .spell-level-label {
   font-family: var(--font-display);
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1443,14 +1443,14 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .spell-pips__none {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   color: var(--border-inner);
 }
 
 /* Diamond pip */
 .spell-pip {
-  width: 13px;
-  height: 13px;
+  width: 15px;
+  height: 15px;
   transform: rotate(45deg);
   border: 1.5px solid var(--border-inner);
   background: var(--bg-deep);
@@ -1499,7 +1499,7 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .spell-slot-adj {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   width: 18px;
   height: 18px;
   line-height: 1;
@@ -1526,7 +1526,7 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .spell-slot-count {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   color: var(--text-dim);
   min-width: 12px;
   text-align: center;
@@ -1541,7 +1541,7 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .res-empty {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   color: var(--text-dim);
   font-style: italic;
   padding: 2px 0 8px;
@@ -1567,7 +1567,7 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .res-row__name {
   font-family: var(--font-display);
-  font-size: 0.72rem;
+  font-size: 0.875rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--text-bright);
@@ -1602,8 +1602,8 @@ input[type="number"] { -moz-appearance: textfield; }
 }
 
 .res-pip {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   border: 1.5px solid var(--border-inner);
   background: var(--bg-surface);
@@ -1644,7 +1644,7 @@ input[type="number"] { -moz-appearance: textfield; }
 /* Recharge tag — cycles through SR / LR / Manual */
 .res-recharge-tag {
   font-family: var(--font-display);
-  font-size: 0.5rem;
+  font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1680,7 +1680,7 @@ input[type="number"] { -moz-appearance: textfield; }
   border: none;
   color: var(--accent-red);
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-size: 1rem;
   line-height: 1;
   cursor: pointer;
   padding: 0 2px;
@@ -1693,7 +1693,7 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .res-add-btn {
   font-family: var(--font-display);
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1745,7 +1745,7 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .crop-modal__title {
   font-family: var(--font-display);
-  font-size: 0.85rem;
+  font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1754,7 +1754,7 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .crop-modal__hint {
   font-family: var(--font-body);
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   color: var(--text-dim);
   font-style: italic;
 }
@@ -1813,7 +1813,7 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .crop-zoom-label {
   font-family: var(--font-display);
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -1823,7 +1823,7 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .crop-zoom-value {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   color: var(--text-dim);
   white-space: nowrap;
   min-width: 36px;
@@ -1869,7 +1869,7 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .crop-btn {
   font-family: var(--font-display);
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1918,7 +1918,7 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .gold-tracker__label {
   font-family: var(--font-display);
-  font-size: 0.52rem;
+  font-size: 0.675rem;
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -1929,7 +1929,7 @@ input[type="number"] { -moz-appearance: textfield; }
 .gold-tracker__input {
   width: 80px;
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-size: 1rem;
   font-weight: 700;
   text-align: right;
   background: var(--bg-input);
@@ -1946,7 +1946,7 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .gold-tracker__unit {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.875rem;
   color: var(--text-gold);
   opacity: 0.7;
 }
@@ -1955,14 +1955,14 @@ input[type="number"] { -moz-appearance: textfield; }
 .gold-tracker__items-value {
   margin-left: auto;
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   color: var(--text-dim);
   white-space: nowrap;
 }
 
 .inv-empty {
   font-family: var(--font-body);
-  font-size: 0.78rem;
+  font-size: 0.925rem;
   color: var(--text-dim);
   font-style: italic;
   padding: var(--gap-xs) 0;
@@ -2013,7 +2013,7 @@ input[type="number"] { -moz-appearance: textfield; }
   cursor: pointer;
   text-align: left;
   font-family: var(--font-display);
-  font-size: 0.68rem;
+  font-size: 0.825rem;
   font-weight: 700;
   letter-spacing: 0.07em;
   color: var(--text-parchment);
@@ -2028,7 +2028,7 @@ input[type="number"] { -moz-appearance: textfield; }
 }
 
 .inv-row__chevron {
-  font-size: 0.55rem;
+  font-size: 0.7rem;
   color: var(--text-dim);
   flex-shrink: 0;
   transition: color 0.12s;
@@ -2051,7 +2051,7 @@ input[type="number"] { -moz-appearance: textfield; }
   background: none;
   border: 1px solid var(--border-inner);
   color: var(--text-dim);
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   cursor: pointer;
   padding: 0;
   line-height: 1;
@@ -2065,7 +2065,7 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .inv-qty-val {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   color: var(--text-dim);
   min-width: 22px;
   text-align: center;
@@ -2074,7 +2074,7 @@ input[type="number"] { -moz-appearance: textfield; }
 /* Value */
 .inv-row__value {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   color: var(--text-dim);
   flex-shrink: 0;
   min-width: 40px;
@@ -2109,7 +2109,7 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .inv-tooltip__desc {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   color: var(--text-parchment);
   line-height: 1.5;
   margin-bottom: 4px;
@@ -2117,7 +2117,7 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .inv-tooltip__value {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.825rem;
   color: var(--text-gold);
   opacity: 0.85;
 }
@@ -2152,7 +2152,7 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .inv-edit-label {
   font-family: var(--font-display);
-  font-size: 0.48rem;
+  font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -2165,7 +2165,7 @@ input[type="number"] { -moz-appearance: textfield; }
   border: 1px solid var(--border-inner);
   color: var(--text-bright);
   font-family: var(--font-body);
-  font-size: 0.78rem;
+  font-size: 0.925rem;
   padding: 4px 6px;
   outline: none;
   width: 100%;
@@ -2185,7 +2185,7 @@ input[type="number"] { -moz-appearance: textfield; }
   border: 1px solid var(--border-inner);
   color: var(--text-bright);
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   padding: 4px 6px;
   outline: none;
   resize: vertical;
@@ -2206,7 +2206,7 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .inv-edit-gp-label {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.825rem;
   color: var(--text-dim);
 }
 
@@ -2218,7 +2218,7 @@ input[type="number"] { -moz-appearance: textfield; }
   border: 1px solid rgba(155, 44, 44, 0.35);
   color: var(--accent-red);
   font-family: var(--font-display);
-  font-size: 0.52rem;
+  font-size: 0.675rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -2244,7 +2244,7 @@ input[type="number"] { -moz-appearance: textfield; }
   border: 1px solid var(--border-inner);
   color: var(--text-bright);
   font-family: var(--font-body);
-  font-size: 0.78rem;
+  font-size: 0.925rem;
   padding: 5px 8px;
   outline: none;
   transition: border-color 0.15s;
@@ -2266,7 +2266,7 @@ input[type="number"] { -moz-appearance: textfield; }
   border: 1px solid var(--border-inner);
   color: var(--text-gold);
   font-family: var(--font-display);
-  font-size: 0.58rem;
+  font-size: 0.725rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;

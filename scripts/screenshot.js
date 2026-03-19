@@ -4,45 +4,75 @@
  * Requires the dev server to be running (npm run dev).
  *
  * Usage:
- *   node scripts/screenshot.js [url]
+ *   node scripts/screenshot.js [url] [--seed path/to/export.json]
  *
  * Default URL: http://localhost:5173
  * Screenshots are saved to tmp/screenshots/
  */
 
 import { chromium } from '@playwright/test';
-import { mkdir } from 'fs/promises';
+import { mkdir, readFile } from 'fs/promises';
 import path from 'path';
 
-const BASE_URL = process.argv[2] || 'http://localhost:5173';
+// Parse args
+let baseUrl = 'http://localhost:5173';
+let seedFile = null;
+const args = process.argv.slice(2);
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === '--seed' && args[i + 1]) {
+    seedFile = args[++i];
+  } else if (!args[i].startsWith('--')) {
+    baseUrl = args[i];
+  }
+}
+
 const OUT_DIR = path.join(process.cwd(), 'tmp', 'screenshots');
 
 async function capture() {
   await mkdir(OUT_DIR, { recursive: true });
 
   const browser = await chromium.launch();
-  const page = await browser.newPage();
+  const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
   page.setDefaultTimeout(10000);
 
   try {
-    // Wait for the dev server to be ready
-    await page.goto(BASE_URL, { waitUntil: 'networkidle' });
+    // If a seed file is provided, inject it into localStorage before loading
+    if (seedFile) {
+      const raw = await readFile(seedFile, 'utf-8');
+      const exported = JSON.parse(raw);
+      const stateJson = JSON.stringify({
+        characters: exported.characters,
+        selectedId: exported.selectedId,
+      });
+      // Navigate to the page first to set localStorage on the correct origin
+      await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
+      await page.evaluate((json) => {
+        localStorage.setItem('phandaLedger_state', json);
+      }, stateJson);
+      // Reload so the app picks up the seeded data
+      await page.reload({ waitUntil: 'networkidle' });
+    } else {
+      await page.goto(baseUrl, { waitUntil: 'networkidle' });
+    }
 
-    // 1. Initial load — no character selected
+    // 1. Initial load
     await page.screenshot({ path: path.join(OUT_DIR, '001_initial.png'), fullPage: true });
     console.log('Captured: 001_initial.png');
 
     // 2. If there are characters in the sidebar, click the first one
-    const firstChar = page.locator('.sidebar .char-entry, .sidebar [data-char], .char-list-item').first();
+    const firstChar = page.locator('.pc-item').first();
     if (await firstChar.count() > 0) {
       await firstChar.click();
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(500);
       await page.screenshot({ path: path.join(OUT_DIR, '002_character_selected.png'), fullPage: true });
       console.log('Captured: 002_character_selected.png');
 
       // 3. Scroll to bottom of the sheet to catch lower sections
-      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-      await page.waitForTimeout(200);
+      await page.evaluate(() => {
+        const main = document.querySelector('.main') || document.documentElement;
+        main.scrollTop = main.scrollHeight;
+      });
+      await page.waitForTimeout(300);
       await page.screenshot({ path: path.join(OUT_DIR, '003_sheet_bottom.png'), fullPage: true });
       console.log('Captured: 003_sheet_bottom.png');
     } else {

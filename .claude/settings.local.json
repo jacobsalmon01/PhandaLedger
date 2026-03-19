@@ -13,7 +13,9 @@
       "Bash(npm test:*)",
       "Bash(npx playwright:*)",
       "Bash(mkdir -p \"C:\\\\Users\\\\jsalm\\\\personal-workspace\\\\PhandaLedger\\\\scripts\")",
-      "Bash(mkdir -p \"C:\\\\Users\\\\jsalm\\\\personal-workspace\\\\PhandaLedger\\\\.claude\\\\commands\")"
+      "Bash(mkdir -p \"C:\\\\Users\\\\jsalm\\\\personal-workspace\\\\PhandaLedger\\\\.claude\\\\commands\")",
+      "Bash(node:*)",
+      "Bash(ls:*)"
     ]
   }
 }

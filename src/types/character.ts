@@ -40,6 +40,8 @@ export interface InventoryItem {
   id: string;
   name: string;
   quantity: number;
+  description: string; // shown in hover tooltip / edit panel
+  valuegp: number;     // value in gold pieces; 0 means unset
 }
 
 export interface SpellSlot {

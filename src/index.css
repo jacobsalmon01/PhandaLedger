@@ -1900,3 +1900,386 @@ input[type="number"] { -moz-appearance: textfield; }
   border-color: var(--border-gold);
   color: #e8c96a;
 }
+
+/* ══════════════════════════════════════════
+   Inventory
+   ══════════════════════════════════════════ */
+
+/* ── Gold tracker ── */
+.gold-tracker {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  padding: 6px 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-gold-dim);
+  margin-bottom: var(--gap-sm);
+}
+
+.gold-tracker__label {
+  font-family: var(--font-display);
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.gold-tracker__input {
+  width: 80px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: right;
+  background: var(--bg-input);
+  border: 1px solid var(--border-inner);
+  color: var(--text-gold);
+  padding: 2px 5px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.gold-tracker__input:focus {
+  border-color: var(--border-gold-dim);
+}
+
+.gold-tracker__unit {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-gold);
+  opacity: 0.7;
+}
+
+/* Items value readout — right-aligned, visually secondary */
+.gold-tracker__items-value {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.inv-empty {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  font-style: italic;
+  padding: var(--gap-xs) 0;
+}
+
+/* ── Item list ── */
+.inv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: var(--gap-sm);
+}
+
+/* ── Individual row ── */
+.inv-row {
+  position: relative; /* anchor for the tooltip */
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-inner);
+  transition: border-color 0.12s;
+}
+
+.inv-row:hover,
+.inv-row--editing {
+  border-color: var(--border-frame);
+}
+
+/* ── Main (always-visible) row ── */
+.inv-row__main {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  padding: 4px 8px;
+  min-height: 30px;
+}
+
+/* Name button */
+.inv-row__name-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  color: var(--text-parchment);
+  transition: color 0.12s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inv-row__name-btn:hover {
+  color: var(--text-bright);
+}
+
+.inv-row__chevron {
+  font-size: 0.55rem;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  transition: color 0.12s;
+}
+
+/* Quantity stepper */
+.inv-row__qty {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.inv-qty-btn {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--border-inner);
+  color: var(--text-dim);
+  font-size: 0.65rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: border-color 0.1s, color 0.1s;
+}
+
+.inv-qty-btn:hover {
+  border-color: var(--border-frame);
+  color: var(--text-parchment);
+}
+
+.inv-qty-val {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  min-width: 22px;
+  text-align: center;
+}
+
+/* Value */
+.inv-row__value {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  min-width: 40px;
+  text-align: right;
+}
+
+/* ── Hover tooltip ── */
+/*
+ * Pure CSS hover — no JS state needed on desktop.
+ * Suppressed via .inv-row--editing so it doesn't compete with the edit panel.
+ * On touch devices (:hover never fires), the edit panel provides the same info.
+ */
+.inv-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 50;
+  min-width: 180px;
+  max-width: 280px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-gold-dim);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border-inner) inset;
+  padding: var(--gap-sm) var(--gap-md);
+  pointer-events: none; /* don't interfere with hover on the row itself */
+}
+
+/* Show on hover unless the row is in edit mode */
+.inv-row:not(.inv-row--editing):hover .inv-tooltip {
+  display: block;
+}
+
+.inv-tooltip__desc {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--text-parchment);
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+.inv-tooltip__value {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-gold);
+  opacity: 0.85;
+}
+
+/* ── Inline edit panel ── */
+.inv-edit-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm);
+  padding: var(--gap-sm) var(--gap-md) var(--gap-md);
+  border-top: 1px solid var(--border-inner);
+  background: var(--bg-panel);
+}
+
+.inv-edit-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* Side-by-side layout for Quantity + Value */
+.inv-edit-row--inline {
+  flex-direction: row;
+  gap: var(--gap-lg);
+}
+
+.inv-edit-pair {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.inv-edit-label {
+  font-family: var(--font-display);
+  font-size: 0.48rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  opacity: 0.7;
+}
+
+.inv-edit-input {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-inner);
+  color: var(--text-bright);
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  padding: 4px 6px;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+
+.inv-edit-input:focus {
+  border-color: var(--border-gold-dim);
+}
+
+.inv-edit-input--short {
+  width: 64px;
+}
+
+.inv-edit-textarea {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-inner);
+  color: var(--text-bright);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  padding: 4px 6px;
+  outline: none;
+  resize: vertical;
+  width: 100%;
+  line-height: 1.5;
+  transition: border-color 0.15s;
+}
+
+.inv-edit-textarea:focus {
+  border-color: var(--border-gold-dim);
+}
+
+.inv-edit-gp-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.inv-edit-gp-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-dim);
+}
+
+.inv-remove-btn {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 3px 10px;
+  background: none;
+  border: 1px solid rgba(155, 44, 44, 0.35);
+  color: var(--accent-red);
+  font-family: var(--font-display);
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.inv-remove-btn:hover {
+  background: rgba(155, 44, 44, 0.12);
+  border-color: var(--accent-red);
+  color: #c04040;
+}
+
+/* ── Add-item footer ── */
+.inv-add-row {
+  display: flex;
+  gap: var(--gap-xs);
+}
+
+.inv-add-input {
+  flex: 1;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-inner);
+  color: var(--text-bright);
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  padding: 5px 8px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.inv-add-input:focus {
+  border-color: var(--border-gold-dim);
+}
+
+.inv-add-input::placeholder {
+  color: var(--text-dim);
+  opacity: 0.55;
+  font-style: italic;
+}
+
+.inv-add-btn {
+  padding: 5px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-inner);
+  color: var(--text-gold);
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.inv-add-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--border-gold-dim);
+}
+
+.inv-add-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}

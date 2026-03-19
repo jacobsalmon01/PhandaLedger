@@ -6,6 +6,7 @@ import { DefenseSection } from './sections/DefenseSection';
 import { HitPointsSection } from './sections/HitPointsSection';
 import { SpellSlotsSection } from './sections/SpellSlotsSection';
 import { ResourcesSection } from './sections/ResourcesSection';
+import { InventorySection } from './sections/InventorySection';
 
 export function CharacterSheet() {
   const { selected, updateSelected } = useStore();
@@ -37,6 +38,7 @@ export function CharacterSheet() {
           <SpellSlotsSection ch={selected} updateSelected={updateSelected} />
           <ResourcesSection ch={selected} updateSelected={updateSelected} />
         </div>
+        <InventorySection ch={selected} updateSelected={updateSelected} />
       </div>
     </main>
   );

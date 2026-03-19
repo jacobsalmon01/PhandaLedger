@@ -89,6 +89,10 @@ export interface Character {
   saveProficiencies: string[];
   skillProficiencies: string[];
 
+  shortRestsUsed: number;          // 0–2, resets on long rest
+  lastLongRestAt: string | null;   // display label, e.g. "Fri Mar 19 · 9:00 PM"
+  lastLongRestTimestamp: number | null; // ms epoch for 24h cooldown
+
   spellSlots: SpellSlot[];
   weapons: Weapon[];
   inventory: InventoryItem[];
@@ -121,6 +125,10 @@ export function createCharacter(name = ''): Character {
 
     saveProficiencies: [],
     skillProficiencies: [],
+
+    shortRestsUsed: 0,
+    lastLongRestAt: null,
+    lastLongRestTimestamp: null,
     spellSlots: [],
     weapons: [],
     inventory: [],

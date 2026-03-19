@@ -117,18 +117,25 @@ export function useStore() {
 
   const shortRest = useCallback(() => {
     if (!snap.selectedId) return;
-    updateCharacter(snap.selectedId, (c) => ({
-      ...c,
-      resources: c.resources.map((r) =>
-        r.recharge === 'short' ? { ...r, used: 0 } : r
-      ),
-    }));
+    updateCharacter(snap.selectedId, (c) => {
+      if (c.shortRestsUsed >= 2) return c;
+      return {
+        ...c,
+        shortRestsUsed: c.shortRestsUsed + 1,
+        resources: c.resources.map((r) =>
+          r.recharge === 'short' ? { ...r, used: 0 } : r
+        ),
+      };
+    });
   }, [snap.selectedId]);
 
-  const longRest = useCallback(() => {
+  const longRest = useCallback((label: string, timestamp: number) => {
     if (!snap.selectedId) return;
     updateCharacter(snap.selectedId, (c) => ({
       ...c,
+      shortRestsUsed: 0,
+      lastLongRestAt: label,
+      lastLongRestTimestamp: timestamp,
       spellSlots: c.spellSlots.map((s) => ({ ...s, used: 0 })),
       resources: c.resources.map((r) =>
         r.recharge !== 'manual' ? { ...r, used: 0 } : r

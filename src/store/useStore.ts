@@ -1,5 +1,6 @@
 import { useSyncExternalStore, useCallback } from 'react';
 import { type Character, createCharacter } from '../types/character';
+import { type PartyExport } from '../utils/importExport';
 
 const STORAGE_KEY = 'phandaLedger_state';
 
@@ -143,6 +144,19 @@ export function useStore() {
     }));
   }, [snap.selectedId]);
 
+  /**
+   * Replaces the entire party with the contents of a validated PartyExport.
+   * Preserves selectedId if the character still exists, otherwise selects
+   * the first character in the imported roster.
+   */
+  const replaceParty = useCallback((exported: PartyExport) => {
+    const { characters, selectedId } = exported;
+    const safeSelectedId = characters.find((c) => c.id === selectedId)
+      ? selectedId
+      : characters[0]?.id ?? null;
+    setState(() => ({ characters, selectedId: safeSelectedId }));
+  }, []);
+
   return {
     characters: snap.characters,
     selectedId: snap.selectedId,
@@ -153,5 +167,6 @@ export function useStore() {
     updateSelected,
     shortRest,
     longRest,
+    replaceParty,
   };
 }

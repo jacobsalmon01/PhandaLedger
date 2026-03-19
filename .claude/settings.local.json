@@ -9,7 +9,8 @@
       "Bash(cd:*)",
       "Bash(timeout 8)",
       "Bash(npx tsc:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(npm test:*)"
     ]
   }
 }

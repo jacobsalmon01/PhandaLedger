@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import type { Character } from '../types/character';
+import { ImportExportControls } from './ImportExportControls';
 
 function SidebarPortrait({ ch }: { ch: Character }) {
   if (!ch.portrait) {
@@ -125,7 +126,7 @@ function LongRestModal({ lastTimestamp, onConfirm, onCancel }: LongRestModalProp
 }
 
 export function Sidebar() {
-  const { characters, selectedId, selected, selectCharacter, addCharacter, removeCharacter, shortRest, longRest } = useStore();
+  const { characters, selectedId, selected, selectCharacter, addCharacter, removeCharacter, shortRest, longRest, replaceParty } = useStore();
   const [showLongRestModal, setShowLongRestModal] = useState(false);
 
   const hasSelected = selectedId !== null;
@@ -233,6 +234,13 @@ export function Sidebar() {
         <button className="btn-add-pc" onClick={addCharacter}>
           + New Adventurer
         </button>
+
+        <div className="ie-divider" />
+        <ImportExportControls
+          characters={characters}
+          selectedId={selectedId}
+          onImport={replaceParty}
+        />
       </div>
 
       {showLongRestModal && (

@@ -500,6 +500,126 @@ body::after {
 
 .btn-add-pc:hover { background: var(--bg-hover); border-color: var(--border-gold); }
 
+/* ── Import / Export controls ── */
+.ie-divider {
+  height: 1px;
+  background: var(--border-inner);
+  margin: var(--gap-sm) 0 var(--gap-xs);
+  opacity: 0.5;
+}
+
+.ie-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.ie-btn {
+  flex: 1;
+  padding: 5px 4px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-inner);
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.ie-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.ie-btn--export {
+  color: var(--text-dim);
+}
+
+.ie-btn--export:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--border-frame);
+  color: var(--text-parchment);
+}
+
+.ie-btn--import {
+  color: var(--text-dim);
+}
+
+.ie-btn--import:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-frame);
+  color: var(--text-parchment);
+}
+
+/* Error message shown inline under the buttons */
+.ie-error {
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  color: var(--accent-red);
+  background: rgba(155, 44, 44, 0.08);
+  border: 1px solid rgba(155, 44, 44, 0.25);
+  padding: var(--gap-xs) var(--gap-sm);
+  margin-top: 4px;
+  line-height: 1.45;
+}
+
+/* Confirmation modal — character preview list */
+.ie-modal-desc {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  color: var(--text-parchment);
+  line-height: 1.5;
+}
+
+.ie-modal-desc strong {
+  color: var(--text-bright);
+}
+
+.ie-char-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: var(--gap-xs);
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.ie-char-list__item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--gap-sm);
+  padding: 3px 6px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-inner);
+}
+
+.ie-char-list__item--empty {
+  color: var(--text-dim);
+  font-style: italic;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+}
+
+.ie-char-list__name {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-bright);
+}
+
+.ie-char-list__meta {
+  font-family: var(--font-body);
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ── Main Content ── */
 .main {
   flex: 1;

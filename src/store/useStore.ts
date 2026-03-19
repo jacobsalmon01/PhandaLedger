@@ -37,6 +37,11 @@ function hydrate() {
             (ch as unknown as Record<string, unknown>)[key] = template[key];
           }
         }
+        // Migration: fill in missing fields on each inventory item
+        ch.inventory = (ch.inventory || []).map((item) => {
+          const raw = item as unknown as Record<string, unknown>;
+          return { equipped: false, modifiers: [], ...raw } as unknown as typeof item;
+        });
       });
       state = parsed;
     }

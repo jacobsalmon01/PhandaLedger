@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import type { Character, PortraitCrop } from '../../types/character';
-import { calcAC } from '../../types/character';
+import { calcEffectiveAC } from '../../types/character';
 import { PortraitCropModal } from '../PortraitCropModal';
 import { NumericInput } from '../NumericInput';
 
@@ -130,7 +130,7 @@ export function CharacterHeader({ ch, updateSelected }: Props) {
               onCommit={(v) => updateSelected((c) => ({ ...c, gold: { ...c.gold, gp: Math.max(0, v) } }))}
             />
           </div>
-          <div className="ac-shield-badge" title={`AC ${calcAC(ch)} · ${ch.armorType} armor${ch.shield ? ` + shield` : ''}`}>
+          <div className="ac-shield-badge" title={`AC ${calcEffectiveAC(ch)} · ${ch.armorType} armor${ch.shield ? ` + shield` : ''}`}>
             <svg className="ac-shield-svg" viewBox="0 0 48 58" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
                 d="M 1,1 L 47,1 L 47,33 C 47,50 24,57 24,57 C 24,57 1,50 1,33 Z"
@@ -146,7 +146,7 @@ export function CharacterHeader({ ch, updateSelected }: Props) {
                 opacity="0.6"
               />
               <text x="24" y="17" textAnchor="middle" dominantBaseline="middle" className="ac-shield__label">AC</text>
-              <text x="24" y="35" textAnchor="middle" dominantBaseline="middle" className="ac-shield__number">{calcAC(ch)}</text>
+              <text x="24" y="35" textAnchor="middle" dominantBaseline="middle" className="ac-shield__number">{calcEffectiveAC(ch)}</text>
             </svg>
           </div>
         </div>

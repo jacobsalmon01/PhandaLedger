@@ -980,6 +980,16 @@ body::after {
   color: var(--text-dim);
 }
 
+/* Row holds the score (and effective score when modified) */
+.ability-card__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0;
+  width: 100%;
+}
+
+/* Base score — the editable input */
 .ability-card__score {
   font-family: var(--font-mono);
   font-size: 1.1rem;
@@ -998,6 +1008,39 @@ body::after {
   border-color: var(--border-gold-dim);
 }
 
+/* When effective score is shown, shrink the base input and dim it */
+.ability-card__score--has-effective {
+  width: 36px;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-dim);
+  background: transparent;
+  border-color: var(--border-inner);
+  padding: 2px 2px;
+  border-right: none;
+}
+
+.ability-card__score--has-effective:hover,
+.ability-card__score--has-effective:focus {
+  color: var(--text-parchment);
+  background: var(--bg-surface);
+  border-color: var(--border-gold-dim);
+}
+
+/* Effective score — hero number, only shown when items modify the stat */
+.ability-card__effective {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-gold);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-gold-dim);
+  padding: 2px 3px;
+  text-align: center;
+  flex: 1;
+}
+
+/* Modifier — always shown below */
 .ability-card__mod {
   font-family: var(--font-mono);
   font-size: 0.85rem;
@@ -1194,22 +1237,54 @@ body::after {
 .defense-formula {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 3px;
   justify-content: center;
 }
 
-.defense-formula__text {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: var(--text-dim);
+/* Hero: the big AC number */
+.defense-formula__hero {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  line-height: 1;
 }
 
 .defense-formula__total {
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-size: 2.2rem;
   font-weight: 700;
+  color: var(--text-bright);
+  line-height: 1;
+}
+
+.defense-formula__ac-label {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* Breakdown: compact, secondary */
+.defense-formula__breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 6px;
+  align-items: center;
+}
+
+.defense-formula__text {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.defense-formula__text--item {
   color: var(--text-gold);
-  margin-top: 2px;
+  opacity: 0.75;
+  font-style: italic;
 }
 
 /* ── HP Tracker ── */
@@ -2340,4 +2415,184 @@ input[type="number"] { -moz-appearance: textfield; }
 .inv-add-btn:disabled {
   opacity: 0.3;
   cursor: default;
+}
+
+/* ── Equipped state ── */
+.inv-row--equipped {
+  border-color: var(--border-gold-dim);
+}
+
+/* Equipped toggle button */
+.inv-equip-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0 4px;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.15s;
+  opacity: 0.5;
+}
+
+.inv-equip-btn:hover {
+  color: var(--text-gold);
+  opacity: 1;
+}
+
+.inv-equip-btn--on {
+  color: var(--text-gold);
+  opacity: 1;
+  text-shadow: 0 0 6px rgba(212, 180, 90, 0.5);
+}
+
+/* Modifier badges in the main row (when equipped) */
+.inv-row__mod-badges {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+
+.inv-mod-badge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-gold);
+  background: rgba(212, 180, 90, 0.1);
+  border: 1px solid rgba(212, 180, 90, 0.25);
+  padding: 1px 5px;
+  white-space: nowrap;
+}
+
+/* Tooltip modifier list */
+.inv-tooltip__mods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.inv-tooltip__mod {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-gold);
+  opacity: 0.9;
+}
+
+.inv-tooltip__mod + .inv-tooltip__mod::before {
+  content: '·';
+  margin-right: 4px;
+  opacity: 0.4;
+}
+
+/* Defense formula item modifier contribution */
+.defense-formula__text--item {
+  color: var(--text-gold);
+  opacity: 0.85;
+  font-style: italic;
+}
+
+/* ── Effects / Stat modifiers editor ── */
+.inv-effects-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.inv-effects-label {
+  font-family: var(--font-display);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  opacity: 0.7;
+}
+
+.inv-effects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.inv-effect-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.inv-effect-select {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-inner);
+  color: var(--text-parchment);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 3px 5px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.inv-effect-select:focus {
+  border-color: var(--border-gold-dim);
+}
+
+.inv-effect-select--op {
+  width: 52px;
+}
+
+.inv-effect-input {
+  width: 60px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-inner);
+  color: var(--text-gold);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 3px 5px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.inv-effect-input:focus {
+  border-color: var(--border-gold-dim);
+}
+
+.inv-effect-remove {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  padding: 2px 5px;
+  cursor: pointer;
+  transition: color 0.12s;
+  line-height: 1;
+}
+
+.inv-effect-remove:hover {
+  color: var(--accent-red);
+}
+
+.inv-add-effect-btn {
+  align-self: flex-start;
+  background: none;
+  border: 1px dashed var(--border-inner);
+  color: var(--text-dim);
+  font-family: var(--font-display);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.inv-add-effect-btn:hover {
+  border-color: var(--border-gold-dim);
+  color: var(--text-gold);
 }

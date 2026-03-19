@@ -36,12 +36,32 @@ export interface Weapon {
   finesse: boolean;
 }
 
+export type StatKey =
+  | 'ac'
+  | 'speed'
+  | 'initiative'
+  | 'hp.max'
+  | 'abilities.str'
+  | 'abilities.dex'
+  | 'abilities.con'
+  | 'abilities.int'
+  | 'abilities.wis'
+  | 'abilities.cha';
+
+export interface StatModifier {
+  stat: StatKey;
+  op: 'add' | 'mul' | 'set';
+  value: number;
+}
+
 export interface InventoryItem {
   id: string;
   name: string;
   quantity: number;
   description: string; // shown in hover tooltip / edit panel
   valuegp: number;     // value in gold pieces; 0 means unset
+  equipped: boolean;
+  modifiers: StatModifier[];
 }
 
 export interface SpellSlot {
@@ -152,7 +172,7 @@ export function profBonus(level: number): number {
   return Math.ceil(level / 4) + 1;
 }
 
-/** Compute effective AC from armor type, base AC, and DEX modifier */
+/** Compute base AC from armor type, base AC, and DEX modifier (no item modifiers) */
 export function calcAC(ch: Pick<Character, 'armorType' | 'armorBaseAC' | 'shield' | 'shieldBonus' | 'abilities'>): number {
   const dex = abilityMod(ch.abilities.dex);
   const shieldAC = ch.shield ? ch.shieldBonus : 0;
@@ -162,4 +182,24 @@ export function calcAC(ch: Pick<Character, 'armorType' | 'armorBaseAC' | 'shield
     case 'light':  return ch.armorBaseAC + dex + shieldAC;
     case 'none':   return 10 + dex + shieldAC;
   }
+}
+
+/** Apply item modifiers for a given stat to a base value */
+export function applyModifiers(base: number, items: InventoryItem[], stat: StatKey): number {
+  return items
+    .filter((i) => i.equipped)
+    .flatMap((i) => i.modifiers)
+    .filter((m) => m.stat === stat)
+    .reduce((acc, m) => {
+      switch (m.op) {
+        case 'add': return acc + m.value;
+        case 'mul': return Math.round(acc * m.value);
+        case 'set': return m.value;
+      }
+    }, base);
+}
+
+/** AC including contributions from equipped item modifiers */
+export function calcEffectiveAC(ch: Character): number {
+  return applyModifiers(calcAC(ch), ch.inventory, 'ac');
 }

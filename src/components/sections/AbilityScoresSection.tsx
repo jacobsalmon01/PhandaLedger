@@ -1,5 +1,5 @@
-import type { Character, AbilityScores } from '../../types/character';
-import { abilityMod, profBonus } from '../../types/character';
+import type { Character, AbilityScores, StatKey } from '../../types/character';
+import { abilityMod, profBonus, applyModifiers } from '../../types/character';
 import { NumericInput } from '../NumericInput';
 
 interface Props {
@@ -69,7 +69,8 @@ export function AbilityScoresSection({ ch, updateSelected }: Props) {
       <div className="attr-skills-grid">
         {ABILITIES.map(([abilityKey, label]) => {
           const score = ch.abilities[abilityKey];
-          const mod = abilityMod(score);
+          const effectiveScore = applyModifiers(score, ch.inventory, `abilities.${abilityKey}` as StatKey);
+          const mod = abilityMod(effectiveScore);
           const isSaveProficient = ch.saveProficiencies.includes(abilityKey);
           const saveBonus = mod + (isSaveProficient ? pb : 0);
           const skills = SKILLS_BY_ABILITY[abilityKey];
@@ -77,19 +78,24 @@ export function AbilityScoresSection({ ch, updateSelected }: Props) {
           return (
             <div key={abilityKey} className="attr-col">
               {/* Ability score header */}
-              <div className="ability-card">
+              <div className={`ability-card${effectiveScore !== score ? ' ability-card--modified' : ''}`}>
                 <span className="ability-card__label">{label.slice(0, 3).toUpperCase()}</span>
-                <NumericInput
-                  className="ability-card__score"
-                  value={score}
-                  fallback={10}
-                  min={1}
-                  max={30}
-                  onCommit={(v) => updateSelected((c) => ({
-                    ...c,
-                    abilities: { ...c.abilities, [abilityKey]: Math.max(1, Math.min(30, v)) },
-                  }))}
-                />
+                <div className="ability-card__row">
+                  <NumericInput
+                    className={`ability-card__score${effectiveScore !== score ? ' ability-card__score--has-effective' : ''}`}
+                    value={score}
+                    fallback={10}
+                    min={1}
+                    max={30}
+                    onCommit={(v) => updateSelected((c) => ({
+                      ...c,
+                      abilities: { ...c.abilities, [abilityKey]: Math.max(1, Math.min(30, v)) },
+                    }))}
+                  />
+                  {effectiveScore !== score && (
+                    <span className="ability-card__effective">{effectiveScore}</span>
+                  )}
+                </div>
                 <span className="ability-card__mod">{mod >= 0 ? `+${mod}` : `${mod}`}</span>
               </div>
 

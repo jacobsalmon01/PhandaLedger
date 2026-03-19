@@ -18,6 +18,8 @@ export function createInventoryItem(name: string): InventoryItem {
     quantity: 1,
     description: '',
     valuegp: 0,
+    equipped: false,
+    modifiers: [],
   };
 }
 

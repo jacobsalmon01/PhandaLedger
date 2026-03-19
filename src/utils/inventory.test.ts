@@ -57,16 +57,16 @@ describe('totalInventoryValue', () => {
 
   it('sums quantity × valuegp across all items', () => {
     const items = [
-      { id: '1', name: 'Potion', quantity: 3, description: '', valuegp: 50 },
-      { id: '2', name: 'Rope',   quantity: 2, description: '', valuegp: 1  },
+      { id: '1', name: 'Potion', quantity: 3, description: '', valuegp: 50,  equipped: false, modifiers: [] },
+      { id: '2', name: 'Rope',   quantity: 2, description: '', valuegp: 1,   equipped: false, modifiers: [] },
     ];
     expect(totalInventoryValue(items)).toBe(152); // (3×50) + (2×1)
   });
 
   it('ignores items with valuegp of 0', () => {
     const items = [
-      { id: '1', name: 'Pebble', quantity: 10, description: '', valuegp: 0 },
-      { id: '2', name: 'Gold',   quantity: 1,  description: '', valuegp: 100 },
+      { id: '1', name: 'Pebble', quantity: 10, description: '', valuegp: 0,   equipped: false, modifiers: [] },
+      { id: '2', name: 'Gold',   quantity: 1,  description: '', valuegp: 100, equipped: false, modifiers: [] },
     ];
     expect(totalInventoryValue(items)).toBe(100);
   });

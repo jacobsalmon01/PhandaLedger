@@ -1,5 +1,5 @@
 import type { Character, ArmorType } from '../../types/character';
-import { abilityMod, calcAC } from '../../types/character';
+import { abilityMod, calcEffectiveAC } from '../../types/character';
 import { NumericInput } from '../NumericInput';
 
 interface Props {
@@ -8,6 +8,10 @@ interface Props {
 }
 
 export function DefenseSection({ ch, updateSelected }: Props) {
+  const itemACMods = ch.inventory
+    .filter((i) => i.equipped)
+    .flatMap((i) => i.modifiers.filter((m) => m.stat === 'ac').map((m) => ({ m, item: i })));
+
   return (
     <section className="section">
       <h2 className="section__heading">Defense</h2>
@@ -56,19 +60,31 @@ export function DefenseSection({ ch, updateSelected }: Props) {
           )}
         </div>
         <div className="defense-formula">
-          {ch.armorType === 'none' && (
-            <span className="defense-formula__text">10 + {abilityMod(ch.abilities.dex)} dex</span>
-          )}
-          {ch.armorType === 'medium' && (
-            <span className="defense-formula__text">{ch.armorBaseAC} + {Math.min(abilityMod(ch.abilities.dex), 2)} dex</span>
-          )}
-          {ch.armorType === 'light' && (
-            <span className="defense-formula__text">{ch.armorBaseAC} + {abilityMod(ch.abilities.dex)} dex</span>
-          )}
-          {ch.shield && (
-            <span className="defense-formula__text">+ {ch.shieldBonus} shield</span>
-          )}
-          <span className="defense-formula__total">= {calcAC(ch)} AC</span>
+          <div className="defense-formula__hero">
+            <span className="defense-formula__total">{calcEffectiveAC(ch)}</span>
+            <span className="defense-formula__ac-label">AC</span>
+          </div>
+          <div className="defense-formula__breakdown">
+            {ch.armorType === 'none' && (
+              <span className="defense-formula__text">10+{abilityMod(ch.abilities.dex)} dex</span>
+            )}
+            {ch.armorType === 'medium' && (
+              <span className="defense-formula__text">{ch.armorBaseAC}+{Math.min(abilityMod(ch.abilities.dex), 2)} dex</span>
+            )}
+            {ch.armorType === 'light' && (
+              <span className="defense-formula__text">{ch.armorBaseAC}+{abilityMod(ch.abilities.dex)} dex</span>
+            )}
+            {ch.shield && (
+              <span className="defense-formula__text">+{ch.shieldBonus} shield</span>
+            )}
+            {itemACMods.map(({ m, item }, idx) => (
+              <span key={idx} className="defense-formula__text defense-formula__text--item" title={item.name}>
+                {m.op === 'add' ? (m.value >= 0 ? `+${m.value}` : `−${Math.abs(m.value)}`)
+                 : m.op === 'mul' ? `×${m.value}`
+                 : `=${m.value}`} {item.name}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
     </section>

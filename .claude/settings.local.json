@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(shopt -s dotglob)",
+      "Bash(mv temp-scaffold/* .)",
+      "Bash(rm -rf temp-scaffold)",
+      "Bash(npm install:*)",
+      "Bash(cd:*)",
+      "Bash(timeout 8)"
+    ]
+  }
+}

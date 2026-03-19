@@ -33,7 +33,7 @@ function hydrate() {
       parsed.characters.forEach((ch) => {
         for (const key of Object.keys(template) as (keyof Character)[]) {
           if (!(key in ch)) {
-            (ch as Record<string, unknown>)[key] = template[key];
+            (ch as unknown as Record<string, unknown>)[key] = template[key];
           }
         }
       });

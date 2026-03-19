@@ -30,10 +30,10 @@ export function CharacterSheet() {
     <main className="main">
       <div className="main-inner" key={selected.id}>
         <CharacterHeader ch={selected} updateSelected={updateSelected} />
+        <HitPointsSection ch={selected} updateSelected={updateSelected} />
         <IdentitySection ch={selected} updateSelected={updateSelected} />
         <AbilityScoresSection ch={selected} updateSelected={updateSelected} />
         <DefenseSection ch={selected} updateSelected={updateSelected} />
-        <HitPointsSection ch={selected} updateSelected={updateSelected} />
         <div className="slots-resources-row">
           <SpellSlotsSection ch={selected} updateSelected={updateSelected} />
           <ResourcesSection ch={selected} updateSelected={updateSelected} />

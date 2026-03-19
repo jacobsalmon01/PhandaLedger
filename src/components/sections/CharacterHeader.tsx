@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import type { Character, PortraitCrop } from '../../types/character';
 import { calcAC } from '../../types/character';
 import { PortraitCropModal } from '../PortraitCropModal';
+import { NumericInput } from '../NumericInput';
 
 interface Props {
   ch: Character;
@@ -118,24 +119,36 @@ export function CharacterHeader({ ch, updateSelected }: Props) {
           autoComplete="off"
           onChange={(e) => updateSelected((c) => ({ ...c, name: e.target.value }))}
         />
-        <div className="ac-shield-badge" title={`AC ${calcAC(ch)} · ${ch.armorType} armor${ch.shield ? ` + shield` : ''}`}>
-          <svg className="ac-shield-svg" viewBox="0 0 48 58" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M 1,1 L 47,1 L 47,33 C 47,50 24,57 24,57 C 24,57 1,50 1,33 Z"
-              fill="var(--bg-deep)"
-              stroke="var(--border-gold-dim)"
-              strokeWidth="1.5"
+        <div className="char-header-badges">
+          <div className="gold-coin-badge" title="Gold Pieces held">
+            <span className="gold-coin__label">GP</span>
+            <NumericInput
+              className="gold-coin__value"
+              value={ch.gold.gp}
+              fallback={0}
+              min={0}
+              onCommit={(v) => updateSelected((c) => ({ ...c, gold: { ...c.gold, gp: Math.max(0, v) } }))}
             />
-            <path
-              d="M 5,5 L 43,5 L 43,32 C 43,46 24,52 24,52 C 24,52 5,46 5,32 Z"
-              fill="none"
-              stroke="var(--border-inner)"
-              strokeWidth="0.75"
-              opacity="0.6"
-            />
-            <text x="24" y="17" textAnchor="middle" dominantBaseline="middle" className="ac-shield__label">AC</text>
-            <text x="24" y="35" textAnchor="middle" dominantBaseline="middle" className="ac-shield__number">{calcAC(ch)}</text>
-          </svg>
+          </div>
+          <div className="ac-shield-badge" title={`AC ${calcAC(ch)} · ${ch.armorType} armor${ch.shield ? ` + shield` : ''}`}>
+            <svg className="ac-shield-svg" viewBox="0 0 48 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M 1,1 L 47,1 L 47,33 C 47,50 24,57 24,57 C 24,57 1,50 1,33 Z"
+                fill="var(--bg-deep)"
+                stroke="var(--border-gold-dim)"
+                strokeWidth="1.5"
+              />
+              <path
+                d="M 5,5 L 43,5 L 43,32 C 43,46 24,52 24,52 C 24,52 5,46 5,32 Z"
+                fill="none"
+                stroke="var(--border-inner)"
+                strokeWidth="0.75"
+                opacity="0.6"
+              />
+              <text x="24" y="17" textAnchor="middle" dominantBaseline="middle" className="ac-shield__label">AC</text>
+              <text x="24" y="35" textAnchor="middle" dominantBaseline="middle" className="ac-shield__number">{calcAC(ch)}</text>
+            </svg>
+          </div>
         </div>
       </div>
     </>

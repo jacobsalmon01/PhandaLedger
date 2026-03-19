@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import type { Character } from '../types/character';
 import { ImportExportControls } from './ImportExportControls';
 import { InitiativeTracker } from './InitiativeTracker';
+import { DiceRoller } from './DiceRoller';
 
 function SidebarPortrait({ ch }: { ch: Character }) {
   if (!ch.portrait) {
@@ -181,6 +182,7 @@ export function Sidebar() {
       </div>
 
       <InitiativeTracker />
+      <DiceRoller />
 
       <div className="sidebar-footer">
         {/* Short rest — charge pips + button */}

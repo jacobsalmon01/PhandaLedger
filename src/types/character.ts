@@ -29,11 +29,15 @@ export interface HitDice {
 export interface Weapon {
   id: string;
   name: string;
-  attackBonus: number;
-  damageDice: string; // e.g. '1d8'
+  attackBonus: number;   // magic enhancement — applies to both attack and damage
+  damageDice: string;    // one-handed damage dice, e.g. '1d8'
+  versatile: boolean;    // can be used one- or two-handed
+  versatileDice: string; // two-handed damage dice, e.g. '1d10'
   damageType: string;
   stat: keyof AbilityScores;
-  finesse: boolean;
+  finesse: boolean;      // may use STR or DEX, whichever is higher
+  ranged: boolean;       // ranged weapon — qualifies for sneak attack
+  proficient: boolean;
 }
 
 export type StatKey =
@@ -67,6 +71,20 @@ export interface InventoryItem {
 export interface SpellSlot {
   max: number;
   used: number;
+}
+
+export interface PreparedSpell {
+  id: string;
+  name: string;
+  level: number;           // 0 = cantrip, 1–9 = leveled
+  concentration: boolean;
+  duration: string;        // display string, e.g. "Concentration, up to 1 minute"
+  durationRounds: number;  // 0 = not round-trackable
+  castingTime: string;     // "1 action", "Bonus action", etc.
+  notes: string;           // quick reference: save DC, damage, etc.
+  // runtime tracking — persisted so a refresh mid-session keeps state
+  active: boolean;
+  roundsRemaining: number;
 }
 
 export type RechargeOn = 'short' | 'long' | 'manual';
@@ -115,7 +133,9 @@ export interface Character {
   lastLongRestAt: string | null;   // display label, e.g. "Fri Mar 19 · 9:00 PM"
   lastLongRestTimestamp: number | null; // ms epoch for 24h cooldown
 
+  sneakAttack: boolean;  // rogue sneak attack — shown on finesse/ranged weapons
   spellSlots: SpellSlot[];
+  spells: PreparedSpell[];
   weapons: Weapon[];
   inventory: InventoryItem[];
   gold: Gold;
@@ -151,7 +171,9 @@ export function createCharacter(name = ''): Character {
     shortRestsUsed: 0,
     lastLongRestAt: null,
     lastLongRestTimestamp: null,
+    sneakAttack: false,
     spellSlots: [],
+    spells: [],
     weapons: [],
     inventory: [],
     gold: { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 },

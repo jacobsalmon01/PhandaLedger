@@ -119,6 +119,10 @@ export function InitiativeTracker() {
             <div className="init-list">
               {sorted.map((entry) => {
                 const isActive = entry.id === activeId;
+                const concSpell = entry.characterId
+                  ? characters.find((c) => c.id === entry.characterId)
+                      ?.spells?.find((s) => s.active && s.concentration)
+                  : undefined;
                 return (
                   <div
                     key={entry.id}
@@ -131,6 +135,14 @@ export function InitiativeTracker() {
                       onCommit={(v) => updateInitiativeEntry(entry.id, v)}
                     />
                     <span className="init-row__name">{displayName(entry)}</span>
+                    {concSpell && (
+                      <span
+                        className="init-row__conc"
+                        title={`Concentrating: ${concSpell.name}`}
+                      >
+                        ◎
+                      </span>
+                    )}
                     <button
                       className="init-row__remove"
                       title="Remove"

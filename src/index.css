@@ -1619,6 +1619,1355 @@ body::after {
   font-style: italic;
 }
 
+/* ══════════════════════════════════════════
+   Attacks & Weapons
+   ══════════════════════════════════════════ */
+
+.weapons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: var(--gap-sm);
+}
+
+.weapons-empty {
+  font-family: var(--font-body);
+  font-size: 0.825rem;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+/* ── Weapon card ── */
+.weapon-card {
+  background: var(--bg-deep);
+  border: 1px solid var(--border-inner);
+  border-left: 4px solid rgba(200, 164, 78, 0.18);
+  transition: border-left-color 0.15s, background 0.15s;
+}
+
+.weapon-card:hover {
+  border-left-color: var(--border-gold-dim);
+  background: #121009;
+}
+
+.weapon-card--editing {
+  border-left-color: var(--border-gold-dim);
+  background: #151210;
+}
+
+/* ── Name row ── */
+.weapon-card__name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px 6px;
+  border-bottom: 1px solid var(--border-inner);
+}
+
+.weapon-card__name {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-parchment);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.weapon-card__name--placeholder {
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+/* ── Property tags (finesse, no prof) ── */
+.weapon-card__tags {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.weapon-tag {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border: 1px solid var(--border-gold-dim);
+  color: var(--border-gold-dim);
+  background: rgba(200, 164, 78, 0.06);
+}
+
+.weapon-tag--warn {
+  border-color: rgba(155, 44, 44, 0.4);
+  color: rgba(155, 44, 44, 0.7);
+  background: rgba(155, 44, 44, 0.06);
+}
+
+/* ── Stats block (the hero section of each card) ── */
+.weapon-card__stats {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px 8px;
+  gap: 0;
+}
+
+.weapon-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.weapon-stat__number {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.weapon-stat--atk .weapon-stat__number {
+  font-size: 2rem;
+  color: var(--text-gold);
+}
+
+.weapon-stat--dmg .weapon-stat__number {
+  font-size: 1.25rem;
+  color: var(--text-bright);
+}
+
+.weapon-stat__label {
+  font-family: var(--font-display);
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.weapon-stat__divider {
+  width: 1px;
+  height: 38px;
+  background: var(--border-inner);
+  margin: 0 18px;
+  flex-shrink: 0;
+}
+
+/* ── Grip toggle (1H / 2H) — sits in stats row, pushed right ── */
+.weapon-card__grip {
+  display: flex;
+  gap: 3px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.grip-btn {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  background: none;
+  border: 1px solid var(--border-inner);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+
+.grip-btn--active {
+  background: rgba(200, 164, 78, 0.1);
+  border-color: var(--border-gold-dim);
+  color: var(--text-gold);
+}
+
+.grip-btn:not(.grip-btn--active):hover {
+  background: var(--bg-hover);
+  color: var(--text-parchment);
+  border-color: var(--border-inner);
+}
+
+/* ── Formula row ── */
+.weapon-card__formula {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px 8px;
+  flex-wrap: wrap;
+}
+
+.weapon-formula__piece {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: rgba(160, 149, 128, 0.5);
+  letter-spacing: 0.03em;
+}
+
+.weapon-formula__sep {
+  color: var(--border-inner);
+  font-size: 0.65rem;
+  flex-shrink: 0;
+}
+
+.weapon-formula__tag {
+  font-family: var(--font-body);
+  font-style: italic;
+  color: var(--border-gold-dim);
+  font-size: 0.6rem;
+  opacity: 0.7;
+}
+
+/* ── Actions (edit / remove) ── */
+.weapon-card__actions {
+  display: flex;
+  gap: 0;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.weapon-action-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  line-height: 1;
+  padding: 2px 5px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s, color 0.12s;
+}
+
+.weapon-card:hover .weapon-action-btn,
+.weapon-card--editing .weapon-action-btn {
+  opacity: 0.45;
+}
+
+.weapon-action-btn:hover {
+  opacity: 1 !important;
+  color: var(--text-bright);
+}
+
+.weapon-action-btn--remove:hover {
+  color: #d44;
+}
+
+/* ── Inline edit form ── */
+.weapon-form {
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.weapon-form__row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.weapon-form__row--toggles {
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-top: 2px;
+}
+
+.weapon-form__row--actions {
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.weapon-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.weapon-form__field--wide {
+  flex: 1;
+  min-width: 110px;
+}
+
+.weapon-form__label {
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  opacity: 0.65;
+  white-space: nowrap;
+}
+
+.weapon-form__input {
+  background: var(--bg-input);
+  border: 1px solid var(--border-inner);
+  color: var(--text-bright);
+  font-family: var(--font-body);
+  font-size: 0.825rem;
+  padding: 4px 7px;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+
+.weapon-form__input:focus {
+  border-color: var(--border-gold-dim);
+}
+
+.weapon-form__input--sm {
+  width: 58px;
+}
+
+.weapon-form__input--type {
+  width: 96px;
+}
+
+.weapon-form__select {
+  background: var(--bg-input);
+  border: 1px solid var(--border-inner);
+  color: var(--text-parchment);
+  font-family: var(--font-body);
+  font-size: 0.825rem;
+  padding: 4px 5px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.weapon-form__select:focus {
+  border-color: var(--border-gold-dim);
+}
+
+.weapon-form__toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  cursor: pointer;
+  user-select: none;
+}
+
+.weapon-form__toggle input[type="checkbox"] {
+  accent-color: var(--text-gold);
+  width: 12px;
+  height: 12px;
+  cursor: pointer;
+}
+
+.weapon-form__save {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 5px 16px;
+  background: rgba(200, 164, 78, 0.08);
+  border: 1px solid var(--border-gold-dim);
+  color: var(--text-gold);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.weapon-form__save:hover:not(:disabled) {
+  background: rgba(200, 164, 78, 0.16);
+  border-color: var(--border-gold);
+}
+
+.weapon-form__save:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.weapon-form__cancel {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  background: none;
+  border: 1px solid var(--border-inner);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s;
+}
+
+.weapon-form__cancel:hover {
+  border-color: var(--text-dim);
+  color: var(--text-parchment);
+}
+
+/* ── Sneak attack toggle (section heading) ── */
+.sneak-toggle {
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  background: none;
+  border: 1px solid var(--border-inner);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  flex-shrink: 0;
+}
+
+.sneak-toggle:hover {
+  border-color: rgba(155, 44, 44, 0.5);
+  color: rgba(200, 80, 80, 0.8);
+}
+
+.sneak-toggle--active {
+  background: rgba(155, 44, 44, 0.1);
+  border-color: rgba(155, 44, 44, 0.5);
+  color: rgba(210, 100, 100, 0.9);
+}
+
+.sneak-toggle--active:hover {
+  background: rgba(155, 44, 44, 0.15);
+  border-color: rgba(155, 44, 44, 0.7);
+  color: rgba(220, 110, 110, 1);
+}
+
+/* ── Sneak attack stat block ── */
+.weapon-stat--sneak .weapon-stat__number {
+  font-size: 1.15rem;
+  color: rgba(210, 90, 90, 0.9);
+}
+
+.weapon-stat--sneak .weapon-stat__label {
+  color: rgba(155, 44, 44, 0.7);
+}
+
+.weapon-stat__divider--sneak {
+  background: rgba(155, 44, 44, 0.2);
+}
+
+.weapon-formula__piece--sneak {
+  color: rgba(210, 90, 90, 0.5);
+}
+
+/* ── Add weapon button ── */
+.weapons-add-btn {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 5px 14px;
+  background: none;
+  border: 1px solid var(--border-inner);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s;
+}
+
+.weapons-add-btn:hover {
+  border-color: var(--border-gold-dim);
+  color: var(--text-gold);
+}
+
+/* ══════════════════════════════════════════
+   Prepared Spells
+   ══════════════════════════════════════════ */
+
+.spells-empty {
+  font-family: var(--font-body);
+  font-size: 0.825rem;
+  color: var(--text-dim);
+  font-style: italic;
+  margin-bottom: var(--gap-sm);
+}
+
+.spells-add-btn {
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 2px 10px;
+  background: none;
+  border: 1px solid var(--border-inner);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s;
+}
+
+.spells-add-btn:hover {
+  border-color: var(--border-gold-dim);
+  color: var(--text-gold);
+}
+
+.spell-form-wrap {
+  margin-bottom: var(--gap-sm);
+  border: 1px solid var(--border-inner);
+  background: var(--bg-deep);
+}
+
+/* ── Level groups ── */
+.spells-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.spell-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.spell-group__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.spell-group__rule {
+  flex: 1;
+  height: 1px;
+  background: var(--border-inner);
+}
+
+.spell-group__label {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.spell-group__slots {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-inner);
+  padding: 0 5px;
+  flex-shrink: 0;
+}
+
+.spell-group__slots--empty {
+  color: rgba(155, 44, 44, 0.7);
+  border-color: rgba(155, 44, 44, 0.3);
+}
+
+/* ── Spell rows ── */
+.spell-row {
+  border: 1px solid transparent;
+  border-left: 3px solid transparent;
+  background: var(--bg-surface);
+  transition: border-left-color 0.12s, background 0.12s;
+}
+
+.spell-row:hover {
+  background: var(--bg-hover);
+}
+
+.spell-row--active {
+  background: rgba(200, 164, 78, 0.05);
+  border-color: var(--border-inner);
+  border-left-color: var(--border-gold-dim);
+}
+
+/* Concentration active — distinct arcane blue tint */
+.spell-row--concentrating {
+  background: rgba(74, 143, 168, 0.07);
+  border-left-color: rgba(74, 143, 168, 0.6);
+}
+
+.spell-row--expired {
+  border-left-color: rgba(155, 44, 44, 0.5);
+  background: rgba(155, 44, 44, 0.04);
+}
+
+.spell-row__top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px 4px;
+  min-height: 32px;
+}
+
+.spell-row__bottom {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px 6px 34px; /* 34px = cast btn width + gap */
+  flex-wrap: wrap;
+}
+
+/* ── Cast button ── */
+.spell-cast-btn {
+  background: none;
+  border: 1px solid var(--border-inner);
+  color: var(--text-dim);
+  font-size: 0.65rem;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.1s, color 0.1s, background 0.1s;
+  padding: 0;
+}
+
+.spell-cast-btn:hover:not(:disabled) {
+  border-color: var(--border-gold-dim);
+  color: var(--text-gold);
+  background: rgba(200, 164, 78, 0.08);
+}
+
+.spell-cast-btn--active {
+  border-color: rgba(74, 143, 168, 0.7);
+  color: rgba(100, 180, 210, 0.9);
+  background: rgba(74, 143, 168, 0.12);
+  font-size: 0.55rem;
+}
+
+.spell-cast-btn--active:hover:not(:disabled) {
+  background: rgba(74, 143, 168, 0.2);
+}
+
+.spell-cast-btn--locked {
+  border-color: rgba(155, 44, 44, 0.25);
+  color: rgba(155, 44, 44, 0.4);
+}
+
+.spell-cast-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ── Spell name ── */
+.spell-row__name {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--text-parchment);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spell-row--active .spell-row__name,
+.spell-row--concentrating .spell-row__name {
+  color: var(--text-bright);
+}
+
+/* ── CONC badge ── */
+.spell-conc-badge {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 1px 6px;
+  border: 1px solid rgba(74, 143, 168, 0.35);
+  color: rgba(74, 143, 168, 0.6);
+  background: rgba(74, 143, 168, 0.06);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.spell-conc-badge--active {
+  border-color: rgba(74, 143, 168, 0.7);
+  color: rgba(100, 180, 210, 0.95);
+  background: rgba(74, 143, 168, 0.14);
+  font-size: 0.56rem;
+}
+
+/* ── Round counter ── */
+.spell-rounds {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  background: var(--bg-deep);
+  border: 1px solid var(--border-inner);
+  padding: 1px 4px 1px 6px;
+}
+
+.spell-rounds--expired {
+  border-color: rgba(155, 44, 44, 0.4);
+}
+
+.spell-rounds__num {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-gold);
+  line-height: 1;
+  min-width: 12px;
+  text-align: center;
+}
+
+.spell-rounds--expired .spell-rounds__num {
+  color: rgba(155, 44, 44, 0.8);
+}
+
+.spell-rounds__unit {
+  font-family: var(--font-display);
+  font-size: 0.48rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.spell-rounds__tick {
+  background: none;
+  border: none;
+  border-left: 1px solid var(--border-inner);
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  line-height: 1;
+  padding: 0 3px;
+  cursor: pointer;
+  margin-left: 2px;
+  transition: color 0.1s;
+}
+
+.spell-rounds__tick:hover:not(:disabled) {
+  color: var(--text-parchment);
+}
+
+.spell-rounds__tick:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ── Bottom line: meta info (casting time / duration / notes) ── */
+.spell-meta__piece {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.spell-meta__dot {
+  color: var(--border-inner);
+  font-size: 0.7rem;
+  flex-shrink: 0;
+}
+
+.spell-meta__notes {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Row actions ── */
+.spell-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.spell-end-btn {
+  font-family: var(--font-display);
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  background: rgba(155, 44, 44, 0.08);
+  border: 1px solid rgba(155, 44, 44, 0.3);
+  color: rgba(200, 80, 80, 0.8);
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+}
+
+.spell-end-btn:hover {
+  background: rgba(155, 44, 44, 0.15);
+  border-color: rgba(155, 44, 44, 0.6);
+  color: rgba(220, 100, 100, 1);
+}
+
+.spell-action-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  padding: 2px 4px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s, color 0.12s;
+}
+
+.spell-row:hover .spell-action-btn,
+.spell-row--active .spell-action-btn,
+.spell-row--concentrating .spell-action-btn {
+  opacity: 0.45;
+}
+
+.spell-action-btn:hover {
+  opacity: 1 !important;
+  color: var(--text-bright);
+}
+
+.spell-action-btn--remove:hover {
+  color: #d44;
+}
+
+/* ── Add/edit form ── */
+.spell-form {
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.spell-form__row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.spell-form__row--actions {
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.spell-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.spell-form__field--wide {
+  flex: 1;
+  min-width: 120px;
+}
+
+.spell-form__label {
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  opacity: 0.65;
+  white-space: nowrap;
+}
+
+.spell-form__input {
+  background: var(--bg-input);
+  border: 1px solid var(--border-inner);
+  color: var(--text-bright);
+  font-family: var(--font-body);
+  font-size: 0.825rem;
+  padding: 4px 7px;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+
+.spell-form__input:focus {
+  border-color: var(--border-gold-dim);
+}
+
+.spell-form__input--sm {
+  width: 56px;
+}
+
+.spell-form__input--md {
+  width: 110px;
+}
+
+.spell-form__select {
+  background: var(--bg-input);
+  border: 1px solid var(--border-inner);
+  color: var(--text-parchment);
+  font-family: var(--font-body);
+  font-size: 0.825rem;
+  padding: 4px 5px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.spell-form__select:focus {
+  border-color: var(--border-gold-dim);
+}
+
+.spell-form__toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  cursor: pointer;
+  user-select: none;
+  padding-bottom: 4px; /* align with inputs */
+}
+
+.spell-form__toggle input[type="checkbox"] {
+  accent-color: rgba(74, 143, 168, 0.9);
+  width: 12px;
+  height: 12px;
+  cursor: pointer;
+}
+
+.spell-form__save {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 5px 16px;
+  background: rgba(200, 164, 78, 0.08);
+  border: 1px solid var(--border-gold-dim);
+  color: var(--text-gold);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.spell-form__save:hover:not(:disabled) {
+  background: rgba(200, 164, 78, 0.16);
+  border-color: var(--border-gold);
+}
+
+.spell-form__save:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.spell-form__cancel {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  background: none;
+  border: 1px solid var(--border-inner);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s;
+}
+
+.spell-form__cancel:hover {
+  border-color: var(--text-dim);
+  color: var(--text-parchment);
+}
+
+/* ── Concentration indicator in initiative tracker ── */
+.init-row__conc {
+  font-size: 0.65rem;
+  color: rgba(74, 143, 168, 0.7);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+/* ══════════════════════════════════════════
+   Dice Roller
+   ══════════════════════════════════════════ */
+
+/* ── Keyframes ── */
+@keyframes dice-spin {
+  0%   { transform: translateY(0)    scaleY(1);    opacity: 1;   }
+  28%  { transform: translateY(-5px) scaleY(1.07); opacity: 0.65; }
+  60%  { transform: translateY(3px)  scaleY(0.94); opacity: 0.8;  }
+  85%  { transform: translateY(-2px) scaleY(1.02); opacity: 0.9;  }
+  100% { transform: translateY(0)    scaleY(1);    opacity: 1;   }
+}
+
+@keyframes dice-land {
+  0% {
+    transform: scale(1.65) translateY(-10px);
+    color: #ffffff;
+    text-shadow:
+      0 0 20px #fff,
+      0 0 44px var(--text-gold),
+      0 0 80px rgba(212, 180, 90, 0.55);
+    opacity: 0.85;
+  }
+  32% {
+    transform: scale(1.12) translateY(0);
+    color: var(--text-gold);
+    text-shadow:
+      0 0 14px var(--text-gold),
+      0 0 30px rgba(212, 180, 90, 0.45);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    color: var(--text-gold);
+    text-shadow: 0 0 8px rgba(212, 180, 90, 0.2);
+  }
+}
+
+@keyframes dice-shimmer {
+  0%, 100% { opacity: 1;    }
+  50%       { opacity: 0.5;  }
+}
+
+/* ── Container ── */
+.dice-roller {
+  border-top: 1px solid var(--border-inner);
+  border-bottom: 1px solid var(--border-inner);
+}
+
+.dice-roller__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px var(--gap-md);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+}
+
+.dice-roller__header:hover {
+  background: var(--bg-hover);
+}
+
+.dice-roller__chevron {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.dice-roller__title {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-gold);
+}
+
+.dice-roller__badge {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--text-gold);
+  margin-left: auto;
+  background: rgba(200, 164, 78, 0.1);
+  border: 1px solid var(--border-gold-dim);
+  padding: 1px 6px;
+}
+
+.dice-roller__badge-mode--advantage    { color: rgba(106, 170, 74,  0.9); }
+.dice-roller__badge-mode--disadvantage { color: rgba(200, 80,  80,  0.9); }
+
+.dice-roller__body {
+  padding: var(--gap-sm) var(--gap-md) var(--gap-md);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+/* ── Die selector grid ── */
+.dice-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.dice-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 5px 0 4px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-inner);
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+  min-height: 46px;
+}
+
+.dice-btn:hover {
+  border-color: var(--border-gold-dim);
+  background: var(--bg-hover);
+}
+
+.dice-btn--selected {
+  border-color: var(--border-gold-dim);
+  background: rgba(200, 164, 78, 0.07);
+}
+
+.dice-btn__icon {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: var(--text-dim);
+  stroke-width: 6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  transition: stroke 0.12s, filter 0.12s;
+  overflow: visible;
+}
+
+.dice-btn--selected .dice-btn__icon {
+  stroke: var(--text-gold);
+  filter: drop-shadow(0 0 3px rgba(212, 180, 90, 0.45));
+}
+
+.dice-btn__label {
+  font-family: var(--font-display);
+  font-size: 0.47rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--text-dim);
+  text-transform: lowercase;
+  transition: color 0.12s;
+}
+
+.dice-btn--selected .dice-btn__label {
+  color: var(--text-gold);
+}
+
+/* ── Mode selector ── */
+.dice-adv-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+}
+
+.dice-adv-btn {
+  font-family: var(--font-display);
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 5px 2px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-inner);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+
+.dice-adv-btn:hover:not(.dice-adv-btn--active) {
+  border-color: var(--border-gold-dim);
+  color: var(--text-parchment);
+}
+
+.dice-adv-btn--normal.dice-adv-btn--active {
+  border-color: var(--border-gold-dim);
+  background: rgba(200, 164, 78, 0.08);
+  color: var(--text-gold);
+}
+
+.dice-adv-btn--advantage.dice-adv-btn--active {
+  border-color: rgba(106, 170, 74, 0.55);
+  background: rgba(106, 170, 74, 0.07);
+  color: rgba(106, 170, 74, 0.95);
+}
+
+.dice-adv-btn--disadvantage.dice-adv-btn--active {
+  border-color: rgba(155, 44, 44, 0.55);
+  background: rgba(155, 44, 44, 0.07);
+  color: rgba(200, 80, 80, 0.95);
+}
+
+/* ── Roll button ── */
+.dice-roll-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 16px;
+  background: linear-gradient(180deg, rgba(200,164,78,0.10) 0%, rgba(200,164,78,0.04) 100%);
+  border: 1px solid var(--border-gold-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.dice-roll-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, rgba(200,164,78,0.20) 0%, rgba(200,164,78,0.09) 100%);
+  border-color: var(--border-gold);
+  box-shadow: 0 0 16px rgba(200,164,78,0.14), inset 0 0 10px rgba(200,164,78,0.05);
+}
+
+.dice-roll-btn:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.dice-roll-btn__ornament {
+  font-size: 0.44rem;
+  color: var(--border-gold-dim);
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.dice-roll-btn:hover:not(:disabled) .dice-roll-btn__ornament {
+  color: var(--text-gold);
+}
+
+.dice-roll-btn__text {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-gold);
+}
+
+.dice-roll-btn--rolling .dice-roll-btn__text {
+  animation: dice-shimmer 0.38s ease-in-out infinite;
+}
+
+/* ── Result stage ── */
+.dice-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 12px 8px 10px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border-inner);
+  position: relative;
+  min-height: 80px;
+  transition: border-color 0.3s;
+}
+
+.dice-result::before,
+.dice-result::after {
+  content: '';
+  position: absolute;
+  left: 16%; right: 16%;
+  height: 1px;
+}
+
+.dice-result::before {
+  top: 0;
+  background: linear-gradient(90deg, transparent, var(--border-gold-dim), transparent);
+}
+
+.dice-result::after {
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, var(--border-gold-dim), transparent);
+}
+
+.dice-result--done {
+  border-color: var(--border-gold-dim);
+}
+
+.dice-result__pair {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dice-result__vs {
+  font-family: var(--font-display);
+  font-size: 0.48rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  opacity: 0.45;
+  flex-shrink: 0;
+}
+
+/* ── Result number states ── */
+.dice-result__num {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  color: var(--text-parchment);
+  min-width: 1ch;
+  transition: font-size 0.18s ease, color 0.18s ease, opacity 0.18s ease;
+}
+
+/* During rolling — equal-sized companion dice */
+.dice-result__num--roll {
+  font-size: 2.3rem;
+  min-width: 52px;
+}
+
+/* Tumble animation while numbers are changing */
+.dice-result__num--spin {
+  animation: dice-spin 0.11s ease-in-out infinite;
+}
+
+.dice-result__num--spin-delay {
+  animation-delay: 0.045s;
+}
+
+/* Flash-land animation — fires once when final numbers appear */
+.dice-result__num--land {
+  animation: dice-land 0.5s ease-out forwards;
+}
+
+.dice-result__num--land-delay {
+  animation-delay: 0.06s;
+}
+
+/* Single-die normal mode — bigger */
+.dice-result__num--solo {
+  font-size: 3.6rem;
+  min-width: 80px;
+}
+
+/* Winner (done state) */
+.dice-result__num--winner {
+  font-size: 3.1rem;
+  color: var(--text-gold);
+  text-shadow: 0 0 10px rgba(212, 180, 90, 0.22);
+  min-width: 60px;
+}
+
+.dice-result__num--solo.dice-result__num--winner {
+  font-size: 3.6rem;
+  min-width: 80px;
+}
+
+/* Loser (done state) — dim, smaller, struck */
+.dice-result__num--loser {
+  font-size: 1.5rem;
+  color: var(--text-dim);
+  opacity: 0.38;
+  text-decoration: line-through;
+  text-decoration-color: rgba(155, 44, 44, 0.45);
+  min-width: 36px;
+}
+
+/* Label below result */
+.dice-result__label {
+  font-family: var(--font-display);
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  opacity: 0.5;
+}
+
 /* ── HP Tracker ── */
 .hp-block {
   display: flex;

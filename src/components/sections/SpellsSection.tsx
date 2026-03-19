@@ -1,0 +1,422 @@
+import { useState } from 'react';
+import type { Character, PreparedSpell } from '../../types/character';
+
+interface Props {
+  ch: Character;
+  updateSelected: (updater: (ch: Character) => Character) => void;
+}
+
+const ORDINALS = ['Cantrip','1st','2nd','3rd','4th','5th','6th','7th','8th','9th'];
+
+const CASTING_TIMES = [
+  '1 action', 'Bonus action', 'Reaction', '1 minute', '10 minutes', '1 hour',
+];
+
+const DURATIONS = [
+  'Instantaneous', '1 round', '1 minute', '10 minutes', '1 hour', '8 hours',
+  '24 hours', 'Until dispelled',
+  'Concentration, up to 1 round', 'Concentration, up to 1 minute',
+  'Concentration, up to 10 minutes', 'Concentration, up to 1 hour',
+];
+
+function blankSpell(): Omit<PreparedSpell, 'id'> {
+  return {
+    name: '', level: 1, concentration: false,
+    duration: '', durationRounds: 0, castingTime: '1 action',
+    notes: '', active: false, roundsRemaining: 0,
+  };
+}
+
+function hasSlot(ch: Character, level: number): boolean {
+  if (level === 0) return true;
+  const slot = ch.spellSlots[level - 1] ?? { max: 0, used: 0 };
+  return slot.used < slot.max;
+}
+
+// ── Spell form ────────────────────────────────────────────────────────────────
+
+interface FormProps {
+  form: Omit<PreparedSpell, 'id'>;
+  patch: <K extends keyof Omit<PreparedSpell, 'id'>>(k: K, v: Omit<PreparedSpell, 'id'>[K]) => void;
+  onSave: () => void;
+  onCancel: () => void;
+}
+
+function SpellForm({ form, patch, onSave, onCancel }: FormProps) {
+  return (
+    <div className="spell-form">
+      <div className="spell-form__row">
+        <label className="spell-form__field spell-form__field--wide">
+          <span className="spell-form__label">Name</span>
+          <input
+            className="spell-form__input"
+            value={form.name}
+            placeholder="Fireball…"
+            autoFocus
+            onChange={(e) => patch('name', e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && onSave()}
+          />
+        </label>
+
+        <label className="spell-form__field">
+          <span className="spell-form__label">Level</span>
+          <select
+            className="spell-form__select"
+            value={form.level}
+            onChange={(e) => patch('level', parseInt(e.target.value, 10))}
+          >
+            {ORDINALS.map((label, i) => (
+              <option key={i} value={i}>{label}</option>
+            ))}
+          </select>
+        </label>
+
+        <label className="spell-form__field">
+          <span className="spell-form__label">Casting Time</span>
+          <input
+            className="spell-form__input spell-form__input--md"
+            list="spell-casting-times"
+            value={form.castingTime}
+            placeholder="1 action"
+            onChange={(e) => patch('castingTime', e.target.value)}
+          />
+          <datalist id="spell-casting-times">
+            {CASTING_TIMES.map((t) => <option key={t} value={t} />)}
+          </datalist>
+        </label>
+
+        <label className="spell-form__field spell-form__field--wide">
+          <span className="spell-form__label">Duration</span>
+          <input
+            className="spell-form__input"
+            list="spell-durations"
+            value={form.duration}
+            placeholder="1 minute"
+            onChange={(e) => patch('duration', e.target.value)}
+          />
+          <datalist id="spell-durations">
+            {DURATIONS.map((d) => <option key={d} value={d} />)}
+          </datalist>
+        </label>
+
+        <label className="spell-form__field">
+          <span className="spell-form__label">Rounds</span>
+          <input
+            type="number"
+            className="spell-form__input spell-form__input--sm"
+            value={form.durationRounds}
+            min={0}
+            placeholder="0"
+            onChange={(e) =>
+              patch('durationRounds', Math.max(0, parseInt(e.target.value, 10) || 0))
+            }
+          />
+        </label>
+      </div>
+
+      <div className="spell-form__row">
+        <label className="spell-form__field spell-form__field--wide">
+          <span className="spell-form__label">Notes</span>
+          <input
+            className="spell-form__input"
+            value={form.notes}
+            placeholder="DC 15 Wis save · 8d6 fire · 20ft radius…"
+            onChange={(e) => patch('notes', e.target.value)}
+          />
+        </label>
+
+        <label className="spell-form__toggle">
+          <input
+            type="checkbox"
+            checked={form.concentration}
+            onChange={(e) => patch('concentration', e.target.checked)}
+          />
+          Concentration
+        </label>
+      </div>
+
+      <div className="spell-form__row spell-form__row--actions">
+        <button
+          className="spell-form__save"
+          onClick={onSave}
+          disabled={!form.name.trim()}
+        >
+          Save
+        </button>
+        <button className="spell-form__cancel" onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Main section ──────────────────────────────────────────────────────────────
+
+export function SpellsSection({ ch, updateSelected }: Props) {
+  const [editId, setEditId] = useState<string | null>(null);
+  const [form, setForm] = useState<Omit<PreparedSpell, 'id'>>(blankSpell());
+
+  function patch<K extends keyof Omit<PreparedSpell, 'id'>>(
+    k: K, v: Omit<PreparedSpell, 'id'>[K]
+  ) {
+    setForm((prev) => ({ ...prev, [k]: v }));
+  }
+
+  function openAdd() { setForm(blankSpell()); setEditId('new'); }
+  function openEdit(s: PreparedSpell) { setForm({ ...s }); setEditId(s.id); }
+  function cancel() { setEditId(null); }
+
+  function saveNew() {
+    if (!form.name.trim()) return;
+    updateSelected((c) => ({
+      ...c, spells: [...c.spells, { ...form, id: crypto.randomUUID() }],
+    }));
+    setEditId(null);
+  }
+
+  function saveEdit(id: string) {
+    if (!form.name.trim()) return;
+    updateSelected((c) => ({
+      ...c, spells: c.spells.map((s) => s.id === id ? { ...form, id } : s),
+    }));
+    setEditId(null);
+  }
+
+  function remove(id: string) {
+    if (editId === id) setEditId(null);
+    updateSelected((c) => ({ ...c, spells: c.spells.filter((s) => s.id !== id) }));
+  }
+
+  function cast(spell: PreparedSpell) {
+    updateSelected((c) => {
+      // Build fresh slot array
+      const slots = Array.from({ length: 9 }, (_, i) =>
+        ({ ...(c.spellSlots[i] ?? { max: 0, used: 0 }) })
+      );
+
+      // Drop any currently active concentration spell (concentration is exclusive)
+      let spells = c.spells.map((s) =>
+        s.concentration && s.active && s.id !== spell.id
+          ? { ...s, active: false, roundsRemaining: 0 }
+          : { ...s }
+      );
+
+      // Activate this spell
+      spells = spells.map((s) =>
+        s.id === spell.id
+          ? { ...s, active: true, roundsRemaining: s.durationRounds }
+          : s
+      );
+
+      // Deduct slot for leveled spells
+      if (spell.level > 0) {
+        const idx = spell.level - 1;
+        if (slots[idx].used < slots[idx].max) {
+          slots[idx].used += 1;
+        }
+      }
+
+      return { ...c, spells, spellSlots: slots };
+    });
+  }
+
+  function endSpell(id: string) {
+    updateSelected((c) => ({
+      ...c,
+      spells: c.spells.map((s) =>
+        s.id === id ? { ...s, active: false, roundsRemaining: 0 } : s
+      ),
+    }));
+  }
+
+  function tickRound(id: string) {
+    updateSelected((c) => ({
+      ...c,
+      spells: c.spells.map((s) =>
+        s.id === id
+          ? { ...s, roundsRemaining: Math.max(0, s.roundsRemaining - 1) }
+          : s
+      ),
+    }));
+  }
+
+  // Group by level, active spells first within each group
+  const grouped = new Map<number, PreparedSpell[]>();
+  for (const s of ch.spells) {
+    if (!grouped.has(s.level)) grouped.set(s.level, []);
+    grouped.get(s.level)!.push(s);
+  }
+  for (const [lvl, arr] of grouped) {
+    grouped.set(lvl, [...arr].sort((a, b) => {
+      if (a.active !== b.active) return a.active ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    }));
+  }
+  const levels = [...grouped.keys()].sort((a, b) => a - b);
+
+  return (
+    <section className="section">
+      <h2 className="section__heading section__heading--flex">
+        <span>Prepared Spells</span>
+        {editId !== 'new' && (
+          <button className="spells-add-btn" onClick={openAdd}>+ Add Spell</button>
+        )}
+      </h2>
+
+      {ch.spells.length === 0 && editId !== 'new' && (
+        <div className="spells-empty">
+          No spells prepared. Add spells to track concentration, duration, and active effects.
+        </div>
+      )}
+
+      {editId === 'new' && (
+        <div className="spell-form-wrap">
+          <SpellForm form={form} patch={patch} onSave={saveNew} onCancel={cancel} />
+        </div>
+      )}
+
+      <div className="spells-list">
+        {levels.map((level) => {
+          const spells = grouped.get(level)!;
+          const slotData = level > 0
+            ? (ch.spellSlots[level - 1] ?? { max: 0, used: 0 })
+            : null;
+          const slotsLeft = slotData ? slotData.max - slotData.used : null;
+
+          return (
+            <div key={level} className="spell-group">
+              {/* ── Level divider ── */}
+              <div className="spell-group__header">
+                <span className="spell-group__rule" />
+                <span className="spell-group__label">
+                  {level === 0 ? 'Cantrips' : `${ORDINALS[level]} Level`}
+                </span>
+                {slotData && slotData.max > 0 && (
+                  <span className={`spell-group__slots${slotsLeft === 0 ? ' spell-group__slots--empty' : ''}`}>
+                    {slotsLeft}/{slotData.max}
+                  </span>
+                )}
+                <span className="spell-group__rule" />
+              </div>
+
+              {spells.map((spell) => {
+                const isEditing = editId === spell.id;
+                const canCast = hasSlot(ch, spell.level);
+                const expired = spell.active && spell.durationRounds > 0 && spell.roundsRemaining === 0;
+                const isConc = spell.active && spell.concentration;
+
+                return (
+                  <div
+                    key={spell.id}
+                    className={[
+                      'spell-row',
+                      spell.active && !isConc ? 'spell-row--active' : '',
+                      isConc ? 'spell-row--concentrating' : '',
+                      expired ? 'spell-row--expired' : '',
+                    ].filter(Boolean).join(' ')}
+                  >
+                    {!isEditing ? (
+                      <>
+                        {/* ── Top line: cast · name · badges · rounds · actions ── */}
+                        <div className="spell-row__top">
+                          <button
+                            className={`spell-cast-btn${spell.active ? ' spell-cast-btn--active' : ''}${!canCast && !spell.active ? ' spell-cast-btn--locked' : ''}`}
+                            title={
+                              spell.active
+                                ? 'Recast (expends another slot)'
+                                : canCast
+                                  ? level === 0 ? 'Cast cantrip' : `Cast — uses 1 ${ORDINALS[level]} slot`
+                                  : 'No slots remaining'
+                            }
+                            disabled={!spell.active && !canCast}
+                            onClick={() => cast(spell)}
+                          >
+                            {spell.active ? '◆' : '▶'}
+                          </button>
+
+                          <span className="spell-row__name">{spell.name || 'Unnamed'}</span>
+
+                          {spell.concentration && (
+                            <span className={`spell-conc-badge${spell.active ? ' spell-conc-badge--active' : ''}`}>
+                              {spell.active ? '◎ Concentrating' : '◎ Conc'}
+                            </span>
+                          )}
+
+                          {spell.active && spell.durationRounds > 0 && (
+                            <span className={`spell-rounds${expired ? ' spell-rounds--expired' : ''}`}>
+                              <span className="spell-rounds__num">{spell.roundsRemaining}</span>
+                              <span className="spell-rounds__unit">rnd</span>
+                              <button
+                                className="spell-rounds__tick"
+                                title="Tick down one round"
+                                onClick={() => tickRound(spell.id)}
+                                disabled={expired}
+                              >−</button>
+                            </span>
+                          )}
+
+                          <div className="spell-row__actions">
+                            {spell.active && (
+                              <button
+                                className="spell-end-btn"
+                                onClick={() => endSpell(spell.id)}
+                                title="End spell"
+                              >
+                                End
+                              </button>
+                            )}
+                            <button
+                              className="spell-action-btn"
+                              title="Edit"
+                              onClick={() => openEdit(spell)}
+                            >✎</button>
+                            <button
+                              className="spell-action-btn spell-action-btn--remove"
+                              title="Remove"
+                              onClick={() => remove(spell.id)}
+                            >×</button>
+                          </div>
+                        </div>
+
+                        {/* ── Bottom line: meta + notes ── */}
+                        {(spell.castingTime || spell.duration || spell.notes) && (
+                          <div className="spell-row__bottom">
+                            {spell.castingTime && (
+                              <span className="spell-meta__piece">{spell.castingTime}</span>
+                            )}
+                            {spell.duration && (
+                              <>
+                                <span className="spell-meta__dot">·</span>
+                                <span className="spell-meta__piece">{spell.duration}</span>
+                              </>
+                            )}
+                            {spell.notes && (
+                              <>
+                                {(spell.castingTime || spell.duration) && (
+                                  <span className="spell-meta__dot">—</span>
+                                )}
+                                <span className="spell-meta__notes">{spell.notes}</span>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <SpellForm
+                        form={form}
+                        patch={patch}
+                        onSave={() => saveEdit(spell.id)}
+                        onCancel={cancel}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}

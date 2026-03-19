@@ -6,6 +6,8 @@ import { DefenseSection } from './sections/DefenseSection';
 import { HitPointsSection } from './sections/HitPointsSection';
 import { SpellSlotsSection } from './sections/SpellSlotsSection';
 import { ResourcesSection } from './sections/ResourcesSection';
+import { WeaponsSection } from './sections/WeaponsSection';
+import { SpellsSection } from './sections/SpellsSection';
 import { InventorySection } from './sections/InventorySection';
 
 export function CharacterSheet() {
@@ -34,6 +36,8 @@ export function CharacterSheet() {
         <IdentitySection ch={selected} updateSelected={updateSelected} />
         <AbilityScoresSection ch={selected} updateSelected={updateSelected} />
         <DefenseSection ch={selected} updateSelected={updateSelected} />
+        <WeaponsSection ch={selected} updateSelected={updateSelected} />
+        <SpellsSection ch={selected} updateSelected={updateSelected} />
         <div className="slots-resources-row">
           <SpellSlotsSection ch={selected} updateSelected={updateSelected} />
           <ResourcesSection ch={selected} updateSelected={updateSelected} />

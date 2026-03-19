@@ -43,6 +43,7 @@ async function capture() {
       const stateJson = JSON.stringify({
         characters: exported.characters,
         selectedId: exported.selectedId,
+        ...(exported.initiative ? { initiative: exported.initiative } : {}),
       });
       // Navigate to the page first to set localStorage on the correct origin
       await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
@@ -53,6 +54,16 @@ async function capture() {
       await page.reload({ waitUntil: 'networkidle' });
     } else {
       await page.goto(baseUrl, { waitUntil: 'networkidle' });
+    }
+
+    // 0. Expand initiative tracker if it exists
+    const initHeader = page.locator('.init-tracker__header');
+    if (await initHeader.count() > 0) {
+      const body = page.locator('.init-tracker__body');
+      if (await body.count() === 0) {
+        await initHeader.click();
+        await page.waitForTimeout(300);
+      }
     }
 
     // 1. Initial load

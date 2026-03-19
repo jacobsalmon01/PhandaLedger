@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import type { Character } from '../types/character';
 import { ImportExportControls } from './ImportExportControls';
+import { InitiativeTracker } from './InitiativeTracker';
 
 function SidebarPortrait({ ch }: { ch: Character }) {
   if (!ch.portrait) {
@@ -178,6 +179,8 @@ export function Sidebar() {
           </div>
         ))}
       </div>
+
+      <InitiativeTracker />
 
       <div className="sidebar-footer">
         {/* Short rest — charge pips + button */}

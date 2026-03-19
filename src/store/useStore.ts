@@ -1,5 +1,6 @@
 import { useSyncExternalStore, useCallback } from 'react';
 import { type Character, createCharacter } from '../types/character';
+import { type InitiativeEntry } from '../types/initiative';
 import { type PartyExport } from '../utils/importExport';
 
 const STORAGE_KEY = 'phandaLedger_state';
@@ -7,11 +8,12 @@ const STORAGE_KEY = 'phandaLedger_state';
 interface AppState {
   characters: Character[];
   selectedId: string | null;
+  initiative: InitiativeEntry[];
 }
 
 // ── Persistent store with subscribe/getSnapshot for useSyncExternalStore ──
 
-let state: AppState = { characters: [], selectedId: null };
+let state: AppState = { characters: [], selectedId: null, initiative: [] };
 let listeners = new Set<() => void>();
 
 function emit() {
@@ -43,6 +45,8 @@ function hydrate() {
           return { equipped: false, modifiers: [], ...raw } as unknown as typeof item;
         });
       });
+      // Migration: ensure initiative array exists
+      if (!parsed.initiative) parsed.initiative = [];
       state = parsed;
     }
   } catch { /* corrupted data, start fresh */ }
@@ -149,23 +153,45 @@ export function useStore() {
     }));
   }, [snap.selectedId]);
 
-  /**
-   * Replaces the entire party with the contents of a validated PartyExport.
-   * Preserves selectedId if the character still exists, otherwise selects
-   * the first character in the imported roster.
-   */
   const replaceParty = useCallback((exported: PartyExport) => {
     const { characters, selectedId } = exported;
     const safeSelectedId = characters.find((c) => c.id === selectedId)
       ? selectedId
       : characters[0]?.id ?? null;
-    setState(() => ({ characters, selectedId: safeSelectedId }));
+    setState(() => ({ characters, selectedId: safeSelectedId, initiative: [] }));
+  }, []);
+
+  // ── Initiative mutations ──
+
+  const addInitiativeEntry = useCallback((entry: InitiativeEntry) => {
+    setState((prev) => ({ ...prev, initiative: [...prev.initiative, entry] }));
+  }, []);
+
+  const removeInitiativeEntry = useCallback((id: string) => {
+    setState((prev) => ({
+      ...prev,
+      initiative: prev.initiative.filter((e) => e.id !== id),
+    }));
+  }, []);
+
+  const updateInitiativeEntry = useCallback((id: string, initiative: number) => {
+    setState((prev) => ({
+      ...prev,
+      initiative: prev.initiative.map((e) =>
+        e.id === id ? { ...e, initiative } : e
+      ),
+    }));
+  }, []);
+
+  const clearInitiative = useCallback(() => {
+    setState((prev) => ({ ...prev, initiative: [] }));
   }, []);
 
   return {
     characters: snap.characters,
     selectedId: snap.selectedId,
     selected,
+    initiative: snap.initiative,
     addCharacter,
     removeCharacter,
     selectCharacter,
@@ -173,5 +199,9 @@ export function useStore() {
     shortRest,
     longRest,
     replaceParty,
+    addInitiativeEntry,
+    removeInitiativeEntry,
+    updateInitiativeEntry,
+    clearInitiative,
   };
 }

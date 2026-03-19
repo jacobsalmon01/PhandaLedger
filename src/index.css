@@ -233,6 +233,338 @@ body::after {
 .pc-item:hover .pc-item__remove { opacity: 0.6; }
 .pc-item__remove:hover { opacity: 1 !important; color: #d44; }
 
+/* ══════════════════════════════════════════
+   Initiative Tracker
+   ══════════════════════════════════════════ */
+
+.init-tracker {
+  border-top: 1px solid var(--border-inner);
+  border-bottom: 1px solid var(--border-inner);
+}
+
+.init-tracker__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px var(--gap-md);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+}
+
+.init-tracker__header:hover {
+  background: var(--bg-hover);
+}
+
+.init-tracker__chevron {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.init-tracker__title {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-gold);
+}
+
+.init-tracker__count {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-inner);
+  padding: 0 5px;
+  margin-left: auto;
+}
+
+.init-tracker__active-badge {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--text-gold);
+  background: rgba(200, 164, 78, 0.12);
+  border: 1px solid var(--border-gold-dim);
+  padding: 0 5px;
+}
+
+.init-tracker__body {
+  padding: 0 var(--gap-md) var(--gap-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm);
+}
+
+/* ── Initiative list ── */
+.init-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.init-empty {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  font-style: italic;
+  padding: 4px 0;
+}
+
+.init-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-inner);
+  border-left: 3px solid transparent;
+  transition: border-color 0.12s, background 0.12s;
+  overflow: hidden;
+}
+
+.init-row--active {
+  border-color: var(--border-inner);
+  border-left-color: var(--border-gold);
+  background: rgba(200, 164, 78, 0.07);
+}
+
+/* Initiative number — the dominant data point */
+.init-row__value {
+  width: 36px;
+  min-width: 36px;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--text-dim);
+  background: var(--bg-deep);
+  border: none;
+  border-right: 1px solid var(--border-inner);
+  padding: 5px 2px;
+  outline: none;
+  flex-shrink: 0;
+  transition: color 0.15s, background 0.15s;
+}
+
+.init-row__value:focus {
+  color: var(--text-bright);
+  background: #161310;
+}
+
+.init-row--active .init-row__value {
+  color: var(--text-gold);
+  background: rgba(200, 164, 78, 0.1);
+}
+
+.init-row__name {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--text-parchment);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 5px 7px;
+}
+
+.init-row--npc .init-row__name {
+  color: var(--text-dim);
+  font-weight: 400;
+  font-family: var(--font-body);
+  font-style: italic;
+}
+
+.init-row--active .init-row__name {
+  color: var(--text-bright);
+}
+
+.init-row__remove {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  line-height: 1;
+  padding: 5px 7px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s, color 0.12s;
+  flex-shrink: 0;
+}
+
+.init-row:hover .init-row__remove {
+  opacity: 0.5;
+}
+
+.init-row__remove:hover {
+  opacity: 1 !important;
+  color: #d44;
+}
+
+/* ── Turn controls ── */
+.init-turn-controls {
+  display: flex;
+  gap: var(--gap-xs);
+}
+
+/* ── Add sections ── */
+.init-add-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.init-add-label {
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  opacity: 0.6;
+}
+
+.init-add-row {
+  display: flex;
+  gap: 4px;
+}
+
+.init-select {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-input);
+  border: 1px solid var(--border-inner);
+  color: var(--text-parchment);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  padding: 3px 4px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.init-select:focus {
+  border-color: var(--border-gold-dim);
+}
+
+.init-input {
+  background: var(--bg-input);
+  border: 1px solid var(--border-inner);
+  color: var(--text-bright);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  padding: 3px 5px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.init-input:focus {
+  border-color: var(--border-gold-dim);
+}
+
+.init-input::placeholder {
+  color: var(--text-dim);
+  opacity: 0.5;
+  font-style: italic;
+}
+
+.init-input--name {
+  flex: 1;
+  min-width: 0;
+}
+
+.init-input--num {
+  width: 42px;
+  font-family: var(--font-mono);
+  text-align: center;
+}
+
+.init-btn {
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+/* "Add All Party Members" — prominent full-width button */
+.init-btn--add-all {
+  width: 100%;
+  background: rgba(200, 164, 78, 0.06);
+  border: 1px solid var(--border-gold-dim);
+  color: var(--text-gold);
+  padding: 6px 10px;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+}
+
+.init-btn--add-all:hover {
+  background: rgba(200, 164, 78, 0.12);
+  border-color: var(--border-gold);
+}
+
+.init-btn--add {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-inner);
+  color: var(--text-gold);
+  font-size: 0.9rem;
+  padding: 2px 8px;
+}
+
+.init-btn--add:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--border-gold-dim);
+}
+
+.init-btn--add:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* "Start Combat" / "Next Turn" — primary action */
+.init-btn--next {
+  flex: 1;
+  background: rgba(200, 164, 78, 0.08);
+  border: 1px solid var(--border-gold-dim);
+  color: var(--text-gold);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+}
+
+.init-btn--next:hover {
+  background: rgba(200, 164, 78, 0.15);
+  border-color: var(--border-gold);
+  color: var(--text-bright);
+}
+
+/* "End" combat — compact, secondary */
+.init-btn--reset {
+  background: none;
+  border: 1px solid rgba(155, 44, 44, 0.25);
+  color: rgba(155, 44, 44, 0.7);
+  padding: 4px 8px;
+  font-size: 0.58rem;
+}
+
+.init-btn--reset:hover {
+  background: rgba(155, 44, 44, 0.08);
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+}
+
 .sidebar-footer {
   padding: var(--gap-sm) var(--gap-md);
   border-top: 1px solid var(--border-inner);

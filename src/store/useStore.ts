@@ -115,6 +115,27 @@ export function useStore() {
     [snap.selectedId]
   );
 
+  const shortRest = useCallback(() => {
+    if (!snap.selectedId) return;
+    updateCharacter(snap.selectedId, (c) => ({
+      ...c,
+      resources: c.resources.map((r) =>
+        r.recharge === 'short' ? { ...r, used: 0 } : r
+      ),
+    }));
+  }, [snap.selectedId]);
+
+  const longRest = useCallback(() => {
+    if (!snap.selectedId) return;
+    updateCharacter(snap.selectedId, (c) => ({
+      ...c,
+      spellSlots: c.spellSlots.map((s) => ({ ...s, used: 0 })),
+      resources: c.resources.map((r) =>
+        r.recharge !== 'manual' ? { ...r, used: 0 } : r
+      ),
+    }));
+  }, [snap.selectedId]);
+
   return {
     characters: snap.characters,
     selectedId: snap.selectedId,
@@ -123,5 +144,7 @@ export function useStore() {
     removeCharacter,
     selectCharacter,
     updateSelected,
+    shortRest,
+    longRest,
   };
 }

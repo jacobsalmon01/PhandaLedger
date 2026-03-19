@@ -10,7 +10,10 @@
       "Bash(timeout 8)",
       "Bash(npx tsc:*)",
       "Bash(npm run:*)",
-      "Bash(npm test:*)"
+      "Bash(npm test:*)",
+      "Bash(npx playwright:*)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\jsalm\\\\personal-workspace\\\\PhandaLedger\\\\scripts\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\jsalm\\\\personal-workspace\\\\PhandaLedger\\\\.claude\\\\commands\")"
     ]
   }
 }

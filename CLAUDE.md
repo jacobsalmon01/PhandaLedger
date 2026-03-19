@@ -11,7 +11,17 @@ npm run lint      # ESLint static analysis
 npm run preview   # Preview production build locally
 ```
 
-There are no tests configured in this project.
+There are no unit/integration tests configured in this project.
+
+## Visual Screenshot Verification
+
+Use the `/screenshot` command to capture and examine the app visually after front-end changes.
+
+```bash
+npm run screenshot   # Capture screenshots of the running app (requires npm run dev first)
+```
+
+Screenshots are saved to `tmp/screenshots/` (gitignored). The `/screenshot` command starts the dev server if needed, runs the capture, and visually examines every PNG — flagging layout issues, broken components, or unexpected blank areas. Use this after any UI change rather than relying solely on code review.
 
 ## Architecture
 

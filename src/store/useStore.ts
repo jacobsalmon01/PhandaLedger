@@ -44,6 +44,14 @@ function hydrate() {
           const raw = item as unknown as Record<string, unknown>;
           return { equipped: false, modifiers: [], ...raw } as unknown as typeof item;
         });
+        // Migration: ensure conditions array exists and has object shape
+        if (!ch.conditions) {
+          (ch as unknown as Record<string, unknown>).conditions = [];
+        } else {
+          ch.conditions = (ch.conditions as unknown[]).map((c) =>
+            typeof c === 'string' ? { name: c } : c
+          ) as typeof ch.conditions;
+        }
         // Migration: fill in missing fields on each spell
         ch.spells = (ch.spells || []).map((s) => {
           const raw = s as unknown as Record<string, unknown>;
@@ -201,6 +209,50 @@ export function useStore() {
     setState((prev) => ({ ...prev, initiative: [] }));
   }, []);
 
+  const updateEnemyHp = useCallback((entryId: string, enemyId: string, hp: number) => {
+    setState((prev) => ({
+      ...prev,
+      initiative: prev.initiative.map((e) =>
+        e.id === entryId
+          ? { ...e, enemies: e.enemies?.map((en) => en.id === enemyId ? { ...en, hp } : en) }
+          : e
+      ),
+    }));
+  }, []);
+
+  const removeEnemy = useCallback((entryId: string, enemyId: string) => {
+    setState((prev) => ({
+      ...prev,
+      initiative: prev.initiative.map((e) =>
+        e.id === entryId
+          ? { ...e, enemies: e.enemies?.filter((en) => en.id !== enemyId) }
+          : e
+      ),
+    }));
+  }, []);
+
+  const addEnemy = useCallback((entryId: string, maxHp: number) => {
+    setState((prev) => ({
+      ...prev,
+      initiative: prev.initiative.map((e) =>
+        e.id === entryId
+          ? { ...e, enemies: [...(e.enemies ?? []), { id: crypto.randomUUID(), hp: maxHp, maxHp }] }
+          : e
+      ),
+    }));
+  }, []);
+
+  const clearDeadEnemies = useCallback((entryId: string) => {
+    setState((prev) => ({
+      ...prev,
+      initiative: prev.initiative.map((e) =>
+        e.id === entryId
+          ? { ...e, enemies: e.enemies?.filter((en) => en.hp > 0) }
+          : e
+      ),
+    }));
+  }, []);
+
   return {
     characters: snap.characters,
     selectedId: snap.selectedId,
@@ -217,5 +269,9 @@ export function useStore() {
     removeInitiativeEntry,
     updateInitiativeEntry,
     clearInitiative,
+    updateEnemyHp,
+    removeEnemy,
+    addEnemy,
+    clearDeadEnemies,
   };
 }

@@ -1,4 +1,5 @@
 /** Full D&D 5e character schema — expand as features are added */
+import type { ConditionEntry } from './conditions';
 
 export interface PortraitCrop {
   scale: number;
@@ -133,6 +134,7 @@ export interface Character {
   lastLongRestAt: string | null;   // display label, e.g. "Fri Mar 19 · 9:00 PM"
   lastLongRestTimestamp: number | null; // ms epoch for 24h cooldown
 
+  conditions: ConditionEntry[];  // active conditions e.g. [{ name: "Poisoned", rounds: 3 }]
   sneakAttack: boolean;  // rogue sneak attack — shown on finesse/ranged weapons
   spellSlots: SpellSlot[];
   spells: PreparedSpell[];
@@ -171,6 +173,7 @@ export function createCharacter(name = ''): Character {
     shortRestsUsed: 0,
     lastLongRestAt: null,
     lastLongRestTimestamp: null,
+    conditions: [],
     sneakAttack: false,
     spellSlots: [],
     spells: [],

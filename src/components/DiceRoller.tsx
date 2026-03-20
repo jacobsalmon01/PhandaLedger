@@ -25,6 +25,7 @@ export function DiceRoller() {
   const [phase, setPhase] = useState<'idle' | 'rolling' | 'landing' | 'done'>('idle');
   const [animNums, setAnimNums] = useState<[number, number]>([1, 1]);
   const [result, setResult] = useState<RollResult | null>(null);
+  const [natType, setNatType] = useState<'nat20' | 'nat1' | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function clearTimer() {
@@ -35,6 +36,7 @@ export function DiceRoller() {
     clearTimer();
     setPhase('rolling');
     setResult(null);
+    setNatType(null);
 
     const r1 = rollDie(die);
     const r2 = rollDie(die);
@@ -42,6 +44,12 @@ export function DiceRoller() {
     if (mode === 'advantage')    { chosen = Math.max(r1, r2); other = Math.min(r1, r2); }
     else if (mode === 'disadvantage') { chosen = Math.min(r1, r2); other = Math.max(r1, r2); }
     else                         { chosen = r1; other = r2; }
+
+    // Detect nat 20 / nat 1 (only meaningful on d20)
+    if (die === 20) {
+      if (chosen === 20) setNatType('nat20');
+      else if (chosen === 1) setNatType('nat1');
+    }
 
     let delay = 35;
     let step = 0;
@@ -147,16 +155,24 @@ export function DiceRoller() {
 
           {/* ── Result stage ── */}
           {phase !== 'idle' && (
-            <div className={`dice-result${isDone ? ' dice-result--done' : ''}`}>
+            <div className={[
+              'dice-result',
+              isDone ? 'dice-result--done' : '',
+              natType === 'nat20' && (isLanding || isDone) ? 'dice-result--nat20' : '',
+              natType === 'nat1'  && (isLanding || isDone) ? 'dice-result--nat1'  : '',
+            ].filter(Boolean).join(' ')}>
               {showTwo ? (
                 <div className="dice-result__pair">
                   <span
                     className={[
                       'dice-result__num',
                       (isRolling || isLanding) ? 'dice-result__num--roll' : '',
-                      isRolling   ? 'dice-result__num--spin' : '',
-                      isLanding   ? 'dice-result__num--land' : '',
-                      isDone      ? 'dice-result__num--winner' : '',
+                      isRolling ? 'dice-result__num--spin' : '',
+                      isLanding ? (natType === 'nat20' ? 'dice-result__num--land-nat20'
+                                 : natType === 'nat1'  ? 'dice-result__num--land-nat1'
+                                 : 'dice-result__num--land') : '',
+                      isDone    ? 'dice-result__num--winner' : '',
+                      isDone && natType === 'nat1' ? 'dice-result__num--nat1' : '',
                     ].filter(Boolean).join(' ')}
                   >
                     {displayMain}
@@ -166,9 +182,9 @@ export function DiceRoller() {
                     className={[
                       'dice-result__num',
                       (isRolling || isLanding) ? 'dice-result__num--roll' : '',
-                      isRolling   ? 'dice-result__num--spin dice-result__num--spin-delay' : '',
-                      isLanding   ? 'dice-result__num--land dice-result__num--land-delay' : '',
-                      isDone      ? 'dice-result__num--loser' : '',
+                      isRolling ? 'dice-result__num--spin dice-result__num--spin-delay' : '',
+                      isLanding ? 'dice-result__num--land dice-result__num--land-delay' : '',
+                      isDone    ? 'dice-result__num--loser' : '',
                     ].filter(Boolean).join(' ')}
                   >
                     {displayOther}
@@ -178,9 +194,12 @@ export function DiceRoller() {
                 <span
                   className={[
                     'dice-result__num dice-result__num--solo',
-                    isRolling   ? 'dice-result__num--spin' : '',
-                    isLanding   ? 'dice-result__num--land' : '',
-                    isDone      ? 'dice-result__num--winner' : '',
+                    isRolling ? 'dice-result__num--spin' : '',
+                    isLanding ? (natType === 'nat20' ? 'dice-result__num--land-nat20'
+                               : natType === 'nat1'  ? 'dice-result__num--land-nat1'
+                               : 'dice-result__num--land') : '',
+                    isDone    ? 'dice-result__num--winner' : '',
+                    isDone && natType === 'nat1' ? 'dice-result__num--nat1' : '',
                   ].filter(Boolean).join(' ')}
                 >
                   {displayMain}
@@ -191,6 +210,13 @@ export function DiceRoller() {
                 <div className="dice-result__label">
                   d{result.die}{modeLabel ? ` · ${modeLabel}` : ''}
                 </div>
+              )}
+
+              {isDone && natType === 'nat20' && (
+                <div className="dice-nat-label dice-nat-label--nat20">✦ Natural 20 ✦</div>
+              )}
+              {isDone && natType === 'nat1' && (
+                <div className="dice-nat-label dice-nat-label--nat1">✦ Critical Fail ✦</div>
               )}
             </div>
           )}

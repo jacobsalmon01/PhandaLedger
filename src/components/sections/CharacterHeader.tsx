@@ -3,6 +3,8 @@ import type { Character, PortraitCrop } from '../../types/character';
 import { calcEffectiveAC } from '../../types/character';
 import { PortraitCropModal } from '../PortraitCropModal';
 import { NumericInput } from '../NumericInput';
+import { ConditionPicker } from '../ConditionPicker';
+import { getConditionDef, getExhaustionLevel, type ConditionEntry } from '../../types/conditions';
 
 interface Props {
   ch: Character;
@@ -11,8 +13,26 @@ interface Props {
 
 export function CharacterHeader({ ch, updateSelected }: Props) {
   const [showCropModal, setShowCropModal] = useState(false);
+  const [showCondPicker, setShowCondPicker] = useState(false);
   const cropPortraitSrc = useRef<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function handleConditionsChange(next: ConditionEntry[]) {
+    updateSelected((c) => ({ ...c, conditions: next }));
+  }
+
+  function removeCondition(name: string) {
+    updateSelected((c) => ({ ...c, conditions: c.conditions.filter((x) => x.name !== name) }));
+  }
+
+  function tickCondition(name: string) {
+    updateSelected((c) => ({
+      ...c,
+      conditions: c.conditions
+        .map((e) => e.name === name ? { ...e, rounds: Math.max(0, (e.rounds ?? 1) - 1) } : e)
+        .filter((e) => e.name !== name || (e.rounds ?? 1) > 0),
+    }));
+  }
 
   function handlePortraitUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -110,15 +130,67 @@ export function CharacterHeader({ ch, updateSelected }: Props) {
             </>
           )}
         </div>
-        <input
-          type="text"
-          className="char-name-input"
-          value={ch.name}
-          placeholder="Enter adventurer name…"
-          spellCheck={false}
-          autoComplete="off"
-          onChange={(e) => updateSelected((c) => ({ ...c, name: e.target.value }))}
-        />
+        <div className="char-header__main">
+          <input
+            type="text"
+            className="char-name-input"
+            value={ch.name}
+            placeholder="Enter adventurer name…"
+            spellCheck={false}
+            autoComplete="off"
+            onChange={(e) => updateSelected((c) => ({ ...c, name: e.target.value }))}
+          />
+
+          {/* ── Conditions row ── */}
+          <div className="char-conditions">
+            {ch.conditions.map((entry) => {
+              const def = getConditionDef(entry);
+              if (!def) return null;
+              const isExh = entry.name.startsWith('Exhaustion ');
+              const exhLevel = isExh ? getExhaustionLevel(ch.conditions) : null;
+              const label = isExh ? `Exh ${exhLevel}` : def.abbr;
+              return (
+                <span key={entry.name} className="cond-badge">
+                  <button
+                    className="cond-badge__label"
+                    title={`${entry.name} — ${def.desc}\nClick to remove`}
+                    onClick={() => removeCondition(entry.name)}
+                  >
+                    {label}
+                  </button>
+                  {entry.rounds !== undefined && (
+                    <>
+                      <span className="cond-badge__sep">·</span>
+                      <span className="cond-badge__rounds">{entry.rounds}</span>
+                      <button
+                        className="cond-badge__tick"
+                        title="Tick down one round"
+                        onClick={() => tickCondition(entry.name)}
+                      >−</button>
+                    </>
+                  )}
+                </span>
+              );
+            })}
+            <div className="cond-add-wrap">
+              <button
+                className="cond-add-btn"
+                title="Add / remove conditions"
+                onClick={() => setShowCondPicker((v) => !v)}
+              >
+                {ch.conditions.length === 0 ? '+ Condition' : '✎'}
+              </button>
+              {showCondPicker && (
+                <ConditionPicker
+                  conditions={ch.conditions}
+                  onChange={handleConditionsChange}
+                  onClose={() => setShowCondPicker(false)}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className="char-header-badges">
           <div className="gold-coin-badge" title="Gold Pieces held">
             <span className="gold-coin__label">GP</span>

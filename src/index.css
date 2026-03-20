@@ -321,13 +321,18 @@ body::after {
 
 .init-row {
   display: flex;
-  align-items: center;
-  gap: 0;
+  flex-direction: column;
   background: var(--bg-surface);
   border: 1px solid var(--border-inner);
   border-left: 3px solid transparent;
   transition: border-color 0.12s, background 0.12s;
   overflow: hidden;
+}
+
+.init-row__main {
+  display: flex;
+  align-items: center;
+  gap: 0;
 }
 
 .init-row--active {
@@ -411,6 +416,227 @@ body::after {
   color: #d44;
 }
 
+/* Alive count badge on NPC rows with HP tracking */
+.init-row__alive {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  background: var(--bg-deep);
+  border: 1px solid var(--border-inner);
+  padding: 1px 5px;
+  flex-shrink: 0;
+  letter-spacing: 0.03em;
+  opacity: 0.75;
+}
+
+.init-row__alive--warn {
+  color: rgba(210, 140, 50, 0.9);
+  border-color: rgba(180, 100, 30, 0.4);
+}
+
+.init-row__alive--wipe {
+  color: var(--text-dim);
+  opacity: 0.45;
+}
+
+/* ── Enemy HP panel ── */
+.init-row__enemies {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 5px 6px 6px 6px;
+  border-top: 1px solid var(--border-inner);
+  background: rgba(0, 0, 0, 0.25);
+  max-height: 128px;
+  overflow-y: auto;
+}
+
+/* Each chip: column layout — top row (num + hp), bottom bar */
+.enemy-chip {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-inner);
+  min-width: 46px;
+  overflow: hidden;
+  transition: border-color 0.12s;
+  position: relative;
+}
+
+.enemy-chip:hover {
+  border-color: var(--border-gold-dim);
+}
+
+/* States */
+.enemy-chip--bloodied {
+  border-color: rgba(180, 100, 30, 0.5);
+}
+.enemy-chip--critical {
+  border-color: rgba(180, 50, 50, 0.6);
+}
+.enemy-chip--dead {
+  border-color: rgba(80, 60, 50, 0.5);
+  border-style: dashed;
+  opacity: 0.4;
+}
+
+/* ── Top row: index + hp/max ── */
+.enemy-chip__num {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  line-height: 1;
+  padding: 2px 3px 0 3px;
+  letter-spacing: 0.02em;
+}
+
+.enemy-chip__hprow {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+  padding: 0 3px 2px 3px;
+}
+
+.enemy-chip__hp {
+  width: 24px;
+  min-width: 24px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: right;
+  color: var(--text-parchment);
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+}
+
+.enemy-chip__hp:focus {
+  color: var(--text-bright);
+}
+
+.enemy-chip--bloodied .enemy-chip__hp { color: rgba(210, 140, 50, 0.9); }
+.enemy-chip--critical .enemy-chip__hp { color: rgba(210, 70,  60, 0.9); }
+.enemy-chip--dead     .enemy-chip__hp { color: var(--text-dim); }
+
+.enemy-chip__max {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+/* ── HP bar track ── */
+.enemy-chip__bar-track {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.enemy-chip__bar-fill {
+  height: 100%;
+  background: rgba(100, 175, 80, 0.7);
+  transition: width 0.2s ease, background 0.3s ease;
+}
+
+.enemy-chip--bloodied .enemy-chip__bar-fill {
+  background: rgba(210, 140, 50, 0.8);
+}
+
+.enemy-chip--critical .enemy-chip__bar-fill {
+  background: rgba(200, 55, 50, 0.85);
+}
+
+/* ── Remove button (overlays top-right on hover) ── */
+.enemy-chip__remove {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: rgba(0,0,0,0.7);
+  border: none;
+  border-left: 1px solid var(--border-inner);
+  color: var(--text-dim);
+  font-size: 0.65rem;
+  line-height: 1;
+  padding: 2px 3px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.1s, color 0.1s;
+}
+
+.enemy-chip:hover .enemy-chip__remove {
+  opacity: 0.7;
+}
+
+.enemy-chip__remove:hover {
+  opacity: 1 !important;
+  color: #e05;
+}
+
+/* ── Add enemy button ── */
+.enemy-chip--add {
+  background: transparent;
+  border: 1px dashed rgba(120, 90, 50, 0.4);
+  color: var(--text-dim);
+  font-size: 1rem;
+  font-weight: 300;
+  min-width: 28px;
+  width: 28px;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s;
+  flex-direction: row;
+  padding: 0;
+}
+
+.enemy-chip--add:hover {
+  border-color: var(--border-gold-dim);
+  color: var(--text-gold);
+}
+
+/* Dead count badge — click to clear all dead */
+.enemy-chip--dead-badge {
+  background: rgba(60, 30, 30, 0.4);
+  border-color: rgba(120, 50, 50, 0.5);
+  border-style: dashed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  gap: 1px;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+  min-width: 32px;
+  align-self: stretch;
+}
+
+.enemy-chip--dead-badge:hover {
+  background: rgba(80, 30, 30, 0.6);
+  border-color: rgba(180, 60, 60, 0.6);
+}
+
+.enemy-chip__dead-x {
+  font-size: 0.7rem;
+  color: rgba(180, 70, 70, 0.7);
+  line-height: 1;
+}
+
+.enemy-chip__dead-count {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: rgba(160, 80, 80, 0.8);
+  line-height: 1;
+}
+
 /* ── Turn controls ── */
 .init-turn-controls {
   display: flex;
@@ -437,6 +663,19 @@ body::after {
 .init-add-row {
   display: flex;
   gap: 4px;
+}
+
+.init-add-row--hp {
+  align-items: center;
+}
+
+.init-add-hint {
+  font-family: var(--font-body);
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  font-style: italic;
+  opacity: 0.6;
+  white-space: nowrap;
 }
 
 .init-select {
@@ -487,6 +726,136 @@ body::after {
   width: 42px;
   font-family: var(--font-mono);
   text-align: center;
+}
+
+/* ── NPC entry form ── */
+.init-npc-form {
+  border: 1px solid rgba(120, 90, 40, 0.3);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.init-npc-form__top {
+  display: flex;
+  border-bottom: 1px solid rgba(120, 90, 40, 0.2);
+}
+
+.init-npc-form__name {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  border-right: 1px solid rgba(120, 90, 40, 0.2);
+  color: var(--text-parchment);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  padding: 6px 8px;
+  outline: none;
+  transition: background 0.12s;
+}
+
+.init-npc-form__name::placeholder {
+  color: var(--text-dim);
+  opacity: 0.45;
+  font-style: italic;
+}
+
+.init-npc-form__name:focus {
+  background: rgba(200, 160, 70, 0.04);
+}
+
+.init-npc-form__init {
+  width: 44px;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: var(--text-gold);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 6px 4px;
+  outline: none;
+}
+
+.init-npc-form__init::placeholder {
+  color: var(--text-dim);
+  opacity: 0.35;
+  font-weight: 400;
+}
+
+.init-npc-form__bottom {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 7px;
+}
+
+.init-npc-form__sym {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.init-npc-form__sym--hp {
+  margin-left: 2px;
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.init-npc-form__count,
+.init-npc-form__hp {
+  width: 34px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-inner);
+  color: var(--text-parchment);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-align: center;
+  padding: 2px 3px;
+  outline: none;
+  transition: border-color 0.12s;
+}
+
+.init-npc-form__count:focus,
+.init-npc-form__hp:focus {
+  border-color: var(--border-gold-dim);
+}
+
+.init-npc-form__count::placeholder,
+.init-npc-form__hp::placeholder {
+  color: var(--text-dim);
+  opacity: 0.4;
+}
+
+.init-npc-form__spawn {
+  margin-left: auto;
+  background: rgba(140, 100, 30, 0.15);
+  border: 1px solid rgba(150, 110, 35, 0.4);
+  color: var(--text-gold);
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  flex-shrink: 0;
+}
+
+.init-npc-form__spawn:hover:not(:disabled) {
+  background: rgba(170, 130, 45, 0.28);
+  border-color: var(--border-gold-dim);
+  color: var(--text-bright);
+}
+
+.init-npc-form__spawn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
 }
 
 .init-btn {
@@ -570,7 +939,138 @@ body::after {
   border-top: 1px solid var(--border-inner);
 }
 
-/* ── Rest sections ── */
+/* ── Rests collapsible section ── */
+.rests-section {
+  border-top: 1px solid var(--border-inner);
+  border-bottom: 1px solid var(--border-inner);
+}
+
+.rests-section__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px var(--gap-md);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+}
+
+.rests-section__header:hover {
+  background: var(--bg-hover);
+}
+
+.rests-section__chevron {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.rests-section__title {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-gold);
+  flex: 1;
+}
+
+.rests-section__badge {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: var(--hp-temp);
+  background: rgba(58, 122, 155, 0.12);
+  border: 1px solid rgba(58, 122, 155, 0.25);
+  padding: 1px 5px;
+  letter-spacing: 0.04em;
+}
+
+.rests-section__body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px var(--gap-md) 10px;
+}
+
+/* Each rest type row */
+.rest-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rest-row__info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.rest-row__name {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  opacity: 0.7;
+}
+
+.rest-row__last {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  opacity: 0.55;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rest-btn {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-inner);
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.rest-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.rest-btn--short {
+  color: var(--hp-temp);
+  border-color: rgba(58, 122, 155, 0.25);
+}
+
+.rest-btn--short:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--hp-temp);
+}
+
+.rest-btn--long {
+  color: var(--text-gold);
+  border-color: var(--border-gold-dim);
+}
+
+.rest-btn--long:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--border-gold);
+}
+
+/* ── Rest sections (legacy footer, kept for sr-pips) ── */
 .rest-section {
   display: flex;
   flex-direction: column;
@@ -1131,6 +1631,16 @@ body::after {
 .char-portrait__remove:hover { color: #ff6b6b; }
 .char-portrait__crop-btn:hover { color: var(--border-gold); }
 
+/* Wrapper column for name + conditions */
+.char-header__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  position: relative;
+}
+
 .char-name-input {
   font-family: var(--font-display);
   font-size: 1.8rem;
@@ -1148,6 +1658,317 @@ body::after {
 
 .char-name-input::placeholder { color: var(--text-dim); font-style: italic; }
 .char-name-input:focus { border-bottom-color: var(--border-gold); }
+
+/* ══════════════════════════════════════════
+   Conditions — badges, picker, init icons
+   ══════════════════════════════════════════ */
+
+/* ── Condition badge row in character header ── */
+.char-conditions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 22px;
+}
+
+/* Individual active-condition badge */
+.cond-badge {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--border-inner);
+  background: var(--bg-surface);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  color: var(--text-parchment);
+  overflow: hidden;
+}
+
+.cond-badge__label {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  padding: 3px 7px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: color 0.1s, background 0.1s;
+}
+
+.cond-badge__label:hover {
+  color: var(--text-dim);
+  background: var(--bg-hover);
+}
+
+.cond-badge__sep {
+  color: var(--border-inner);
+  padding: 3px 1px;
+  user-select: none;
+  align-self: center;
+}
+
+.cond-badge__rounds {
+  color: var(--text-gold);
+  padding: 3px 2px 3px 0;
+  align-self: center;
+}
+
+.cond-badge__tick {
+  background: none;
+  border: none;
+  border-left: 1px solid var(--border-inner);
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 0 6px;
+  cursor: pointer;
+  transition: color 0.1s, background 0.1s;
+  display: flex;
+  align-items: center;
+}
+
+.cond-badge__tick:hover {
+  color: var(--text-bright);
+  background: var(--bg-hover);
+}
+
+/* ── Add / edit conditions button ── */
+.cond-add-wrap {
+  position: relative;
+}
+
+.cond-add-btn {
+  font-family: var(--font-display);
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  background: none;
+  border: 1px solid var(--border-inner);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+
+.cond-add-btn:hover {
+  border-color: var(--border-gold-dim);
+  color: var(--text-gold);
+}
+
+/* ── Condition picker panel ── */
+.cond-picker {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 200;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-gold-dim);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
+  min-width: 280px;
+  max-width: 340px;
+}
+
+.cond-picker__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border-inner);
+}
+
+.cond-picker__title {
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-gold);
+}
+
+.cond-picker__close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 2px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  transition: color 0.1s;
+}
+
+.cond-picker__close:hover { color: var(--text-parchment); }
+
+/* List of condition rows */
+.cond-picker__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+}
+
+.cond-pick-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cond-pick-row__btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  padding: 4px 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.1s, background 0.1s;
+  color: var(--text-dim);
+}
+
+.cond-pick-row__btn:hover {
+  border-color: var(--border-gold-dim);
+  background: var(--bg-hover);
+  color: var(--text-parchment);
+}
+
+.cond-pick-row--active .cond-pick-row__btn {
+  border-color: var(--border-gold-dim);
+  background: rgba(160, 110, 30, 0.12);
+  color: var(--text-parchment);
+}
+
+.cond-pick-row__check {
+  font-size: 0.65rem;
+  color: var(--text-gold);
+  flex-shrink: 0;
+}
+
+.cond-pick-row__name {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.cond-pick-row__rounds {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.cond-rounds-input {
+  width: 38px;
+  padding: 2px 4px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border-inner);
+  color: var(--text-parchment);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-align: center;
+}
+
+.cond-rounds-input:focus {
+  outline: none;
+  border-color: var(--border-gold-dim);
+}
+
+.cond-rounds-input__label {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+}
+
+/* Exhaustion special row */
+.cond-picker__exhaustion {
+  padding: 0 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  border-top: 1px solid var(--border-inner);
+  padding-top: 6px;
+}
+
+.cond-pick-exh-level {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-gold);
+  background: rgba(160, 110, 30, 0.15);
+  border: 1px solid rgba(170, 115, 35, 0.4);
+  padding: 0 5px;
+  line-height: 1.6;
+}
+
+.cond-exh-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 2px;
+}
+
+.cond-exh-ctrl {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-inner);
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 0.1s, color 0.1s;
+  flex-shrink: 0;
+}
+
+.cond-exh-ctrl:hover:not(:disabled) {
+  border-color: var(--border-gold-dim);
+  color: var(--text-gold);
+}
+
+.cond-exh-ctrl:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.cond-exh-label {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(205, 160, 65, 0.8);
+  flex: 1;
+  text-align: center;
+}
+
+/* ── Initiative row condition badges ── */
+.init-row__cond {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+  line-height: 1;
+  cursor: default;
+  padding: 1px 3px;
+  border: 1px solid currentColor;
+  opacity: 0.75;
+}
+
 
 /* ── Identity Row ── */
 .identity-row {
@@ -2966,6 +3787,155 @@ body::after {
   text-transform: uppercase;
   color: var(--text-dim);
   opacity: 0.5;
+}
+
+/* ══════════════════════════════════════════
+   Nat 20 / Nat 1 special states
+   ══════════════════════════════════════════ */
+
+/* ── Nat 20: landing flash ── */
+@keyframes dice-land-nat20 {
+  0% {
+    transform: scale(2.4) translateY(-12px);
+    color: #ffffff;
+    text-shadow:
+      0 0 30px #fff,
+      0 0 60px #fff,
+      0 0 90px var(--text-gold),
+      0 0 130px rgba(212, 180, 90, 0.8);
+    opacity: 0.7;
+  }
+  22% {
+    transform: scale(1.2) translateY(0);
+    color: var(--text-gold);
+    text-shadow:
+      0 0 22px var(--text-gold),
+      0 0 50px rgba(212, 180, 90, 0.65),
+      0 0 90px rgba(212, 180, 90, 0.3);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    color: var(--text-gold);
+    text-shadow: 0 0 14px rgba(212, 180, 90, 0.4);
+  }
+}
+
+/* ── Nat 1: landing ── */
+@keyframes dice-land-nat1 {
+  0% {
+    transform: scale(1.35) translateY(-6px);
+    color: rgba(220, 90, 90, 0.9);
+    text-shadow: 0 0 22px rgba(200, 60, 60, 0.6);
+    opacity: 0.8;
+  }
+  35% {
+    transform: scale(1.05) translateY(4px);
+    color: rgba(210, 75, 75, 1);
+    text-shadow: 0 0 14px rgba(180, 50, 50, 0.45);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    color: rgba(200, 70, 70, 0.85);
+    text-shadow: 0 0 6px rgba(160, 40, 40, 0.25);
+  }
+}
+
+/* ── Nat 1: persistent shake ── */
+@keyframes nat1-shake {
+  0%, 100% { transform: translateX(0)    rotate(0deg);    }
+  12%       { transform: translateX(-4px) rotate(-1.2deg); }
+  28%       { transform: translateX( 4px) rotate( 1.2deg); }
+  44%       { transform: translateX(-3px) rotate(-0.8deg); }
+  60%       { transform: translateX( 3px) rotate( 0.8deg); }
+  76%       { transform: translateX(-1px) rotate(-0.3deg); }
+  90%       { transform: translateX( 1px) rotate( 0.3deg); }
+}
+
+/* ── Nat 20: expanding ring pulse ── */
+@keyframes nat20-ring {
+  0% {
+    box-shadow:
+      0 0  0  0px  rgba(212, 180, 90, 0.65),
+      0 0  0  0px  rgba(212, 180, 90, 0.30),
+      0 0 22px 2px rgba(212, 180, 90, 0.08);
+  }
+  55% {
+    box-shadow:
+      0 0  0 14px  rgba(212, 180, 90, 0),
+      0 0  0 28px  rgba(212, 180, 90, 0),
+      0 0 22px 2px rgba(212, 180, 90, 0.08);
+  }
+  100% {
+    box-shadow:
+      0 0  0 14px  rgba(212, 180, 90, 0),
+      0 0  0 28px  rgba(212, 180, 90, 0),
+      0 0 22px 2px rgba(212, 180, 90, 0.08);
+  }
+}
+
+/* ── Nat label entrance ── */
+@keyframes nat-label-in {
+  from { opacity: 0; transform: translateY(8px); letter-spacing: 0.45em; }
+  to   { opacity: 1; transform: translateY(0);   letter-spacing: 0.25em; }
+}
+
+/* ── Result container states ── */
+.dice-result--nat20 {
+  border-color: var(--border-gold) !important;
+  animation: nat20-ring 0.9s ease-out forwards;
+}
+
+.dice-result--nat20::before,
+.dice-result--nat20::after {
+  background: linear-gradient(90deg, transparent, var(--border-gold), transparent) !important;
+  opacity: 0.9;
+}
+
+.dice-result--nat1 {
+  border-color: rgba(155, 44, 44, 0.55) !important;
+  background: rgba(60, 8, 8, 0.18) !important;
+}
+
+.dice-result--nat1::before,
+.dice-result--nat1::after {
+  background: linear-gradient(90deg, transparent, rgba(155, 44, 44, 0.45), transparent) !important;
+}
+
+/* ── Special landing keyframe overrides ── */
+.dice-result__num--land-nat20 {
+  animation: dice-land-nat20 0.52s ease-out forwards;
+}
+
+.dice-result__num--land-nat1 {
+  animation: dice-land-nat1 0.52s ease-out forwards;
+}
+
+/* ── Nat 1: settled number + shake ── */
+.dice-result__num--nat1 {
+  color: rgba(200, 70, 70, 0.88) !important;
+  text-shadow: 0 0 8px rgba(160, 40, 40, 0.3) !important;
+  animation: nat1-shake 0.55s ease-in-out 0.1s 3;
+}
+
+/* ── Nat label ── */
+.dice-nat-label {
+  font-family: var(--font-display);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  animation: nat-label-in 0.45s ease-out 0.1s both;
+}
+
+.dice-nat-label--nat20 {
+  color: var(--text-gold);
+  text-shadow: 0 0 10px rgba(212, 180, 90, 0.5);
+}
+
+.dice-nat-label--nat1 {
+  color: rgba(200, 70, 70, 0.75);
 }
 
 /* ── HP Tracker ── */

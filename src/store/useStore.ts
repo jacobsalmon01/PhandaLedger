@@ -88,7 +88,15 @@ if (!isPlayerMode) {
   // Register WS listener: incoming state from the server overwrites local state.
   // Migration is applied so schema changes are handled gracefully.
   onStateReceived((incoming) => {
-    state = migrateState(incoming as AppState);
+    const migrated = migrateState(incoming as AppState);
+    // Preserve the player's own character selection if that character still exists.
+    // Fall back to the first character if they have no selection yet.
+    const currentId = state.selectedId;
+    const stillExists = currentId && migrated.characters.some((c) => c.id === currentId);
+    state = {
+      ...migrated,
+      selectedId: stillExists ? currentId : migrated.characters[0]?.id ?? null,
+    };
     emit();
   });
 }
@@ -108,7 +116,9 @@ function setState(updater: (prev: AppState) => AppState) {
   state = updater(state);
   if (!isPlayerMode) {
     persist();
-    broadcastState(state);
+    // Omit selectedId — players manage their own navigation independently.
+    const { selectedId: _omit, ...broadcastable } = state;
+    broadcastState(broadcastable);
   }
   emit();
 }

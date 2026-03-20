@@ -34,6 +34,7 @@ export interface Weapon {
   damageDice: string;    // one-handed damage dice, e.g. '1d8'
   versatile: boolean;    // can be used one- or two-handed
   versatileDice: string; // two-handed damage dice, e.g. '1d10'
+  twoHanded: boolean;    // inherently two-handed (e.g. greatsword) — used for GWF
   damageType: string;
   stat: keyof AbilityScores;
   finesse: boolean;      // may use STR or DEX, whichever is higher
@@ -83,10 +84,14 @@ export interface PreparedSpell {
   durationRounds: number;  // 0 = not round-trackable
   castingTime: string;     // "1 action", "Bonus action", etc.
   notes: string;           // quick reference: save DC, damage, etc.
+  prepared: boolean;       // prepared for the day — only prepared spells can be cast
+  alwaysPrepared: boolean; // granted by class/subclass — always prepared, doesn't count against limit
   // runtime tracking — persisted so a refresh mid-session keeps state
   active: boolean;
   roundsRemaining: number;
 }
+
+export type FightingStyle = 'archery' | 'defense' | 'dueling' | 'great-weapon' | 'protection' | 'two-weapon';
 
 export type RechargeOn = 'short' | 'long' | 'manual';
 
@@ -138,6 +143,7 @@ export interface Character {
 
   spellcastingAbility: SpellcastingAbility;
   conditions: ConditionEntry[];  // active conditions e.g. [{ name: "Poisoned", rounds: 3 }]
+  fightingStyles: FightingStyle[];  // fighter class feature
   sneakAttack: boolean;  // rogue sneak attack — shown on finesse/ranged weapons
   spellSlots: SpellSlot[];
   spells: PreparedSpell[];
@@ -178,6 +184,7 @@ export function createCharacter(name = ''): Character {
     lastLongRestTimestamp: null,
     spellcastingAbility: 'int',
     conditions: [],
+    fightingStyles: [],
     sneakAttack: false,
     spellSlots: [],
     spells: [],
@@ -228,9 +235,11 @@ export function applyModifiers(base: number, items: InventoryItem[], stat: StatK
     }, base);
 }
 
-/** AC including contributions from equipped item modifiers */
+/** AC including contributions from equipped item modifiers and fighting style */
 export function calcEffectiveAC(ch: Character): number {
-  return applyModifiers(calcAC(ch), ch.inventory, 'ac');
+  const base = applyModifiers(calcAC(ch), ch.inventory, 'ac');
+  const defenseBonus = ch.fightingStyles?.includes('defense') && ch.armorType !== 'none' ? 1 : 0;
+  return base + defenseBonus;
 }
 
 /** Spell attack bonus: spellcasting ability modifier + proficiency bonus */

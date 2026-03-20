@@ -18,6 +18,7 @@ tmp/
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+our_party_setup_seed.json
 .idea
 .DS_Store
 *.suo

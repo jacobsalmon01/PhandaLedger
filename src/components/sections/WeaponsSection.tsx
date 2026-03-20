@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Character, Weapon } from '../../types/character';
+import type { Character, FightingStyle, Weapon } from '../../types/character';
 import { abilityMod, profBonus } from '../../types/character';
 
 interface Props {
@@ -22,6 +22,7 @@ const DAMAGE_TYPES = [
   'Acid', 'Poison', 'Necrotic', 'Radiant', 'Force', 'Psychic',
 ];
 
+
 function blankWeapon(): Omit<Weapon, 'id'> {
   return {
     name: '',
@@ -29,6 +30,7 @@ function blankWeapon(): Omit<Weapon, 'id'> {
     damageDice: '1d6',
     versatile: false,
     versatileDice: '',
+    twoHanded: false,
     damageType: 'Slashing',
     stat: 'str',
     finesse: false,
@@ -41,18 +43,20 @@ function sneakDice(level: number): string {
   return `${Math.ceil(level / 2)}d6`;
 }
 
-function calcAttack(ch: Character, w: Weapon) {
+function calcAttack(ch: Character, w: Weapon, styles: FightingStyle[]) {
   const strMod = abilityMod(ch.abilities.str);
   const dexMod = abilityMod(ch.abilities.dex);
   const effectiveStatKey: keyof Character['abilities'] =
     w.finesse ? (strMod >= dexMod ? 'str' : 'dex') : w.stat;
   const statMod = abilityMod(ch.abilities[effectiveStatKey]);
   const prof = w.proficient ? profBonus(ch.level) : 0;
+  const archeryBonus = styles.includes('archery') && w.ranged ? 2 : 0;
   return {
     statLabel: effectiveStatKey.toUpperCase(),
     statMod,
     prof,
-    total: statMod + prof + w.attackBonus,
+    archeryBonus,
+    total: statMod + prof + w.attackBonus + archeryBonus,
   };
 }
 
@@ -170,6 +174,16 @@ function WeaponForm({ form, patch, onSave, onCancel }: FormProps) {
           />
           Versatile
         </label>
+        {!form.versatile && (
+          <label className="weapon-form__toggle">
+            <input
+              type="checkbox"
+              checked={form.twoHanded}
+              onChange={(e) => patch('twoHanded', e.target.checked)}
+            />
+            Two-Handed
+          </label>
+        )}
         <label className="weapon-form__toggle">
           <input
             type="checkbox"
@@ -202,6 +216,9 @@ export function WeaponsSection({ ch, updateSelected }: Props) {
   const [grips, setGrips] = useState<Record<string, 'one' | 'two'>>({});
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<Omit<Weapon, 'id'>>(blankWeapon());
+
+  const isFighter = ch.class.toLowerCase().includes('fighter');
+  const styles: FightingStyle[] = isFighter ? (ch.fightingStyles ?? []) : [];
 
   function getGrip(w: Weapon): 'one' | 'two' {
     return grips[w.id] ?? 'one';
@@ -271,12 +288,24 @@ export function WeaponsSection({ ch, updateSelected }: Props) {
         )}
 
         {ch.weapons.map((w) => {
-          const { statLabel, statMod, prof, total } = calcAttack(ch, w);
+          const { statLabel, statMod, prof, archeryBonus, total } = calcAttack(ch, w, styles);
           const grip = getGrip(w);
           const dice = grip === 'two' && w.versatile && w.versatileDice
             ? w.versatileDice
             : w.damageDice;
-          const dmgBonus = statMod + w.attackBonus;
+
+          // Dueling: +2 damage, one melee weapon in the list
+          const meleeCount = ch.weapons.filter((wp) => !wp.ranged).length;
+          const duelingBonus = styles.includes('dueling') && !w.ranged && meleeCount === 1 ? 2 : 0;
+
+          // GWF: applies to inherently two-handed weapons, or versatile in two-hand grip
+          const gwfApplies = styles.includes('great-weapon') && !w.ranged
+            && (w.twoHanded || (w.versatile && grip === 'two'));
+
+          // TWF: show offhand damage bonus for melee weapons
+          const twfOffhandMod = styles.includes('two-weapon') && !w.ranged ? statMod : null;
+
+          const dmgBonus = statMod + w.attackBonus + duelingBonus;
           const dmgStr = `${dice}${signed(dmgBonus)}`;
           const isEditing = editId === w.id;
 
@@ -286,12 +315,14 @@ export function WeaponsSection({ ch, updateSelected }: Props) {
             `${statLabel} ${signed(statMod)}`,
             prof > 0 ? `PROF ${signed(prof)}` : null,
             w.attackBonus !== 0 ? signed(w.attackBonus) : null,
+            archeryBonus > 0 ? 'ARCHERY +2' : null,
           ].filter(Boolean).join(' · ');
 
           const dmgFormula = [
             dice,
             `${statLabel} ${signed(statMod)}`,
             w.attackBonus !== 0 ? signed(w.attackBonus) : null,
+            duelingBonus > 0 ? 'DUELING +2' : null,
           ].filter(Boolean).join(' · ');
 
           return (
@@ -304,6 +335,8 @@ export function WeaponsSection({ ch, updateSelected }: Props) {
                 <span className="weapon-card__name">{w.name || 'Unnamed'}</span>
                 <div className="weapon-card__tags">
                   {w.finesse && <span className="weapon-tag">finesse</span>}
+                  {w.twoHanded && <span className="weapon-tag">2h</span>}
+                  {gwfApplies && <span className="weapon-tag weapon-tag--gwf" title="Great Weapon Fighting: reroll 1s and 2s on damage">GWF</span>}
                   {!w.proficient && <span className="weapon-tag weapon-tag--warn">no prof</span>}
                 </div>
                 <div className="weapon-card__actions">
@@ -338,6 +371,16 @@ export function WeaponsSection({ ch, updateSelected }: Props) {
                     <span className="weapon-stat__number">{dmgStr}</span>
                     <span className="weapon-stat__label">{w.damageType}</span>
                   </div>
+
+                  {twfOffhandMod !== null && (
+                    <>
+                      <div className="weapon-stat__divider weapon-stat__divider--twf" />
+                      <div className="weapon-stat weapon-stat--twf" title="Two-Weapon Fighting: add this to your offhand attack's damage">
+                        <span className="weapon-stat__number">{signed(twfOffhandMod)}</span>
+                        <span className="weapon-stat__label">Offhand</span>
+                      </div>
+                    </>
+                  )}
 
                   {ch.sneakAttack && (w.finesse || w.ranged) && (
                     <>

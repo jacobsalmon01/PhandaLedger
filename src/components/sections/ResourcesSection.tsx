@@ -6,11 +6,11 @@ interface Props {
 }
 
 const RECHARGE_CYCLE: RechargeOn[] = ['long', 'short', 'manual'];
-const RECHARGE_LABELS: Record<RechargeOn, string> = { short: 'SR', long: 'LR', manual: '—' };
+const RECHARGE_LABELS: Record<RechargeOn, string> = { short: 'Short Rest', long: 'Long Rest', manual: 'Manual' };
 const RECHARGE_TITLES: Record<RechargeOn, string> = {
-  short: 'Short rest',
-  long: 'Long rest',
-  manual: 'Manual',
+  short: 'Recharges on a short rest — click to change',
+  long:  'Recharges on a long rest — click to change',
+  manual: 'Restore manually — click to change',
 };
 
 export function ResourcesSection({ ch, updateSelected }: Props) {
@@ -41,6 +41,7 @@ export function ResourcesSection({ ch, updateSelected }: Props) {
   return (
     <section className="section">
       <h2 className="section__heading">Resources</h2>
+      <p className="res-hint">Click a pip to expend · click again to restore · click the badge to cycle recharge type</p>
 
       {ch.resources.length === 0 && (
         <div className="res-empty">
@@ -60,24 +61,31 @@ export function ResourcesSection({ ch, updateSelected }: Props) {
                 spellCheck={false}
                 onChange={(e) => updateResource(res.id, (r) => ({ ...r, name: e.target.value }))}
               />
-              <div className="res-row__pips">
-                {Array.from({ length: res.max }, (_, pipIdx) => {
-                  const isFilled = pipIdx < available;
-                  return (
-                    <button
-                      key={pipIdx}
-                      className={`res-pip${isFilled ? ' res-pip--available' : ' res-pip--used'}`}
-                      title={isFilled ? 'Expend' : 'Restore'}
-                      onClick={() =>
-                        updateResource(res.id, (r) =>
-                          isFilled
-                            ? { ...r, used: Math.min(r.used + 1, r.max) }
-                            : { ...r, used: Math.max(r.used - 1, 0) }
-                        )
-                      }
-                    />
-                  );
-                })}
+              <div className="res-row__track">
+                <div className="res-row__pips">
+                  {Array.from({ length: res.max }, (_, pipIdx) => {
+                    const isFilled = pipIdx < available;
+                    return (
+                      <button
+                        key={pipIdx}
+                        className={`res-pip${isFilled ? ' res-pip--available' : ' res-pip--used'}`}
+                        title={isFilled ? 'Expend' : 'Restore'}
+                        onClick={() =>
+                          updateResource(res.id, (r) =>
+                            isFilled
+                              ? { ...r, used: Math.min(r.used + 1, r.max) }
+                              : { ...r, used: Math.max(r.used - 1, 0) }
+                          )
+                        }
+                      />
+                    );
+                  })}
+                </div>
+                <div className={`res-row__count${available === 0 ? ' res-row__count--spent' : available === res.max ? ' res-row__count--full' : ''}`}>
+                  <span className="res-row__count-avail">{available}</span>
+                  <span className="res-row__count-sep">/</span>
+                  <span className="res-row__count-max">{res.max}</span>
+                </div>
               </div>
               <div className="res-row__controls">
                 <div className="spell-slot-adj-row">
@@ -110,6 +118,7 @@ export function ResourcesSection({ ch, updateSelected }: Props) {
                   }
                   data-recharge={res.recharge}
                 >
+                  <span className="res-recharge-tag__icon">↺</span>
                   {RECHARGE_LABELS[res.recharge]}
                 </button>
                 <button

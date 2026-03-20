@@ -24,7 +24,7 @@ function blankSpell(): Omit<PreparedSpell, 'id'> {
   return {
     name: '', level: 1, concentration: false,
     duration: '', durationRounds: 0, castingTime: '1 action',
-    notes: '', active: false, roundsRemaining: 0,
+    notes: '', prepared: true, alwaysPrepared: false, active: false, roundsRemaining: 0,
   };
 }
 
@@ -134,6 +134,14 @@ function SpellForm({ form, patch, onSave, onCancel }: FormProps) {
           />
           Concentration
         </label>
+        <label className="spell-form__toggle" title="Always prepared — granted by class or subclass, doesn't count against preparation limit">
+          <input
+            type="checkbox"
+            checked={form.alwaysPrepared}
+            onChange={(e) => patch('alwaysPrepared', e.target.checked)}
+          />
+          Always Prepared
+        </label>
       </div>
 
       <div className="spell-form__row spell-form__row--actions">
@@ -189,7 +197,31 @@ export function SpellsSection({ ch, updateSelected }: Props) {
     updateSelected((c) => ({ ...c, spells: c.spells.filter((s) => s.id !== id) }));
   }
 
+  function togglePrepared(id: string) {
+    updateSelected((c) => ({
+      ...c,
+      spells: c.spells.map((s) =>
+        s.id === id ? { ...s, prepared: !s.prepared, active: s.prepared ? false : s.active, roundsRemaining: s.prepared ? 0 : s.roundsRemaining } : s
+      ),
+    }));
+  }
+
+  function prepareAll() {
+    updateSelected((c) => ({
+      ...c, spells: c.spells.map((s) => ({ ...s, prepared: true })),
+    }));
+  }
+
+  function unprepareAll() {
+    updateSelected((c) => ({
+      ...c, spells: c.spells.map((s) =>
+        s.alwaysPrepared ? s : { ...s, prepared: false, active: false, roundsRemaining: 0 }
+      ),
+    }));
+  }
+
   function cast(spell: PreparedSpell) {
+    if (!spell.prepared && spell.level > 0) return;
     updateSelected((c) => {
       // Build fresh slot array
       const slots = Array.from({ length: 9 }, (_, i) =>
@@ -250,6 +282,7 @@ export function SpellsSection({ ch, updateSelected }: Props) {
   }
   for (const [lvl, arr] of grouped) {
     grouped.set(lvl, [...arr].sort((a, b) => {
+      if (a.prepared !== b.prepared) return a.prepared ? -1 : 1;
       if (a.active !== b.active) return a.active ? -1 : 1;
       return a.name.localeCompare(b.name);
     }));
@@ -262,6 +295,31 @@ export function SpellsSection({ ch, updateSelected }: Props) {
   const attackBonus = spellAttackBonus(ch);
   const saveDC = spellSaveDC(ch);
 
+  // Prepared spell limit — only for classes with daily preparation
+  const prepInfo = (() => {
+    const cls = ch.class.toLowerCase();
+    const s = (n: number) => (n >= 0 ? `+${n}` : `${n}`);
+    const intMod = abilityMod(ch.abilities.int);
+    const wisMod = abilityMod(ch.abilities.wis);
+    const chaMod = abilityMod(ch.abilities.cha);
+    let max: number, formula: string;
+    if (cls.includes('wizard')) {
+      max = Math.max(1, intMod + ch.level);
+      formula = `INT ${s(intMod)} + Lv ${ch.level}`;
+    } else if (cls.includes('cleric')) {
+      max = Math.max(1, wisMod + ch.level);
+      formula = `WIS ${s(wisMod)} + Lv ${ch.level}`;
+    } else if (cls.includes('paladin')) {
+      const half = Math.floor(ch.level / 2);
+      max = Math.max(1, chaMod + half);
+      formula = `CHA ${s(chaMod)} + ½Lv ${half}`;
+    } else {
+      return null;
+    }
+    const prepared = ch.spells.filter((sp) => sp.level > 0 && sp.prepared && !sp.alwaysPrepared).length;
+    return { prepared, max, formula };
+  })();
+
   const ABILITY_OPTIONS: { key: SpellcastingAbility; label: string }[] = [
     { key: 'int', label: 'INT' },
     { key: 'wis', label: 'WIS' },
@@ -271,9 +329,17 @@ export function SpellsSection({ ch, updateSelected }: Props) {
   return (
     <section className="section">
       <h2 className="section__heading section__heading--flex">
-        <span>Prepared Spells</span>
+        <span>Known Spells</span>
         {editId !== 'new' && (
-          <button className="spells-add-btn" onClick={openAdd}>+ Add Spell</button>
+          <div className="spells-header-actions">
+            {ch.spells.length > 0 && (
+              <>
+                <button className="spells-prepare-btn" onClick={unprepareAll} title="Mark all spells as unprepared">Unprepare All</button>
+                <button className="spells-prepare-btn spells-prepare-btn--prepare" onClick={prepareAll} title="Mark all spells as prepared">Prepare All</button>
+              </>
+            )}
+            <button className="spells-add-btn" onClick={openAdd}>+ Add Spell</button>
+          </div>
         )}
       </h2>
 
@@ -310,11 +376,26 @@ export function SpellsSection({ ch, updateSelected }: Props) {
           <span className="spell-stat__value">{saveDC}</span>
           <span className="spell-stat__label">Save DC</span>
         </div>
+
+        {prepInfo && (
+          <>
+            <div className="spell-stats__divider" />
+            <div className={`spell-stat spell-stat--prep${prepInfo.prepared > prepInfo.max ? ' spell-stat--prep-over' : prepInfo.prepared === prepInfo.max ? ' spell-stat--prep-full' : ''}`}>
+              <span className="spell-stat__value spell-prep__fraction">
+                <span className="spell-prep__count">{prepInfo.prepared}</span>
+                <span className="spell-prep__sep">/</span>
+                <span className="spell-prep__max">{prepInfo.max}</span>
+              </span>
+              <span className="spell-stat__label">Prepared</span>
+              <span className="spell-prep__formula">{prepInfo.formula}</span>
+            </div>
+          </>
+        )}
       </div>
 
       {ch.spells.length === 0 && editId !== 'new' && (
         <div className="spells-empty">
-          No spells prepared. Add spells to track concentration, duration, and active effects.
+          No spells known. Add spells to your list, then mark them prepared each day.
         </div>
       )}
 
@@ -350,7 +431,8 @@ export function SpellsSection({ ch, updateSelected }: Props) {
 
               {spells.map((spell) => {
                 const isEditing = editId === spell.id;
-                const canCast = hasSlot(ch, spell.level);
+                const isPrepared = spell.level === 0 || spell.alwaysPrepared || spell.prepared;
+                const canCast = hasSlot(ch, spell.level) && isPrepared;
                 const expired = spell.active && spell.durationRounds > 0 && spell.roundsRemaining === 0;
                 const isConc = spell.active && spell.concentration;
 
@@ -359,6 +441,8 @@ export function SpellsSection({ ch, updateSelected }: Props) {
                     key={spell.id}
                     className={[
                       'spell-row',
+                      spell.alwaysPrepared ? 'spell-row--always-prepared' : '',
+                      !isPrepared ? 'spell-row--unprepared' : '',
                       spell.active && !isConc ? 'spell-row--active' : '',
                       isConc ? 'spell-row--concentrating' : '',
                       expired ? 'spell-row--expired' : '',
@@ -366,16 +450,32 @@ export function SpellsSection({ ch, updateSelected }: Props) {
                   >
                     {!isEditing ? (
                       <>
-                        {/* ── Top line: cast · name · badges · rounds · actions ── */}
+                        {/* ── Top line: prepared · cast · name · badges · rounds · actions ── */}
                         <div className="spell-row__top">
+                          {spell.level === 0 && <span className="spell-cantrip-dot">◆</span>}
+                          {spell.level > 0 && spell.alwaysPrepared && (
+                            <span className="spell-always-dot" title="Always prepared — granted by class or subclass">◈</span>
+                          )}
+                          {spell.level > 0 && !spell.alwaysPrepared && (
+                            <button
+                              className={`spell-prepared-btn${isPrepared ? ' spell-prepared-btn--on' : ''}`}
+                              title={isPrepared ? 'Prepared — click to unprepare' : 'Unprepared — click to prepare'}
+                              onClick={() => togglePrepared(spell.id)}
+                            >
+                              {isPrepared ? '●' : '○'}
+                            </button>
+                          )}
+
                           <button
                             className={`spell-cast-btn${spell.active ? ' spell-cast-btn--active' : ''}${!canCast && !spell.active ? ' spell-cast-btn--locked' : ''}`}
                             title={
-                              spell.active
-                                ? 'Recast (expends another slot)'
-                                : canCast
-                                  ? level === 0 ? 'Cast cantrip' : `Cast — uses 1 ${ORDINALS[level]} slot`
-                                  : 'No slots remaining'
+                              !isPrepared
+                                ? 'Not prepared'
+                                : spell.active
+                                  ? 'Recast (expends another slot)'
+                                  : canCast
+                                    ? level === 0 ? 'Cast cantrip' : `Cast — uses 1 ${ORDINALS[level]} slot`
+                                    : 'No slots remaining'
                             }
                             disabled={!spell.active && !canCast}
                             onClick={() => cast(spell)}

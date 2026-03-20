@@ -77,6 +77,9 @@ export function DefenseSection({ ch, updateSelected }: Props) {
             {ch.shield && (
               <span className="defense-formula__text">+{ch.shieldBonus} shield</span>
             )}
+            {ch.fightingStyles?.includes('defense') && ch.armorType !== 'none' && (
+              <span className="defense-formula__text defense-formula__text--style">+1 defense style</span>
+            )}
             {itemACMods.map(({ m, item }, idx) => (
               <span key={idx} className="defense-formula__text defense-formula__text--item" title={item.name}>
                 {m.op === 'add' ? (m.value >= 0 ? `+${m.value}` : `−${Math.abs(m.value)}`)

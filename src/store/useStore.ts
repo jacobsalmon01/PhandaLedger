@@ -57,14 +57,14 @@ function hydrate() {
           const raw = s as unknown as Record<string, unknown>;
           return {
             concentration: false, duration: '', durationRounds: 0,
-            castingTime: '1 action', notes: '', active: false, roundsRemaining: 0,
+            castingTime: '1 action', notes: '', prepared: true, alwaysPrepared: false, active: false, roundsRemaining: 0,
             ...raw,
           } as unknown as typeof s;
         });
         // Migration: fill in missing fields on each weapon
         ch.weapons = (ch.weapons || []).map((w) => {
           const raw = w as unknown as Record<string, unknown>;
-          return { versatile: false, versatileDice: '', proficient: true, ranged: false, ...raw } as unknown as typeof w;
+          return { versatile: false, versatileDice: '', twoHanded: false, proficient: true, ranged: false, ...raw } as unknown as typeof w;
         });
       });
       // Migration: ensure initiative array exists

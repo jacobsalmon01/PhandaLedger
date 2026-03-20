@@ -1,4 +1,4 @@
-import type { Character } from '../../types/character';
+import type { Character, FightingStyle } from '../../types/character';
 import { profBonus } from '../../types/character';
 import { NumericInput } from '../NumericInput';
 import { DND_CLASSES, getClassDef } from '../../types/classes';
@@ -8,7 +8,27 @@ interface Props {
   updateSelected: (updater: (ch: Character) => Character) => void;
 }
 
+const FIGHTING_STYLE_DEFS: { key: FightingStyle; label: string; desc: string }[] = [
+  { key: 'archery',      label: 'Archery',      desc: '+2 bonus to attack rolls with ranged weapons' },
+  { key: 'defense',      label: 'Defense',      desc: '+1 AC while wearing armor' },
+  { key: 'dueling',      label: 'Dueling',      desc: '+2 damage wielding one melee weapon in one hand' },
+  { key: 'great-weapon', label: 'Great Weapon', desc: 'Reroll 1s & 2s on damage dice for two-handed weapons' },
+  { key: 'protection',   label: 'Protection',   desc: 'Reaction: impose disadvantage on attacks near you (shield)' },
+  { key: 'two-weapon',   label: 'Two-Weapon',   desc: 'Add ability modifier to your offhand attack\'s damage' },
+];
+
 export function IdentitySection({ ch, updateSelected }: Props) {
+  const isFighter = ch.class.toLowerCase().includes('fighter');
+
+  function toggleStyle(style: FightingStyle) {
+    updateSelected((c) => ({
+      ...c,
+      fightingStyles: c.fightingStyles.includes(style)
+        ? c.fightingStyles.filter((s) => s !== style)
+        : [...c.fightingStyles, style],
+    }));
+  }
+
   return (
     <section className="section">
       <h2 className="section__heading">Identity</h2>
@@ -69,6 +89,28 @@ export function IdentitySection({ ch, updateSelected }: Props) {
             onChange={(e) => updateSelected((c) => ({ ...c, background: e.target.value }))} />
         </div>
       </div>
+
+      {isFighter && (
+        <div className="fighting-styles-section">
+          <h3 className="fighting-styles__heading">Fighting Style</h3>
+          <div className="fighting-styles__grid">
+            {FIGHTING_STYLE_DEFS.map(({ key, label, desc }) => {
+              const active = (ch.fightingStyles ?? []).includes(key);
+              return (
+                <button
+                  key={key}
+                  className={`fighting-style-card${active ? ' fighting-style-card--active' : ''}`}
+                  onClick={() => toggleStyle(key)}
+                >
+                  <span className="fighting-style-card__check">{active ? '◆' : '◇'}</span>
+                  <span className="fighting-style-card__name">{label}</span>
+                  <span className="fighting-style-card__desc">{desc}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

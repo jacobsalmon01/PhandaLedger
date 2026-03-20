@@ -1557,6 +1557,7 @@ body::after {
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
+  text-align: left;
   color: var(--text-gold);
   border-bottom: 1px solid var(--border-frame);
   padding-bottom: var(--gap-xs);
@@ -5137,6 +5138,10 @@ input[type="number"] { -moz-appearance: textfield; }
   justify-content: space-between;
 }
 
+.section__heading--flex > span {
+  flex: 1;
+}
+
 .spell-long-rest-btn {
   font-family: var(--font-display);
   font-size: 0.7rem;
@@ -6220,6 +6225,47 @@ input[type="number"] { -moz-appearance: textfield; }
 .inv-add-effect-btn:hover {
   border-color: var(--border-gold-dim);
   color: var(--text-gold);
+}
+
+/* ══════════════════════════════════════════
+   Sheet Tabs
+   ══════════════════════════════════════════ */
+
+.sheet-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--border-frame);
+  margin-bottom: var(--gap-lg);
+}
+
+.sheet-tab {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  padding: var(--gap-sm) var(--gap-md);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.sheet-tab:hover {
+  color: var(--text-parchment);
+}
+
+.sheet-tab--active {
+  color: var(--text-gold);
+  border-bottom-color: var(--border-gold);
+}
+
+.sheet-tab-content {
+  animation: fadeIn 0.15s ease-out;
 }
 
 /* ══════════════════════════════════════════

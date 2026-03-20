@@ -78,14 +78,28 @@ async function capture() {
       await page.screenshot({ path: path.join(OUT_DIR, '002_character_selected.png'), fullPage: true });
       console.log('Captured: 002_character_selected.png');
 
-      // 3. Scroll to bottom of the sheet to catch lower sections
-      await page.evaluate(() => {
-        const main = document.querySelector('.main') || document.documentElement;
-        main.scrollTop = main.scrollHeight;
-      });
-      await page.waitForTimeout(300);
-      await page.screenshot({ path: path.join(OUT_DIR, '003_sheet_bottom.png'), fullPage: true });
-      console.log('Captured: 003_sheet_bottom.png');
+      // 3. Capture each tab if tabs exist
+      const tabs = page.locator('.sheet-tab');
+      const tabCount = await tabs.count();
+      if (tabCount > 0) {
+        for (let t = 0; t < tabCount; t++) {
+          const tab = tabs.nth(t);
+          const label = (await tab.textContent()).trim();
+          await tab.click();
+          await page.waitForTimeout(300);
+          await page.screenshot({ path: path.join(OUT_DIR, `003_tab_${label.toLowerCase()}.png`), fullPage: true });
+          console.log(`Captured: 003_tab_${label.toLowerCase()}.png`);
+        }
+      } else {
+        // Fallback: scroll to bottom of the sheet to catch lower sections
+        await page.evaluate(() => {
+          const main = document.querySelector('.main') || document.documentElement;
+          main.scrollTop = main.scrollHeight;
+        });
+        await page.waitForTimeout(300);
+        await page.screenshot({ path: path.join(OUT_DIR, '003_sheet_bottom.png'), fullPage: true });
+        console.log('Captured: 003_sheet_bottom.png');
+      }
     } else {
       console.log('No characters found in sidebar — only capturing initial state.');
     }

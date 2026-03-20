@@ -8543,11 +8543,39 @@ input[type="number"] { -moz-appearance: textfield; }
   cursor: default;
 }
 
-/* Disable action buttons inside the sheet but keep tab navigation alive */
+/* Make all sheet buttons non-interactive; keep tab navigation */
 .player-mode .main button:not(.sheet-tab) {
   pointer-events: none;
-  opacity: 0.5;
   cursor: default;
+}
+
+/* Hide pure action buttons — they take up space and provide no read-only value */
+.player-mode .hp-quick-btn,
+.player-mode .hp-custom__btn,
+.player-mode .spell-slot-adj,
+.player-mode .res-add-btn,
+.player-mode .res-remove-btn,
+.player-mode .weapons-add-btn,
+.player-mode .weapon-action-btn,
+.player-mode .weapon-form__save,
+.player-mode .weapon-form__cancel,
+.player-mode .spells-add-btn,
+.player-mode .spells-prepare-btn,
+.player-mode .spell-form__save,
+.player-mode .spell-form__cancel,
+.player-mode .spell-action-btn,
+.player-mode .spell-end-btn,
+.player-mode .spell-rounds__tick,
+.player-mode .inv-add-btn,
+.player-mode .inv-remove-btn,
+.player-mode .inv-add-effect-btn,
+.player-mode .inv-effect-remove,
+.player-mode .inv-qty-btn,
+.player-mode .char-portrait__remove,
+.player-mode .char-portrait__crop-btn,
+.player-mode .cond-add-btn,
+.player-mode .cond-badge__tick {
+  display: none;
 }
 
 /* Keep character-switching in the sidebar fully interactive */

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import type { Character, PreparedSpell } from '../../types/character';
+import type { Character, PreparedSpell, SpellcastingAbility } from '../../types/character';
+import { spellAttackBonus, spellSaveDC, abilityMod, profBonus } from '../../types/character';
 
 interface Props {
   ch: Character;
@@ -255,6 +256,18 @@ export function SpellsSection({ ch, updateSelected }: Props) {
   }
   const levels = [...grouped.keys()].sort((a, b) => a - b);
 
+  const spellAbility = ch.spellcastingAbility ?? 'int';
+  const spellMod = abilityMod(ch.abilities[spellAbility]);
+  const pb = profBonus(ch.level);
+  const attackBonus = spellAttackBonus(ch);
+  const saveDC = spellSaveDC(ch);
+
+  const ABILITY_OPTIONS: { key: SpellcastingAbility; label: string }[] = [
+    { key: 'int', label: 'INT' },
+    { key: 'wis', label: 'WIS' },
+    { key: 'cha', label: 'CHA' },
+  ];
+
   return (
     <section className="section">
       <h2 className="section__heading section__heading--flex">
@@ -263,6 +276,41 @@ export function SpellsSection({ ch, updateSelected }: Props) {
           <button className="spells-add-btn" onClick={openAdd}>+ Add Spell</button>
         )}
       </h2>
+
+      {/* ── Spellcasting stats banner ── */}
+      <div className="spell-stats">
+        <div className="spell-stats__ability-group">
+          <span className="spell-stats__group-label">Casting Ability</span>
+          <div className="spell-ability-selector">
+            {ABILITY_OPTIONS.map(({ key, label }) => (
+              <button
+                key={key}
+                className={`spell-ability-btn${spellAbility === key ? ' spell-ability-btn--active' : ''}`}
+                onClick={() => updateSelected((c) => ({ ...c, spellcastingAbility: key }))}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <span className="spell-stats__ability-detail">
+            {ch.abilities[spellAbility]} ({spellMod >= 0 ? '+' : ''}{spellMod}) · Prof +{pb}
+          </span>
+        </div>
+
+        <div className="spell-stats__divider" />
+
+        <div className="spell-stat">
+          <span className="spell-stat__value">{attackBonus >= 0 ? `+${attackBonus}` : `${attackBonus}`}</span>
+          <span className="spell-stat__label">Spell Attack</span>
+        </div>
+
+        <div className="spell-stats__divider" />
+
+        <div className="spell-stat">
+          <span className="spell-stat__value">{saveDC}</span>
+          <span className="spell-stat__label">Save DC</span>
+        </div>
+      </div>
 
       {ch.spells.length === 0 && editId !== 'new' && (
         <div className="spells-empty">

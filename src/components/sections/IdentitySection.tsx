@@ -1,6 +1,7 @@
 import type { Character } from '../../types/character';
 import { profBonus } from '../../types/character';
 import { NumericInput } from '../NumericInput';
+import { DND_CLASSES, getClassDef } from '../../types/classes';
 
 interface Props {
   ch: Character;
@@ -14,8 +15,28 @@ export function IdentitySection({ ch, updateSelected }: Props) {
       <div className="identity-row">
         <div className="field field--grow">
           <label className="field__label">Class</label>
-          <input className="field__input" value={ch.class} placeholder="Fighter" spellCheck={false}
-            onChange={(e) => updateSelected((c) => ({ ...c, class: e.target.value }))} />
+          <select
+            className="field__input field__input--select"
+            value={ch.class}
+            onChange={(e) => {
+              const name = e.target.value;
+              const def = getClassDef(name);
+              updateSelected((c) => ({
+                ...c,
+                class: name,
+                ...(def && {
+                  hitDice: { ...c.hitDice, type: def.hitDice },
+                  sneakAttack: def.sneakAttack,
+                  ...(def.spellcastingAbility && { spellcastingAbility: def.spellcastingAbility }),
+                }),
+              }));
+            }}
+          >
+            <option value="">— Select class —</option>
+            {DND_CLASSES.map((cls) => (
+              <option key={cls.name} value={cls.name}>{cls.name}</option>
+            ))}
+          </select>
         </div>
         <div className="field field--grow">
           <label className="field__label">Subclass</label>

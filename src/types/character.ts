@@ -100,6 +100,8 @@ export interface TrackedResource {
 
 export type ArmorType = 'none' | 'light' | 'medium' | 'heavy';
 
+export type SpellcastingAbility = 'int' | 'wis' | 'cha';
+
 export interface Gold {
   cp: number;
   sp: number;
@@ -134,6 +136,7 @@ export interface Character {
   lastLongRestAt: string | null;   // display label, e.g. "Fri Mar 19 · 9:00 PM"
   lastLongRestTimestamp: number | null; // ms epoch for 24h cooldown
 
+  spellcastingAbility: SpellcastingAbility;
   conditions: ConditionEntry[];  // active conditions e.g. [{ name: "Poisoned", rounds: 3 }]
   sneakAttack: boolean;  // rogue sneak attack — shown on finesse/ranged weapons
   spellSlots: SpellSlot[];
@@ -173,6 +176,7 @@ export function createCharacter(name = ''): Character {
     shortRestsUsed: 0,
     lastLongRestAt: null,
     lastLongRestTimestamp: null,
+    spellcastingAbility: 'int',
     conditions: [],
     sneakAttack: false,
     spellSlots: [],
@@ -227,4 +231,14 @@ export function applyModifiers(base: number, items: InventoryItem[], stat: StatK
 /** AC including contributions from equipped item modifiers */
 export function calcEffectiveAC(ch: Character): number {
   return applyModifiers(calcAC(ch), ch.inventory, 'ac');
+}
+
+/** Spell attack bonus: spellcasting ability modifier + proficiency bonus */
+export function spellAttackBonus(ch: Pick<Character, 'abilities' | 'level' | 'spellcastingAbility'>): number {
+  return abilityMod(ch.abilities[ch.spellcastingAbility]) + profBonus(ch.level);
+}
+
+/** Spell save DC: 8 + spellcasting ability modifier + proficiency bonus */
+export function spellSaveDC(ch: Pick<Character, 'abilities' | 'level' | 'spellcastingAbility'>): number {
+  return 8 + spellAttackBonus(ch);
 }

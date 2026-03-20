@@ -21,7 +21,9 @@
       "Bash(node -e \":*)",
       "Bash(git pull:*)",
       "Bash(git stash:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(npm --version)",
+      "Bash(nix --version)"
     ]
   }
 }

@@ -246,6 +246,22 @@ export function useStore() {
     setState(() => ({ characters, selectedId: safeSelectedId, initiative: [] }));
   }, []);
 
+  // Merge incoming characters into the existing party.
+  // Characters with a matching ID are updated in-place; new IDs are appended.
+  // Selects the first incoming character after merging.
+  const mergeCharacters = useCallback((incoming: Character[]) => {
+    setState((prev) => {
+      const incomingIds = new Set(incoming.map((c) => c.id));
+      const kept = prev.characters.filter((c) => !incomingIds.has(c.id));
+      const merged = [...kept, ...incoming];
+      return {
+        ...prev,
+        characters: merged,
+        selectedId: incoming[0]?.id ?? prev.selectedId,
+      };
+    });
+  }, []);
+
   // ── Initiative mutations ──
 
   const addInitiativeEntry = useCallback((entry: InitiativeEntry) => {
@@ -332,6 +348,7 @@ export function useStore() {
     shortRestWithHP,
     shortRestAllWithHP,
     replaceParty,
+    mergeCharacters,
     addInitiativeEntry,
     removeInitiativeEntry,
     updateInitiativeEntry,

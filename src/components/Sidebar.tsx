@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import type { Character } from '../types/character';
 import { ImportExportControls } from './ImportExportControls';
+import { ShareControls } from './ShareControls';
 import { InitiativeTracker } from './InitiativeTracker';
 import { DiceRoller } from './DiceRoller';
 import { RestsSection } from './RestsSection';
@@ -135,6 +136,10 @@ export function Sidebar({ open, onNavigate }: SidebarProps) {
           selectedId={selectedId}
           onImport={replaceParty}
         />
+        <div className="ie-divider" />
+        <div className="ie-controls">
+          <ShareControls />
+        </div>
       </div>
     </aside>
   );

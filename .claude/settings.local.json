@@ -17,7 +17,8 @@
       "Bash(node:*)",
       "Bash(ls:*)",
       "Bash(curl:*)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "Bash(node -e \":*)"
     ]
   }
 }

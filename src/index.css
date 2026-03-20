@@ -1443,6 +1443,163 @@ body::after {
   color: var(--text-parchment);
 }
 
+.ie-btn--share {
+  color: var(--text-gold);
+}
+
+.ie-btn--share:hover:not(:disabled) {
+  background: rgba(180, 130, 40, 0.12);
+  border-color: var(--text-gold);
+  color: var(--border-gold);
+}
+
+/* ── Share modal ─────────────────────────────────────────────────────────── */
+
+.share-modal .lr-modal__body {
+  padding: var(--gap-md);
+}
+
+/* Radio-style choice rows */
+.share-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: var(--gap-sm);
+}
+
+.share-choice {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  padding: 11px var(--gap-md);
+  background: var(--bg-input);
+  border: 1px solid var(--border-inner);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  user-select: none;
+}
+
+.share-choice:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-frame);
+}
+
+.share-choice--active {
+  border-color: var(--border-gold-dim);
+  background: rgba(180, 130, 40, 0.07);
+}
+
+.share-choice__radio {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--border-frame);
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative;
+  background: var(--bg-input);
+  transition: border-color 0.15s;
+}
+
+.share-choice--active .share-choice__radio {
+  border-color: var(--border-gold);
+}
+
+.share-choice__radio::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: var(--text-gold);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.share-choice--active .share-choice__radio::after {
+  opacity: 1;
+}
+
+.share-choice__glyph {
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  width: 1.2rem;
+  text-align: center;
+  transition: color 0.15s;
+}
+
+.share-choice--active .share-choice__glyph {
+  color: var(--text-gold);
+}
+
+.share-choice__text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.share-choice__label {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-parchment);
+}
+
+.share-choice__desc {
+  font-family: var(--font-body);
+  font-size: 0.775rem;
+  color: var(--text-dim);
+}
+
+.share-char-select {
+  width: 100%;
+}
+
+.share-note {
+  font-family: var(--font-body);
+  font-size: 0.775rem;
+  color: var(--text-dim);
+  margin-top: var(--gap-sm);
+  font-style: italic;
+  line-height: 1.4;
+}
+
+/* Success state */
+.share-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-sm);
+  padding: var(--gap-lg) var(--gap-md);
+  text-align: center;
+}
+
+.share-success__glyph {
+  font-size: 2rem;
+  color: var(--text-gold);
+  line-height: 1;
+}
+
+.share-success__title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-bright);
+}
+
+.share-success__sub {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+  max-width: 26ch;
+}
+
 /* Error message shown inline under the buttons */
 .ie-error {
   font-family: var(--font-body);

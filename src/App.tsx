@@ -1,10 +1,98 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { CharacterSheet } from './components/CharacterSheet';
+import { useStore } from './store/useStore';
+import { parseShareHash } from './utils/shareUrl';
+import type { PartyExport } from './utils/importExport';
+
+function IncomingShareModal({
+  incoming,
+  currentCount,
+  onAdd,
+  onReplace,
+  onCancel,
+}: {
+  incoming: PartyExport;
+  currentCount: number;
+  onAdd: () => void;
+  onReplace: () => void;
+  onCancel: () => void;
+}) {
+  const count = incoming.characters.length;
+  const single = count === 1;
+  return (
+    <div className="lr-modal-overlay" onClick={onCancel}>
+      <div className="lr-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="lr-modal__header">
+          <span className="lr-modal__title">Party Shared With You</span>
+          <span className="lr-modal__subtitle">
+            {single
+              ? `${incoming.characters[0].name || 'Someone'} was shared via link.`
+              : `${count} adventurers were shared via link.`}
+          </span>
+        </div>
+        <div className="lr-modal__body">
+          <ul className="ie-char-list">
+            {incoming.characters.map((ch) => (
+              <li key={ch.id} className="ie-char-list__item">
+                <span className="ie-char-list__name">{ch.name || 'Unnamed'}</span>
+                <span className="ie-char-list__meta">
+                  {[ch.class, ch.race].filter(Boolean).join(' · ') || 'No class set'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="lr-modal__footer">
+          <button className="lr-modal__btn lr-modal__btn--cancel" onClick={onCancel}>
+            Dismiss
+          </button>
+          {currentCount > 0 && (
+            <button className="lr-modal__btn lr-modal__btn--warn" onClick={onReplace} title="Removes your current party">
+              Replace Party
+            </button>
+          )}
+          <button className="lr-modal__btn lr-modal__btn--confirm" onClick={onAdd}>
+            Add to Party
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
+  const { characters, replaceParty, mergeCharacters } = useStore();
+
+  const [incomingShare, setIncomingShare] = useState<PartyExport | null>(null);
+
+  // Detect a share hash on mount and parse it.
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash.startsWith('#share=')) return;
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    parseShareHash(hash).then((parsed) => {
+      if (parsed) setIncomingShare(parsed);
+    });
+  }, []);
+
+  function handleAdd() {
+    if (!incomingShare) return;
+    mergeCharacters(incomingShare.characters);
+    setIncomingShare(null);
+  }
+
+  function handleReplace() {
+    if (!incomingShare) return;
+    replaceParty(incomingShare);
+    setIncomingShare(null);
+  }
+
+  function handleDismiss() {
+    setIncomingShare(null);
+  }
 
   return (
     <div id="app">
@@ -21,6 +109,16 @@ export default function App() {
       />
       <Sidebar open={sidebarOpen} onNavigate={closeSidebar} />
       <CharacterSheet />
+
+      {incomingShare && (
+        <IncomingShareModal
+          incoming={incomingShare}
+          currentCount={characters.length}
+          onAdd={handleAdd}
+          onReplace={handleReplace}
+          onCancel={handleDismiss}
+        />
+      )}
     </div>
   );
 }

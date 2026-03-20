@@ -7724,3 +7724,176 @@ input[type="number"] { -moz-appearance: textfield; }
 .sr-hp-row__input[type=number] {
   -moz-appearance: textfield;
 }
+
+/* ═══════════════════════════════════════════════
+   LAN Session — Player Mode & Banners
+   ═══════════════════════════════════════════════ */
+
+/* ── Player mode: hide DM-only controls ─────────────────────────────────── */
+
+/* Hide entire sidebar footer (add char, import/export/share) */
+.player-mode .sidebar-footer { display: none; }
+
+/* Hide remove-character buttons */
+.player-mode .pc-item__remove { display: none; }
+
+/* Hide dice roller entirely */
+.player-mode .dice-roller { display: none; }
+
+/* Hide rest buttons */
+.player-mode .rests-section { display: none; }
+
+/* ── Player mode: make sheet read-only ──────────────────────────────────── */
+
+/* Disable all inputs/textareas/selects in the sheet — still visually present
+   so players can read values, but not interactive. */
+.player-mode .main input,
+.player-mode .main textarea,
+.player-mode .main select {
+  pointer-events: none;
+  cursor: default;
+}
+
+/* Disable action buttons inside the sheet but keep tab navigation alive */
+.player-mode .main button:not(.sheet-tab) {
+  pointer-events: none;
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Keep character-switching in the sidebar fully interactive */
+.player-mode .pc-item,
+.player-mode .pc-item * {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* Keep the sidebar toggle button working on mobile */
+.player-mode .sidebar-toggle {
+  pointer-events: auto;
+}
+
+/* ── Player banner ───────────────────────────────────────────────────────── */
+
+/*
+ * On desktop: compact floating pill anchored to the bottom-right corner.
+ * On mobile:  full-width strip along the bottom edge (more readable on small screens).
+ */
+.player-banner {
+  position: fixed;
+  bottom: 16px;
+  right: 20px;
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-inner);
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+
+.player-banner--connected {
+  background: rgba(18, 32, 14, 0.85);
+  color: var(--accent-green-bright);
+  border-color: rgba(74, 122, 58, 0.45);
+}
+
+.player-banner--connecting,
+.player-banner--disconnected,
+.player-banner--unavailable {
+  background: rgba(28, 24, 18, 0.85);
+  color: var(--text-dim);
+  border-color: var(--border-inner);
+}
+
+.player-banner__dot {
+  font-size: 0.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.player-banner--connected .player-banner__dot {
+  color: var(--accent-green-bright);
+  animation: bannerPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes bannerPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.player-banner__label {
+  white-space: nowrap;
+}
+
+.player-banner__tag {
+  color: var(--text-dim);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  font-family: var(--font-body);
+  text-transform: none;
+  font-size: 0.65rem;
+  white-space: nowrap;
+  padding-left: 4px;
+  border-left: 1px solid var(--border-inner);
+}
+
+/* Mobile: revert to full-width bottom strip */
+@media (max-width: 600px) {
+  .player-banner {
+    bottom: 0;
+    right: 0;
+    left: 0;
+    border-radius: 0;
+    border-top: 1px solid var(--border-inner);
+    border-bottom: none;
+    border-left: none;
+    border-right: none;
+    padding: 7px var(--gap-md);
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .player-banner--connected {
+    background: rgba(74, 122, 58, 0.12);
+    border-color: rgba(74, 122, 58, 0.3);
+  }
+
+  .player-banner--connecting,
+  .player-banner--disconnected,
+  .player-banner--unavailable {
+    background: rgba(160, 149, 128, 0.07);
+  }
+
+  .player-banner__label {
+    flex: 1;
+  }
+
+  .player-banner__tag {
+    font-size: 0.72rem;
+  }
+}
+
+/* ── Watcher badge (admin sidebar) ──────────────────────────────────────── */
+
+.watcher-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--accent-green-bright);
+}
+
+.watcher-badge__dot {
+  font-size: 0.5rem;
+  animation: bannerPulse 2.5s ease-in-out infinite;
+}

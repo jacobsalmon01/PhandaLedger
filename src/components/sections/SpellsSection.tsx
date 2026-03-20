@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Character, PreparedSpell, SpellcastingAbility } from '../../types/character';
 import { spellAttackBonus, spellSaveDC, abilityMod, profBonus } from '../../types/character';
+import { uuid } from '../../utils/uuid';
 
 interface Props {
   ch: Character;
@@ -179,7 +180,7 @@ export function SpellsSection({ ch, updateSelected }: Props) {
   function saveNew() {
     if (!form.name.trim()) return;
     updateSelected((c) => ({
-      ...c, spells: [...c.spells, { ...form, id: crypto.randomUUID() }],
+      ...c, spells: [...c.spells, { ...form, id: uuid() }],
     }));
     setEditId(null);
   }

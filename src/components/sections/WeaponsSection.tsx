@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Character, FightingStyle, Weapon } from '../../types/character';
 import { abilityMod, profBonus } from '../../types/character';
+import { uuid } from '../../utils/uuid';
 
 interface Props {
   ch: Character;
@@ -250,7 +251,7 @@ export function WeaponsSection({ ch, updateSelected }: Props) {
     if (!form.name.trim()) return;
     updateSelected((c) => ({
       ...c,
-      weapons: [...c.weapons, { ...form, id: crypto.randomUUID() }],
+      weapons: [...c.weapons, { ...form, id: uuid() }],
     }));
     setEditId(null);
   }

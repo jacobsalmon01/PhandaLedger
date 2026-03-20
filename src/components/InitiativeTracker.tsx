@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import type { InitiativeEntry } from '../types/initiative';
 import { NumericInput } from './NumericInput';
 import { getConditionDef } from '../types/conditions';
+import { uuid } from '../utils/uuid';
 
 export function InitiativeTracker() {
   const {
@@ -42,13 +43,13 @@ export function InitiativeTracker() {
     const maxHp = parseInt(npcMaxHp, 10) || 0;
     const enemies = maxHp > 0
       ? Array.from({ length: count }, () => ({
-          id: crypto.randomUUID(),
+          id: uuid(),
           hp: maxHp,
           maxHp,
         }))
       : undefined;
     addInitiativeEntry({
-      id: crypto.randomUUID(),
+      id: uuid(),
       name,
       initiative: init,
       type: 'npc',
@@ -65,7 +66,7 @@ export function InitiativeTracker() {
     if (!ch) return;
     const init = parseInt(pcInit, 10) || 0;
     addInitiativeEntry({
-      id: crypto.randomUUID(),
+      id: uuid(),
       name: ch.name || 'Unnamed',
       initiative: init,
       type: 'pc',
@@ -78,7 +79,7 @@ export function InitiativeTracker() {
   function addAllPCs() {
     for (const ch of availablePCs) {
       addInitiativeEntry({
-        id: crypto.randomUUID(),
+        id: uuid(),
         name: ch.name || 'Unnamed',
         initiative: 0,
         type: 'pc',

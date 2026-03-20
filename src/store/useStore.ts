@@ -2,6 +2,8 @@ import { useSyncExternalStore, useCallback } from 'react';
 import { type Character, createCharacter } from '../types/character';
 import { type InitiativeEntry } from '../types/initiative';
 import { type PartyExport } from '../utils/importExport';
+import { uuid } from '../utils/uuid';
+import { isPlayerMode, broadcastState, onStateReceived } from './wsClient';
 
 const STORAGE_KEY = 'phandaLedger_state';
 
@@ -26,56 +28,66 @@ function persist() {
   } catch { /* quota errors, etc */ }
 }
 
+function migrateState(parsed: AppState): AppState {
+  const template = createCharacter();
+  parsed.characters.forEach((ch) => {
+    for (const key of Object.keys(template) as (keyof Character)[]) {
+      if (!(key in ch)) {
+        (ch as unknown as Record<string, unknown>)[key] = template[key];
+      }
+    }
+    ch.inventory = (ch.inventory || []).map((item) => {
+      const raw = item as unknown as Record<string, unknown>;
+      return { equipped: false, modifiers: [], ...raw } as unknown as typeof item;
+    });
+    if (!ch.conditions) {
+      (ch as unknown as Record<string, unknown>).conditions = [];
+    } else {
+      ch.conditions = (ch.conditions as unknown[]).map((c) =>
+        typeof c === 'string' ? { name: c } : c
+      ) as typeof ch.conditions;
+    }
+    ch.spells = (ch.spells || []).map((s) => {
+      const raw = s as unknown as Record<string, unknown>;
+      return {
+        concentration: false, duration: '', durationRounds: 0,
+        castingTime: '1 action', notes: '', prepared: true, alwaysPrepared: false, active: false, roundsRemaining: 0,
+        ...raw,
+      } as unknown as typeof s;
+    });
+    ch.weapons = (ch.weapons || []).map((w) => {
+      const raw = w as unknown as Record<string, unknown>;
+      return { versatile: false, versatileDice: '', twoHanded: false, proficient: true, ranged: false, ...raw } as unknown as typeof w;
+    });
+  });
+  if (!parsed.initiative) parsed.initiative = [];
+  return parsed;
+}
+
 function hydrate() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw) as AppState;
-      // Migration: fill in any missing fields on each character
-      const template = createCharacter();
-      parsed.characters.forEach((ch) => {
-        for (const key of Object.keys(template) as (keyof Character)[]) {
-          if (!(key in ch)) {
-            (ch as unknown as Record<string, unknown>)[key] = template[key];
-          }
-        }
-        // Migration: fill in missing fields on each inventory item
-        ch.inventory = (ch.inventory || []).map((item) => {
-          const raw = item as unknown as Record<string, unknown>;
-          return { equipped: false, modifiers: [], ...raw } as unknown as typeof item;
-        });
-        // Migration: ensure conditions array exists and has object shape
-        if (!ch.conditions) {
-          (ch as unknown as Record<string, unknown>).conditions = [];
-        } else {
-          ch.conditions = (ch.conditions as unknown[]).map((c) =>
-            typeof c === 'string' ? { name: c } : c
-          ) as typeof ch.conditions;
-        }
-        // Migration: fill in missing fields on each spell
-        ch.spells = (ch.spells || []).map((s) => {
-          const raw = s as unknown as Record<string, unknown>;
-          return {
-            concentration: false, duration: '', durationRounds: 0,
-            castingTime: '1 action', notes: '', prepared: true, alwaysPrepared: false, active: false, roundsRemaining: 0,
-            ...raw,
-          } as unknown as typeof s;
-        });
-        // Migration: fill in missing fields on each weapon
-        ch.weapons = (ch.weapons || []).map((w) => {
-          const raw = w as unknown as Record<string, unknown>;
-          return { versatile: false, versatileDice: '', twoHanded: false, proficient: true, ranged: false, ...raw } as unknown as typeof w;
-        });
-      });
-      // Migration: ensure initiative array exists
-      if (!parsed.initiative) parsed.initiative = [];
-      state = parsed;
+      state = migrateState(JSON.parse(raw) as AppState);
     }
   } catch { /* corrupted data, start fresh */ }
 }
 
-// Initial load
-hydrate();
+// Initial load — players skip localStorage and wait for WS state instead
+if (!isPlayerMode) {
+  hydrate();
+  // Queue the hydrated state to be sent as soon as the WS connection opens.
+  // This ensures players who connect after the DM's tab loads get the full
+  // party immediately, without requiring the DM to make any edits first.
+  broadcastState(state);
+} else {
+  // Register WS listener: incoming state from the server overwrites local state.
+  // Migration is applied so schema changes are handled gracefully.
+  onStateReceived((incoming) => {
+    state = migrateState(incoming as AppState);
+    emit();
+  });
+}
 
 function getSnapshot(): AppState {
   return state;
@@ -90,7 +102,10 @@ function subscribe(listener: () => void): () => void {
 
 function setState(updater: (prev: AppState) => AppState) {
   state = updater(state);
-  persist();
+  if (!isPlayerMode) {
+    persist();
+    broadcastState(state);
+  }
   emit();
 }
 
@@ -245,6 +260,20 @@ export function useStore() {
     setState(() => ({ characters, selectedId: safeSelectedId, initiative: [] }));
   }, []);
 
+  // Merge incoming characters into the existing party.
+  // Characters with a matching ID are updated in-place; new IDs are appended.
+  const mergeCharacters = useCallback((incoming: Character[]) => {
+    setState((prev) => {
+      const incomingIds = new Set(incoming.map((c) => c.id));
+      const kept = prev.characters.filter((c) => !incomingIds.has(c.id));
+      return {
+        ...prev,
+        characters: [...kept, ...incoming],
+        selectedId: incoming[0]?.id ?? prev.selectedId,
+      };
+    });
+  }, []);
+
   // ── Initiative mutations ──
 
   const addInitiativeEntry = useCallback((entry: InitiativeEntry) => {
@@ -298,7 +327,7 @@ export function useStore() {
       ...prev,
       initiative: prev.initiative.map((e) =>
         e.id === entryId
-          ? { ...e, enemies: [...(e.enemies ?? []), { id: crypto.randomUUID(), hp: maxHp, maxHp }] }
+          ? { ...e, enemies: [...(e.enemies ?? []), { id: uuid(), hp: maxHp, maxHp }] }
           : e
       ),
     }));
@@ -331,6 +360,7 @@ export function useStore() {
     shortRestWithHP,
     shortRestAllWithHP,
     replaceParty,
+    mergeCharacters,
     addInitiativeEntry,
     removeInitiativeEntry,
     updateInitiativeEntry,

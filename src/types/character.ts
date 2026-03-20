@@ -1,5 +1,6 @@
 /** Full D&D 5e character schema — expand as features are added */
 import type { ConditionEntry } from './conditions';
+import { uuid } from '../utils/uuid';
 
 export interface PortraitCrop {
   scale: number;
@@ -165,7 +166,7 @@ export interface Character {
 
 export function createCharacter(name = ''): Character {
   return {
-    id: crypto.randomUUID(),
+    id: uuid(),
     name,
     class: '',
     subclass: '',

@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useStore } from '../store/useStore';
+import { isPlayerMode } from '../store/wsClient';
 import { CharacterHeader } from './sections/CharacterHeader';
 import { IdentitySection } from './sections/IdentitySection';
 import { AbilityScoresSection } from './sections/AbilityScoresSection';
@@ -38,12 +39,24 @@ export function CharacterSheet() {
     return (
       <main className="main">
         <div className="empty-state">
-          <div className="empty-state__icon">📜</div>
-          <div className="empty-state__title">No Adventurer Selected</div>
-          <div className="empty-state__text">
-            Add a new adventurer to the party roster, or select an existing one
-            to view their record.
-          </div>
+          {isPlayerMode ? (
+            <>
+              <div className="empty-state__icon">✦</div>
+              <div className="empty-state__title">Waiting for Party Data</div>
+              <div className="empty-state__text">
+                The DM's screen will populate this view once the session is live.
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="empty-state__icon">📜</div>
+              <div className="empty-state__title">No Adventurer Selected</div>
+              <div className="empty-state__text">
+                Add a new adventurer to the party roster, or select an existing one
+                to view their record.
+              </div>
+            </>
+          )}
         </div>
       </main>
     );

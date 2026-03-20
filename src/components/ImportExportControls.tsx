@@ -57,7 +57,9 @@ export function ImportExportControls({ characters, selectedId, onImport }: Props
       const message =
         err instanceof ImportValidationError
           ? err.message
-          : 'Could not read the file. Make sure it is a valid PhandaLedger save.';
+          : err instanceof Error
+            ? err.message
+            : 'Could not read the file. Make sure it is a valid PhandaLedger save.';
       setImportError(message);
     }
   }

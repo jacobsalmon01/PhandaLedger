@@ -6,6 +6,7 @@
  */
 
 import type { InventoryItem } from '../types/character';
+import { uuid } from './uuid';
 
 /**
  * Creates a new InventoryItem with sensible defaults.
@@ -13,7 +14,7 @@ import type { InventoryItem } from '../types/character';
  */
 export function createInventoryItem(name: string): InventoryItem {
   return {
-    id: crypto.randomUUID(),
+    id: uuid(),
     name: name.trim(),
     quantity: 1,
     description: '',

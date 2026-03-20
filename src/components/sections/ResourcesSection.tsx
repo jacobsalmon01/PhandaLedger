@@ -1,4 +1,5 @@
 import type { Character, TrackedResource, RechargeOn } from '../../types/character';
+import { uuid } from '../../utils/uuid';
 
 interface Props {
   ch: Character;
@@ -19,7 +20,7 @@ export function ResourcesSection({ ch, updateSelected }: Props) {
       ...c,
       resources: [
         ...c.resources,
-        { id: crypto.randomUUID(), name: '', max: 1, used: 0, recharge: 'long' as RechargeOn },
+        { id: uuid(), name: '', max: 1, used: 0, recharge: 'long' as RechargeOn },
       ],
     }));
   }

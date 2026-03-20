@@ -4,6 +4,7 @@ import { type InitiativeEntry } from '../types/initiative';
 import { type PartyExport } from '../utils/importExport';
 import { uuid } from '../utils/uuid';
 import { isPlayerMode, broadcastState, onStateReceived } from './wsClient';
+import seedData from '../../our_party_setup_seed.json';
 
 const STORAGE_KEY = 'phandaLedger_state';
 
@@ -69,6 +70,9 @@ function hydrate() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       state = migrateState(JSON.parse(raw) as AppState);
+    } else {
+      state = migrateState(seedData as unknown as AppState);
+      persist();
     }
   } catch { /* corrupted data, start fresh */ }
 }
@@ -262,13 +266,15 @@ export function useStore() {
 
   // Merge incoming characters into the existing party.
   // Characters with a matching ID are updated in-place; new IDs are appended.
+  // Selects the first incoming character after merging.
   const mergeCharacters = useCallback((incoming: Character[]) => {
     setState((prev) => {
       const incomingIds = new Set(incoming.map((c) => c.id));
       const kept = prev.characters.filter((c) => !incomingIds.has(c.id));
+      const merged = [...kept, ...incoming];
       return {
         ...prev,
-        characters: [...kept, ...incoming],
+        characters: merged,
         selectedId: incoming[0]?.id ?? prev.selectedId,
       };
     });

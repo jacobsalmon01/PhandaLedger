@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import type { Character, PortraitCrop } from '../../types/character';
-import { calcEffectiveAC } from '../../types/character';
+import { abilityMod, profBonus, calcEffectiveAC } from '../../types/character';
 import { PortraitCropModal } from '../PortraitCropModal';
 import { NumericInput } from '../NumericInput';
 import { ConditionPicker } from '../ConditionPicker';
@@ -148,9 +148,9 @@ export function CharacterHeader({ ch, updateSelected }: Props) {
               if (!def) return null;
               const isExh = entry.name.startsWith('Exhaustion ');
               const exhLevel = isExh ? getExhaustionLevel(ch.conditions) : null;
-              const label = isExh ? `Exh ${exhLevel}` : def.abbr;
+              const label = isExh ? `Exhaustion ${exhLevel}` : def.name;
               return (
-                <span key={entry.name} className="cond-badge">
+                <span key={entry.name} className={`cond-badge cond-badge--${def.tier}`}>
                   <button
                     className="cond-badge__label"
                     title={`${entry.name} — ${def.desc}\nClick to remove`}
@@ -221,6 +221,29 @@ export function CharacterHeader({ ch, updateSelected }: Props) {
               <text x="24" y="35" textAnchor="middle" dominantBaseline="middle" className="ac-shield__number">{calcEffectiveAC(ch)}</text>
             </svg>
           </div>
+          {(() => {
+            const percMod = abilityMod(ch.abilities.wis) + (ch.skillProficiencies.includes('perception') ? profBonus(ch.level) : 0);
+            const pp = 10 + percMod;
+            return (
+              <div className="pp-badge" title={`Passive Perception ${pp} (10 ${percMod >= 0 ? '+' : ''}${percMod})`}>
+                <svg className="pp-badge__svg" viewBox="0 0 60 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  {/* Eye shape — outer */}
+                  <path
+                    d="M 3,19 C 3,19 15,4 30,4 C 45,4 57,19 57,19 C 57,19 45,34 30,34 C 15,34 3,19 3,19 Z"
+                    fill="var(--bg-deep)"
+                    stroke="var(--border-gold-dim)"
+                    strokeWidth="1.2"
+                  />
+                  {/* Iris circle */}
+                  <circle cx="30" cy="19" r="9" fill="none" stroke="var(--border-inner)" strokeWidth="0.75" opacity="0.5" />
+                  {/* Label */}
+                  <text x="30" y="12" textAnchor="middle" dominantBaseline="middle" className="pp-badge__label">PP</text>
+                  {/* Value */}
+                  <text x="30" y="24" textAnchor="middle" dominantBaseline="middle" className="pp-badge__number">{pp}</text>
+                </svg>
+              </div>
+            );
+          })()}
         </div>
       </div>
     </>

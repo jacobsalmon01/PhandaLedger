@@ -175,6 +175,37 @@ export function useStore() {
     }));
   }, [snap.selectedId]);
 
+  const shortRestAll = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      characters: prev.characters.map((c) =>
+        c.shortRestsUsed >= 2 ? c : {
+          ...c,
+          shortRestsUsed: c.shortRestsUsed + 1,
+          resources: c.resources.map((r) =>
+            r.recharge === 'short' ? { ...r, used: 0 } : r
+          ),
+        }
+      ),
+    }));
+  }, []);
+
+  const longRestAll = useCallback((label: string, timestamp: number) => {
+    setState((prev) => ({
+      ...prev,
+      characters: prev.characters.map((c) => ({
+        ...c,
+        shortRestsUsed: 0,
+        lastLongRestAt: label,
+        lastLongRestTimestamp: timestamp,
+        spellSlots: c.spellSlots.map((s) => ({ ...s, used: 0 })),
+        resources: c.resources.map((r) =>
+          r.recharge !== 'manual' ? { ...r, used: 0 } : r
+        ),
+      })),
+    }));
+  }, []);
+
   const replaceParty = useCallback((exported: PartyExport) => {
     const { characters, selectedId } = exported;
     const safeSelectedId = characters.find((c) => c.id === selectedId)
@@ -264,6 +295,8 @@ export function useStore() {
     updateSelected,
     shortRest,
     longRest,
+    shortRestAll,
+    longRestAll,
     replaceParty,
     addInitiativeEntry,
     removeInitiativeEntry,

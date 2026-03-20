@@ -102,11 +102,11 @@ export function AbilityScoresSection({ ch, updateSelected }: Props) {
               {/* Saving throw */}
               <div className="attr-col__divider" />
               <button
-                className={`attr-check-row${isSaveProficient ? ' attr-check-row--proficient' : ''}`}
+                className={`attr-check-row attr-check-row--save${isSaveProficient ? ' attr-check-row--proficient' : ''}`}
                 onClick={() => toggleSave(abilityKey)}
                 title={`${label} saving throw${isSaveProficient ? ` (proficient, +${pb})` : ' — click to add proficiency'}`}
               >
-                <span className="attr-check-row__dot" />
+                <span className="attr-check-row__dot attr-check-row__dot--save" />
                 <span className="attr-check-row__name">Save</span>
                 <span className="attr-check-row__bonus">
                   {saveBonus >= 0 ? `+${saveBonus}` : `${saveBonus}`}

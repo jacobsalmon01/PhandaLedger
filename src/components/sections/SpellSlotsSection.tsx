@@ -22,11 +22,15 @@ export function SpellSlotsSection({ ch, updateSelected }: Props) {
     });
   }
 
+  // Show levels up to the highest configured + 1 (so users can expand), minimum 1
+  const highestConfigured = spellSlots.reduce((max, s, i) => s.max > 0 ? i : max, -1);
+  const visibleCount = Math.min(9, Math.max(1, highestConfigured + 2));
+
   return (
     <section className="section">
       <h2 className="section__heading">Spell Slots</h2>
       <div className="spell-slots">
-        {spellSlots.map((slot, i) => {
+        {spellSlots.slice(0, visibleCount).map((slot, i) => {
           const available = slot.max - slot.used;
           return (
             <div key={i} className={`spell-level-row${slot.max === 0 ? ' spell-level-row--inactive' : ''}`}>

@@ -4,6 +4,9 @@ import { useStore } from '../store/useStore';
 const SR_MAX = 2;
 const LONG_REST_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
+type RestScope = 'character' | 'party';
+type PendingRest = { type: 'short' | 'long' };
+
 function formatRestLabel(timeValue: string): string {
   const [h, m] = timeValue.split(':').map(Number);
   if (isNaN(h) || isNaN(m)) return timeValue;
@@ -26,15 +29,17 @@ function nowHHMM(): string {
 }
 
 export function RestsSection() {
-  const { selected, selectedId, shortRest, longRest } = useStore();
+  const { selected, selectedId, characters, shortRest, longRest, shortRestAll, longRestAll } = useStore();
   const [expanded, setExpanded] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+  const [pending, setPending] = useState<PendingRest | null>(null);
+  const [scope, setScope] = useState<RestScope | null>(null);
   const [timeValue, setTimeValue] = useState(nowHHMM());
 
   const hasSelected = selectedId !== null;
   const srUsed = selected?.shortRestsUsed ?? 0;
   const srRemaining = SR_MAX - srUsed;
   const canShortRest = hasSelected && srRemaining > 0;
+  const partySize = characters.length;
 
   const selectedTs = timestampFromTime(timeValue);
   const lastTs = selected?.lastLongRestTimestamp ?? null;
@@ -44,10 +49,53 @@ export function RestsSection() {
     ? Math.ceil((LONG_REST_COOLDOWN_MS - msSinceLast) / 3600000)
     : 0;
 
-  function confirmLongRest() {
-    longRest(formatRestLabel(timeValue), selectedTs);
-    setShowModal(false);
+  function startRest(type: 'short' | 'long') {
+    if (partySize <= 1) {
+      // Only one character — skip the scope prompt
+      if (type === 'short') {
+        shortRest();
+      } else {
+        setScope('character');
+        setPending({ type: 'long' });
+        setTimeValue(nowHHMM());
+      }
+      return;
+    }
+    setPending({ type });
+    setScope(null);
+    setTimeValue(nowHHMM());
   }
+
+  function chooseScope(chosen: RestScope) {
+    if (!pending) return;
+    if (pending.type === 'short') {
+      if (chosen === 'character') shortRest();
+      else shortRestAll();
+      setPending(null);
+      setScope(null);
+    } else {
+      // Long rest — proceed to time picker
+      setScope(chosen);
+    }
+  }
+
+  function confirmLongRest() {
+    if (!scope) return;
+    const label = formatRestLabel(timeValue);
+    if (scope === 'character') longRest(label, selectedTs);
+    else longRestAll(label, selectedTs);
+    setPending(null);
+    setScope(null);
+  }
+
+  function cancelRest() {
+    setPending(null);
+    setScope(null);
+  }
+
+  const showScopePrompt = pending !== null && scope === null;
+  const showLongRestModal = pending?.type === 'long' && scope !== null;
+  const charName = selected?.name || 'Character';
 
   return (
     <>
@@ -81,7 +129,7 @@ export function RestsSection() {
               </div>
               <button
                 className="rest-btn rest-btn--short"
-                onClick={shortRest}
+                onClick={() => startRest('short')}
                 disabled={!canShortRest}
                 title={
                   !hasSelected ? 'Select a character first'
@@ -103,7 +151,7 @@ export function RestsSection() {
               </div>
               <button
                 className="rest-btn rest-btn--long"
-                onClick={() => { setTimeValue(nowHHMM()); setShowModal(true); }}
+                onClick={() => startRest('long')}
                 disabled={!hasSelected}
                 title={
                   !hasSelected ? 'Select a character first'
@@ -117,13 +165,48 @@ export function RestsSection() {
         )}
       </div>
 
-      {/* ── Long Rest Modal ── */}
-      {showModal && (
-        <div className="lr-modal-overlay" onClick={() => setShowModal(false)}>
+      {/* ── Scope Prompt Modal ── */}
+      {showScopePrompt && (
+        <div className="lr-modal-overlay" onClick={cancelRest}>
+          <div className="lr-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="lr-modal__header">
+              <span className="lr-modal__title">
+                {pending.type === 'short' ? 'Short Rest' : 'Long Rest'}
+              </span>
+              <span className="lr-modal__subtitle">
+                Who is resting?
+              </span>
+            </div>
+            <div className="rest-scope-actions">
+              <button className="rest-scope-btn" onClick={() => chooseScope('character')}>
+                <span className="rest-scope-btn__text">{charName}</span>
+                <span className="rest-scope-btn__sub">Selected character only</span>
+              </button>
+              <button className="rest-scope-btn" onClick={() => chooseScope('party')}>
+                <span className="rest-scope-btn__text">Entire Party</span>
+                <span className="rest-scope-btn__sub">All {partySize} characters</span>
+              </button>
+            </div>
+            <div className="lr-modal__footer">
+              <button className="lr-modal__btn lr-modal__btn--cancel" onClick={cancelRest}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Long Rest Time Modal ── */}
+      {showLongRestModal && (
+        <div className="lr-modal-overlay" onClick={cancelRest}>
           <div className="lr-modal" onClick={(e) => e.stopPropagation()}>
             <div className="lr-modal__header">
               <span className="lr-modal__title">Long Rest</span>
-              <span className="lr-modal__subtitle">When did the party bed down?</span>
+              <span className="lr-modal__subtitle">
+                {scope === 'party'
+                  ? 'When did the party bed down?'
+                  : `When did ${charName} bed down?`}
+              </span>
             </div>
             <div className="lr-modal__body">
               <label className="lr-modal__label">Rest began at</label>
@@ -133,23 +216,27 @@ export function RestsSection() {
                 value={timeValue}
                 onChange={(e) => setTimeValue(e.target.value)}
               />
-              {tooSoon && (
+              {tooSoon && scope === 'character' && (
                 <div className="lr-modal__warning">
                   ⚠ Only {hoursRemaining}h until full rest is available.
-                  The party is not yet recovered.
+                  {charName} is not yet recovered.
                 </div>
               )}
             </div>
             <div className="lr-modal__footer">
-              <button className="lr-modal__btn lr-modal__btn--cancel" onClick={() => setShowModal(false)}>
+              <button className="lr-modal__btn lr-modal__btn--cancel" onClick={cancelRest}>
                 Cancel
               </button>
               <button
-                className={`lr-modal__btn lr-modal__btn--confirm${tooSoon ? ' lr-modal__btn--warn' : ''}`}
+                className={`lr-modal__btn lr-modal__btn--confirm${tooSoon && scope === 'character' ? ' lr-modal__btn--warn' : ''}`}
                 onClick={confirmLongRest}
                 disabled={isNaN(selectedTs)}
               >
-                {tooSoon ? 'Rest Anyway' : 'Take Long Rest'}
+                {tooSoon && scope === 'character'
+                  ? 'Rest Anyway'
+                  : scope === 'party'
+                    ? 'Rest the Party'
+                    : 'Take Long Rest'}
               </button>
             </div>
           </div>

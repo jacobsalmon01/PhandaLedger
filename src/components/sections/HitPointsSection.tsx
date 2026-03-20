@@ -1,19 +1,28 @@
 import { useRef, useState } from 'react';
-import type { Character } from '../../types/character';
+import type { Character, PreparedSpell } from '../../types/character';
 import { NumericInput } from '../NumericInput';
+import { ConcentrationCheckModal } from '../ConcentrationCheckModal';
 
 interface Props {
   ch: Character;
   updateSelected: (updater: (ch: Character) => Character) => void;
 }
 
+interface ConcCheck {
+  spell: PreparedSpell;
+  damage: number;
+}
+
 export function HitPointsSection({ ch, updateSelected }: Props) {
   const [customAmount, setCustomAmount] = useState('');
+  const [concCheck, setConcCheck] = useState<ConcCheck | null>(null);
   const currentHpRef = useRef<HTMLInputElement>(null);
 
   const pct = ch.hp.max > 0 ? Math.max(0, Math.min(100, (ch.hp.current / ch.hp.max) * 100)) : 0;
   const barColor =
     pct > 60 ? 'var(--hp-healthy)' : pct > 25 ? 'var(--hp-wounded)' : 'var(--hp-critical)';
+
+  const activeConc = ch.spells.find((s) => s.concentration && s.active) ?? null;
 
   function applyHP(amount: number) {
     updateSelected((c) => {
@@ -31,6 +40,11 @@ export function HitPointsSection({ ch, updateSelected }: Props) {
       return c;
     });
 
+    // Trigger concentration check if taking damage while concentrating
+    if (amount < 0 && activeConc) {
+      setConcCheck({ spell: activeConc, damage: Math.abs(amount) });
+    }
+
     const el = currentHpRef.current;
     if (el) {
       const cls = amount < 0 ? 'hp-flash-dmg' : 'hp-flash-heal';
@@ -39,6 +53,21 @@ export function HitPointsSection({ ch, updateSelected }: Props) {
       el.classList.add(cls);
       setTimeout(() => el.classList.remove(cls), 350);
     }
+  }
+
+  function breakConcentration() {
+    if (!concCheck) return;
+    updateSelected((c) => ({
+      ...c,
+      spells: c.spells.map((s) =>
+        s.id === concCheck.spell.id ? { ...s, active: false, roundsRemaining: 0 } : s
+      ),
+    }));
+    setConcCheck(null);
+  }
+
+  function keepConcentration() {
+    setConcCheck(null);
   }
 
   function handleCustomHP(sign: 1 | -1) {
@@ -130,6 +159,16 @@ export function HitPointsSection({ ch, updateSelected }: Props) {
           </button>
         </div>
       </div>
+
+      {concCheck && (
+        <ConcentrationCheckModal
+          ch={ch}
+          spell={concCheck.spell}
+          damage={concCheck.damage}
+          onBreak={breakConcentration}
+          onKeep={keepConcentration}
+        />
+      )}
     </section>
   );
 }

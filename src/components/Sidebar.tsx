@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import type { Character } from '../types/character';
 import { ImportExportControls } from './ImportExportControls';
@@ -38,11 +39,24 @@ function hpColor(ch: Character): string {
   return 'var(--hp-critical)';
 }
 
-export function Sidebar() {
+interface SidebarProps {
+  open?: boolean;
+  onNavigate?: () => void;
+}
+
+export function Sidebar({ open, onNavigate }: SidebarProps) {
   const { characters, selectedId, addCharacter, removeCharacter, selectCharacter, replaceParty } = useStore();
+  const [pendingRemove, setPendingRemove] = useState<Character | null>(null);
+
+  function confirmRemove() {
+    if (pendingRemove) {
+      removeCharacter(pendingRemove.id);
+      setPendingRemove(null);
+    }
+  }
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar${open ? ' sidebar--open' : ''}`}>
       <div className="sidebar-header">
         <div className="sidebar-title">PhandaLedger</div>
         <div className="sidebar-subtitle">Party Roster</div>
@@ -53,7 +67,7 @@ export function Sidebar() {
           <div
             key={ch.id}
             className={`pc-item${ch.id === selectedId ? ' pc-item--selected' : ''}`}
-            onClick={() => selectCharacter(ch.id)}
+            onClick={() => { selectCharacter(ch.id); onNavigate?.(); }}
           >
             <SidebarPortrait ch={ch} />
             <div className="pc-item__info">
@@ -72,7 +86,7 @@ export function Sidebar() {
               title="Remove character"
               onClick={(e) => {
                 e.stopPropagation();
-                removeCharacter(ch.id);
+                setPendingRemove(ch);
               }}
             >
               &times;
@@ -80,6 +94,27 @@ export function Sidebar() {
           </div>
         ))}
       </div>
+
+      {pendingRemove && (
+        <div className="lr-modal-overlay" onClick={() => setPendingRemove(null)}>
+          <div className="lr-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="lr-modal__header">
+              <span className="lr-modal__title">Remove Character</span>
+              <span className="lr-modal__subtitle">
+                Are you sure you want to remove {pendingRemove.name || 'this character'} from the party? This cannot be undone.
+              </span>
+            </div>
+            <div className="lr-modal__footer">
+              <button className="lr-modal__btn lr-modal__btn--cancel" onClick={() => setPendingRemove(null)}>
+                Cancel
+              </button>
+              <button className="lr-modal__btn lr-modal__btn--danger" onClick={confirmRemove}>
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <InitiativeTracker />
       <DiceRoller />

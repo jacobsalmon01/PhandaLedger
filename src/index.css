@@ -1315,6 +1315,17 @@ body::after {
   background: rgba(200, 164, 78, 0.12);
 }
 
+.lr-modal__btn--danger {
+  background: rgba(200, 70, 70, 0.1);
+  border-color: rgba(200, 70, 70, 0.5);
+  color: rgba(220, 90, 90, 0.95);
+}
+
+.lr-modal__btn--danger:hover:not(:disabled) {
+  background: rgba(200, 70, 70, 0.2);
+  border-color: rgba(200, 70, 70, 0.7);
+}
+
 /* ── Rest scope picker ── */
 .rest-scope-actions {
   display: grid;
@@ -1689,6 +1700,15 @@ body::after {
   gap: 5px;
   min-width: 0;
   position: relative;
+}
+
+.char-header__tagline {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+  line-height: 1;
+  margin-top: -2px;
 }
 
 .char-name-input {
@@ -6269,14 +6289,258 @@ input[type="number"] { -moz-appearance: textfield; }
 }
 
 /* ══════════════════════════════════════════
-   Responsive
+   Sidebar toggle (hidden on desktop)
    ══════════════════════════════════════════ */
 
-@media (max-width: 900px) {
-  /* Header badges wrap below name on narrow screens */
+.sidebar-toggle {
+  display: none;
+}
+
+.sidebar-overlay {
+  display: none;
+}
+
+/* ══════════════════════════════════════════
+   Responsive — Tablet (≤ 1024px)
+   ══════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 220px;
+    min-width: 220px;
+  }
+
+  .main-inner {
+    padding: var(--gap-md);
+    padding-top: var(--gap-sm);
+  }
+
+  /* Ability grid: 3 columns on tablet */
+  .attr-skills-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--gap-sm) var(--gap-sm);
+  }
+
   .char-header-badges {
     margin-left: 0;
     flex-basis: 100%;
     justify-content: flex-end;
+  }
+
+  .spell-stats {
+    flex-wrap: wrap;
+  }
+}
+
+/* ══════════════════════════════════════════
+   Responsive — Mobile (≤ 768px)
+   ══════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  #app {
+    flex-direction: column;
+    padding: 0;
+    gap: 0;
+  }
+
+  /* ── Sidebar as slide-out drawer ── */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    min-width: 280px;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    border: none;
+    border-right: 2px solid var(--border-gold-dim);
+  }
+
+  .sidebar--open {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .sidebar-overlay--open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* ── Hamburger toggle ── */
+  .sidebar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: var(--gap-sm);
+    left: var(--gap-sm);
+    z-index: 1001;
+    width: 40px;
+    height: 40px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-gold-dim);
+    color: var(--text-gold);
+    font-size: 1.3rem;
+    cursor: pointer;
+    border-radius: 3px;
+  }
+
+  /* ── Main area full-width ── */
+  .main {
+    border: none;
+    min-height: 100vh;
+    height: auto;
+    overflow-y: auto;
+  }
+
+  .main-inner {
+    padding: var(--gap-md);
+    padding-top: 52px; /* room for hamburger */
+  }
+
+  /* ── Character header stacks ── */
+  .char-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .char-portrait-area {
+    width: 72px;
+    height: 72px;
+    min-width: 72px;
+  }
+
+  .char-name-input {
+    font-size: 1.3rem;
+  }
+
+  .char-header-badges {
+    margin-left: 0;
+    flex-basis: 100%;
+    justify-content: flex-start;
+  }
+
+  /* ── Tabs: smaller text, scroll horizontally ── */
+  .sheet-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .sheet-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sheet-tab {
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    padding: var(--gap-xs) var(--gap-sm);
+    white-space: nowrap;
+  }
+
+  /* ── Ability grid: 2 columns on phone ── */
+  .attr-skills-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--gap-md) var(--gap-sm);
+  }
+
+  /* ── HP block stacks ── */
+  .hp-block {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hp-block > .hp-display {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .hp-bar-container {
+    min-width: 0;
+  }
+
+  .hp-quick-btns {
+    flex-wrap: wrap;
+  }
+
+  .hp-custom {
+    margin-left: 0;
+    margin-top: var(--gap-xs);
+    flex-basis: 100%;
+  }
+
+  /* ── Spell stats banner wraps ── */
+  .spell-stats {
+    flex-wrap: wrap;
+    gap: var(--gap-sm);
+  }
+
+  .spell-stats__divider {
+    display: none;
+  }
+
+  /* ── Defense row wraps ── */
+  .defense-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--gap-sm);
+  }
+
+  /* ── Weapon form fields wrap tighter ── */
+  .weapon-form__field--wide {
+    min-width: 100%;
+  }
+
+  /* ── Identity row full-width fields ── */
+  .identity-row {
+    gap: var(--gap-sm);
+  }
+
+  .field--grow {
+    min-width: 100%;
+  }
+
+  /* ── Inventory ── */
+  .inv-row__main {
+    flex-wrap: wrap;
+  }
+}
+
+/* ══════════════════════════════════════════
+   Responsive — Small phones (≤ 400px)
+   ══════════════════════════════════════════ */
+
+@media (max-width: 400px) {
+  .attr-skills-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .char-portrait-area {
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+  }
+
+  .hp-display__value {
+    font-size: 1.4rem;
+    width: 56px;
+  }
+
+  .sheet-tab {
+    font-size: 0.55rem;
+    padding: var(--gap-xs) 6px;
   }
 }

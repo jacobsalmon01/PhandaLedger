@@ -141,6 +141,17 @@ export function CharacterHeader({ ch, updateSelected }: Props) {
             onChange={(e) => updateSelected((c) => ({ ...c, name: e.target.value }))}
           />
 
+          {/* ── Identity tagline ── */}
+          {(ch.race || ch.class || ch.level > 0) && (
+            <div className="char-header__tagline">
+              {[
+                ch.level > 0 ? `Level ${ch.level}` : null,
+                ch.race || null,
+                [ch.class, ch.subclass].filter(Boolean).join(' — ') || null,
+              ].filter(Boolean).join(' · ')}
+            </div>
+          )}
+
           {/* ── Conditions row ── */}
           <div className="char-conditions">
             {ch.conditions.map((entry) => {

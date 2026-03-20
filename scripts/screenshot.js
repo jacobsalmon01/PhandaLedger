@@ -104,6 +104,57 @@ async function capture() {
       console.log('No characters found in sidebar — only capturing initial state.');
     }
 
+    // ── Mobile & tablet viewports ──
+    const responsiveViewports = [
+      { name: 'iphone', width: 390, height: 844 },
+      { name: 'tablet', width: 768, height: 1024 },
+    ];
+
+    // Save localStorage state from current page to re-inject on mobile pages
+    const lsState = await page.evaluate(() => localStorage.getItem('phandaLedger_state'));
+
+    for (const vp of responsiveViewports) {
+      const mobilePage = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
+      mobilePage.setDefaultTimeout(10000);
+      await mobilePage.goto(baseUrl, { waitUntil: 'domcontentloaded' });
+      if (lsState) {
+        await mobilePage.evaluate((json) => localStorage.setItem('phandaLedger_state', json), lsState);
+        await mobilePage.reload({ waitUntil: 'networkidle' });
+      } else {
+        await mobilePage.waitForLoadState('networkidle');
+      }
+
+      // If there are characters, click the first one
+      const mobileFirstChar = mobilePage.locator('.pc-item').first();
+      if (await mobileFirstChar.count() > 0) {
+        // On mobile the sidebar is hidden; open it first
+        const toggle = mobilePage.locator('.sidebar-toggle');
+        if (await toggle.isVisible()) {
+          await toggle.click();
+          await mobilePage.waitForTimeout(300);
+          await mobileFirstChar.click();
+          await mobilePage.waitForTimeout(400);
+        } else {
+          await mobileFirstChar.click();
+          await mobilePage.waitForTimeout(400);
+        }
+      }
+
+      await mobilePage.screenshot({ path: path.join(OUT_DIR, `004_${vp.name}_stats.png`), fullPage: false });
+      console.log(`Captured: 004_${vp.name}_stats.png`);
+
+      // Click Spells tab if visible
+      const spellTab = mobilePage.locator('.sheet-tab', { hasText: 'Spells' });
+      if (await spellTab.count() > 0) {
+        await spellTab.click();
+        await mobilePage.waitForTimeout(300);
+        await mobilePage.screenshot({ path: path.join(OUT_DIR, `004_${vp.name}_spells.png`), fullPage: false });
+        console.log(`Captured: 004_${vp.name}_spells.png`);
+      }
+
+      await mobilePage.close();
+    }
+
     console.log(`\nScreenshots saved to: ${OUT_DIR}`);
   } finally {
     await browser.close();

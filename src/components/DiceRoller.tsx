@@ -318,11 +318,10 @@ export function DiceRoller() {
                       <div className={`skill-equation${isSkillRevealing ? ' skill-equation--reveal' : ''}`}>
                         <div className={`skill-eq__raw-wrap${isSkillRevealing ? ' skill-eq__raw-wrap--enter' : ''}`}>
                           <span className={['skill-eq__raw', skillResult.natType === 'nat20' ? 'skill-eq__raw--nat20' : '', skillResult.natType === 'nat1' ? 'skill-eq__raw--nat1' : ''].filter(Boolean).join(' ')}>{skillResult.rawRoll}</span>
-                          <span className="skill-eq__raw-label">d20</span>
                         </div>
                         {(isSkillAdding || isSkillTotaling || isSkillDone) && (
                           <span className={`skill-eq__mod${isSkillAdding ? ' skill-eq__mod--enter' : ''}`}>
-                            {skillResult.modifier >= 0 ? `+${skillResult.modifier}` : `${skillResult.modifier}`}
+                            {skillResult.modifier >= 0 ? <><span className="skill-eq__mod-sign">+</span>{skillResult.modifier}</> : <><span className="skill-eq__mod-sign">−</span>{Math.abs(skillResult.modifier)}</>}
                           </span>
                         )}
                         {(isSkillTotaling || isSkillDone) && (

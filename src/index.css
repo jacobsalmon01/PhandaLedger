@@ -4370,6 +4370,10 @@ body::after {
   text-transform: uppercase;
 }
 
+.skill-eq__mod-sign {
+  margin-right: 3px;
+}
+
 .skill-eq__mod {
   font-family: var(--font-display);
   font-weight: 700;
@@ -4377,7 +4381,7 @@ body::after {
   color: var(--text-gold);
   text-shadow: 0 0 14px rgba(212, 180, 90, 0.5);
   line-height: 1;
-  padding: 0 2px;
+  padding: 0 4px;
 }
 
 .skill-eq__mod--enter {
@@ -4386,9 +4390,10 @@ body::after {
 
 .skill-eq__equals {
   font-family: var(--font-display);
-  font-size: 1.1rem;
-  color: var(--text-dim);
-  opacity: 0.5;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--gold-light);
+  opacity: 0.9;
   line-height: 1;
   animation: skill-eq-fade 0.2s ease-out both;
 }

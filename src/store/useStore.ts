@@ -190,6 +190,37 @@ export function useStore() {
     }));
   }, []);
 
+  const shortRestWithHP = useCallback((hpGain: number) => {
+    if (!snap.selectedId) return;
+    updateCharacter(snap.selectedId, (c) => {
+      if (c.shortRestsUsed >= 2) return c;
+      return {
+        ...c,
+        hp: { ...c.hp, current: Math.min(c.hp.current + hpGain, c.hp.max) },
+        shortRestsUsed: c.shortRestsUsed + 1,
+        resources: c.resources.map((r) =>
+          r.recharge === 'short' ? { ...r, used: 0 } : r
+        ),
+      };
+    });
+  }, [snap.selectedId]);
+
+  const shortRestAllWithHP = useCallback((hpGains: Record<string, number>) => {
+    setState((prev) => ({
+      ...prev,
+      characters: prev.characters.map((c) =>
+        c.shortRestsUsed >= 2 ? c : {
+          ...c,
+          hp: { ...c.hp, current: Math.min(c.hp.current + (hpGains[c.id] ?? 0), c.hp.max) },
+          shortRestsUsed: c.shortRestsUsed + 1,
+          resources: c.resources.map((r) =>
+            r.recharge === 'short' ? { ...r, used: 0 } : r
+          ),
+        }
+      ),
+    }));
+  }, []);
+
   const longRestAll = useCallback((label: string, timestamp: number) => {
     setState((prev) => ({
       ...prev,
@@ -297,6 +328,8 @@ export function useStore() {
     longRest,
     shortRestAll,
     longRestAll,
+    shortRestWithHP,
+    shortRestAllWithHP,
     replaceParty,
     addInitiativeEntry,
     removeInitiativeEntry,

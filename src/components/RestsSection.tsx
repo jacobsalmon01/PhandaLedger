@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
+import { type Character } from '../types/character';
+import { ShortRestModal } from './ShortRestModal';
 
 const SR_MAX = 2;
 const LONG_REST_COOLDOWN_MS = 24 * 60 * 60 * 1000;
@@ -29,11 +31,20 @@ function nowHHMM(): string {
 }
 
 export function RestsSection() {
-  const { selected, selectedId, characters, shortRest, longRest, shortRestAll, longRestAll } = useStore();
+  const {
+    selected, selectedId, characters,
+    shortRestWithHP, shortRestAllWithHP,
+    longRest, longRestAll,
+  } = useStore();
+
   const [expanded, setExpanded] = useState(false);
   const [pending, setPending] = useState<PendingRest | null>(null);
   const [scope, setScope] = useState<RestScope | null>(null);
   const [timeValue, setTimeValue] = useState(nowHHMM());
+
+  // Short rest HP modal state
+  const [shortRestModalChars, setShortRestModalChars] = useState<Character[] | null>(null);
+  const [shortRestScope, setShortRestScope] = useState<RestScope>('character');
 
   const hasSelected = selectedId !== null;
   const srUsed = selected?.shortRestsUsed ?? 0;
@@ -49,34 +60,58 @@ export function RestsSection() {
     ? Math.ceil((LONG_REST_COOLDOWN_MS - msSinceLast) / 3600000)
     : 0;
 
+  function openShortRestModal(restScope: RestScope) {
+    setShortRestScope(restScope);
+    if (restScope === 'character') {
+      setShortRestModalChars(selected ? [selected] : []);
+    } else {
+      setShortRestModalChars(
+        characters.filter((c) => !c.dead && c.shortRestsUsed < SR_MAX)
+      );
+    }
+  }
+
   function startRest(type: 'short' | 'long') {
-    if (partySize <= 1) {
-      // Only one character — skip the scope prompt
-      if (type === 'short') {
-        shortRest();
+    if (type === 'short') {
+      if (partySize <= 1) {
+        openShortRestModal('character');
       } else {
-        setScope('character');
-        setPending({ type: 'long' });
-        setTimeValue(nowHHMM());
+        setPending({ type: 'short' });
+        setScope(null);
       }
       return;
     }
-    setPending({ type });
-    setScope(null);
-    setTimeValue(nowHHMM());
+    // Long rest
+    if (partySize <= 1) {
+      setScope('character');
+      setPending({ type: 'long' });
+      setTimeValue(nowHHMM());
+    } else {
+      setPending({ type });
+      setScope(null);
+      setTimeValue(nowHHMM());
+    }
   }
 
   function chooseScope(chosen: RestScope) {
     if (!pending) return;
     if (pending.type === 'short') {
-      if (chosen === 'character') shortRest();
-      else shortRestAll();
+      openShortRestModal(chosen);
       setPending(null);
       setScope(null);
     } else {
       // Long rest — proceed to time picker
       setScope(chosen);
     }
+  }
+
+  function handleShortRestConfirm(hpGains: Record<string, number>) {
+    if (shortRestScope === 'party') {
+      shortRestAllWithHP(hpGains);
+    } else if (selectedId) {
+      shortRestWithHP(hpGains[selectedId] ?? 0);
+    }
+    setShortRestModalChars(null);
   }
 
   function confirmLongRest() {
@@ -164,6 +199,15 @@ export function RestsSection() {
           </div>
         )}
       </div>
+
+      {/* ── Short Rest HP Modal ── */}
+      {shortRestModalChars !== null && (
+        <ShortRestModal
+          characters={shortRestModalChars}
+          onConfirm={handleShortRestConfirm}
+          onCancel={() => setShortRestModalChars(null)}
+        />
+      )}
 
       {/* ── Scope Prompt Modal ── */}
       {showScopePrompt && (

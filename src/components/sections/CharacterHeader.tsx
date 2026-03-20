@@ -255,6 +255,31 @@ export function CharacterHeader({ ch, updateSelected }: Props) {
               </div>
             );
           })()}
+
+          {/* ── Hit Dice Badge ── */}
+          <div className="hd-badge" title={`Hit Dice: ${ch.level}${ch.hitDice.type} (${ch.class || 'unknown class'})`}>
+            <svg className="hd-badge__svg" viewBox="0 0 58 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Outer octagon */}
+              <path
+                d="M 16,2 L 42,2 L 56,16 L 56,48 L 42,62 L 16,62 L 2,48 L 2,16 Z"
+                fill="var(--bg-deep)"
+                stroke="var(--border-gold-dim)"
+                strokeWidth="1.5"
+              />
+              {/* Inner octagon frame */}
+              <path
+                d="M 19,6 L 39,6 L 52,19 L 52,45 L 39,58 L 19,58 L 6,45 L 6,19 Z"
+                fill="none"
+                stroke="var(--border-inner)"
+                strokeWidth="0.75"
+                opacity="0.55"
+              />
+              {/* "HD" label */}
+              <text x="29" y="20" textAnchor="middle" dominantBaseline="middle" className="hd-badge__label">HD</text>
+              {/* Die type value */}
+              <text x="29" y="42" textAnchor="middle" dominantBaseline="middle" className="hd-badge__value">{ch.hitDice.type}</text>
+            </svg>
+          </div>
         </div>
       </div>
     </>

@@ -2311,8 +2311,8 @@ body::after {
 
 .gold-coin-badge {
   flex-shrink: 0;
-  width: 64px;
-  height: 64px;
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
   background: var(--bg-deep);
   border: 2px solid var(--border-gold-dim);
@@ -2343,14 +2343,14 @@ body::after {
 
 .gold-coin__value {
   font-family: var(--font-mono);
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--text-gold);
   background: transparent;
   border: none !important;
   outline: none;
   text-align: center;
-  width: 54px;
+  width: 46px;
   padding: 0;
   line-height: 1;
 }
@@ -2372,8 +2372,8 @@ body::after {
 }
 
 .ac-shield-svg {
-  width: 68px;
-  height: 82px;
+  width: 45px;
+  height: 54px;
   display: block;
 }
 
@@ -2388,7 +2388,7 @@ body::after {
 
 .ac-shield__number {
   font-family: var(--font-mono);
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   fill: var(--text-bright);
 }
@@ -2406,8 +2406,8 @@ body::after {
 }
 
 .pp-badge__svg {
-  width: 68px;
-  height: 43px;
+  width: 57px;
+  height: 36px;
   display: block;
 }
 
@@ -2423,6 +2423,38 @@ body::after {
 .pp-badge__number {
   font-family: var(--font-mono);
   font-size: 16px;
+  font-weight: 700;
+  fill: var(--text-bright);
+}
+
+/* ── Hit Dice Badge (octagon die) ── */
+.hd-badge {
+  flex-shrink: 0;
+  cursor: default;
+  transition: filter 0.2s;
+}
+
+.hd-badge:hover {
+  filter: drop-shadow(0 3px 10px rgba(200, 164, 78, 0.30));
+}
+
+.hd-badge__svg {
+  width: 48px;
+  height: 54px;
+  display: block;
+}
+
+.hd-badge__label {
+  font-family: var(--font-display);
+  font-size: 8.5px;
+  fill: var(--text-dim);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.hd-badge__value {
+  font-family: var(--font-mono);
+  font-size: 14px;
   font-weight: 700;
   fill: var(--text-bright);
 }
@@ -7443,4 +7475,252 @@ input[type="number"] { -moz-appearance: textfield; }
   margin-right: 4px;
   color: rgba(200, 80, 80, 0.7);
   vertical-align: middle;
+}
+
+/* ── Short Rest HP Recovery Modal ── */
+
+.sr-hp-modal {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-gold);
+  border-radius: 4px;
+  width: min(520px, 95vw);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+}
+
+.sr-hp-modal__header {
+  padding: var(--gap-md) var(--gap-lg);
+  border-bottom: 1px solid var(--border-inner);
+  flex-shrink: 0;
+}
+
+.sr-hp-modal__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 3px;
+}
+
+.sr-hp-modal__title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--text-gold);
+  letter-spacing: 0.03em;
+}
+
+.sr-hp-modal__subtitle {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.sr-hp-modal__roll-all {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  color: var(--text-gold);
+  background: rgba(200, 164, 78, 0.07);
+  border: 1px solid var(--border-gold-dim);
+  border-radius: 3px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.sr-hp-modal__roll-all:hover {
+  background: rgba(200, 164, 78, 0.16);
+  border-color: var(--border-gold);
+}
+
+.sr-hp-modal__table {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+/* Each character row */
+.sr-hp-row {
+  display: grid;
+  grid-template-columns: 40px 1fr auto auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 9px var(--gap-lg);
+  transition: background 0.1s;
+}
+
+.sr-hp-row + .sr-hp-row {
+  border-top: 1px solid var(--border-inner);
+}
+
+.sr-hp-row:hover {
+  background: var(--bg-hover);
+}
+
+.sr-hp-row--full {
+  opacity: 0.55;
+}
+
+/* Portrait */
+.sr-hp-row__portrait {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border-frame);
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-surface);
+}
+
+.sr-hp-row__portrait-crop {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sr-hp-row__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.sr-hp-row__initial {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+/* Name + meta */
+.sr-hp-row__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sr-hp-row__name {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  color: var(--text-bright);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sr-hp-row__meta {
+  font-family: var(--font-body);
+  font-size: 0.67rem;
+  color: var(--text-dim);
+  margin-top: 1px;
+}
+
+/* HP current/max display */
+.sr-hp-row__hp-status {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  flex-shrink: 0;
+}
+
+.sr-hp-row__hp-sep {
+  color: var(--text-dim);
+}
+
+.sr-hp-row__hp-max {
+  color: var(--text-dim);
+}
+
+/* "Full HP" label (replaces roll + input when at max) */
+.sr-hp-row__full-label {
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--hp-healthy);
+  grid-column: span 2;
+  text-align: right;
+}
+
+/* Per-character dice roll button */
+.sr-hp-row__roll-btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-frame);
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 1.05rem;
+  color: var(--text-parchment);
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+
+.sr-hp-row__roll-btn:hover {
+  border-color: var(--border-gold-dim);
+  color: var(--text-gold);
+  background: var(--bg-hover);
+}
+
+.sr-hp-row__roll-btn--rolling {
+  animation: srDiceRoll 0.45s ease;
+}
+
+@keyframes srDiceRoll {
+  0%   { transform: rotate(0deg) scale(1); }
+  20%  { transform: rotate(-25deg) scale(1.25); }
+  50%  { transform: rotate(18deg) scale(1.2); }
+  80%  { transform: rotate(-8deg) scale(1.1); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+/* HP numeric input */
+.sr-hp-row__input {
+  width: 58px;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--text-bright);
+  background: var(--bg-input);
+  border: 1px solid var(--border-frame);
+  border-radius: 3px;
+  padding: 4px 6px;
+  text-align: center;
+  flex-shrink: 0;
+  transition: border-color 0.15s;
+}
+
+.sr-hp-row__input:focus {
+  outline: none;
+  border-color: var(--border-gold-dim);
+}
+
+.sr-hp-row__input--rolled {
+  animation: srInputFlash 0.45s ease;
+}
+
+@keyframes srInputFlash {
+  0%   { background: var(--bg-input); border-color: var(--border-frame); }
+  30%  { background: rgba(200, 164, 78, 0.14); border-color: var(--border-gold); }
+  100% { background: var(--bg-input); border-color: var(--border-frame); }
+}
+
+/* Hide number input arrows */
+.sr-hp-row__input::-webkit-inner-spin-button,
+.sr-hp-row__input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+.sr-hp-row__input[type=number] {
+  -moz-appearance: textfield;
 }

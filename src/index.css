@@ -7046,77 +7046,248 @@ input[type="number"] { -moz-appearance: textfield; }
     min-height: 38px;
   }
 
-  /* ── Section headings — slightly larger on mobile ── */
+  /* ── Section headings — slightly larger, wrapping flex ── */
   .section__heading {
     font-size: 0.78rem;
     padding-bottom: 8px;
     margin-bottom: var(--gap-sm);
   }
 
-  /* ── Spell stats banner wraps ── */
-  .spell-stats {
+  /* Heading with buttons: stack label above action row */
+  .section__heading--flex {
     flex-wrap: wrap;
-    gap: var(--gap-sm);
-    padding: 0.5rem;
+    gap: 6px;
+    align-items: center;
   }
 
+  .spells-header-actions {
+    flex-shrink: 0;
+    gap: 4px;
+  }
+
+  /* ── Spell stats banner — 2-row mobile layout ── */
+  .spell-stats {
+    flex-wrap: wrap;
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  /* Row 1: ability selector — full width */
+  .spell-stats__ability-group {
+    flex-basis: 100%;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+    padding: 0.65rem 0.75rem 0.6rem;
+    border-bottom: 1px solid var(--border-inner);
+  }
+
+  .spell-stats__group-label {
+    flex-basis: 100%;
+    font-size: 0.55rem;
+    letter-spacing: 0.18em;
+    margin-bottom: 1px;
+  }
+
+  .spell-ability-selector {
+    gap: 5px;
+  }
+
+  .spell-ability-btn {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 7px 13px;
+    min-height: 34px;
+    border-radius: 2px;
+  }
+
+  .spell-stats__ability-detail {
+    font-size: 0.7rem;
+    margin-left: auto;
+    color: var(--text-parchment);
+  }
+
+  /* Row 2: stat boxes — equal-width columns, no gaps */
   .spell-stats__divider {
     display: none;
   }
 
   .spell-stat {
-    min-width: 3.2rem;
-    padding: 0.35rem 0.6rem;
+    flex: 1;
+    min-width: 0;
+    border-radius: 0;
+    border: none;
+    border-right: 1px solid var(--border-inner);
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.6rem 0.4rem;
+    box-shadow: none;
+    gap: 0.25rem;
+  }
+
+  .spell-stat:last-of-type {
+    border-right: none;
   }
 
   .spell-stat__value {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
   }
 
   .spell-stat__label {
-    font-size: 0.46rem;
-  }
-
-  .spell-ability-btn {
-    font-size: 0.58rem;
-    padding: 6px 8px;
-    min-height: 32px;
-  }
-
-  .spell-stats__group-label {
     font-size: 0.5rem;
+    letter-spacing: 0.1em;
   }
 
-  /* Spell action buttons — larger touch targets */
+  .spell-prep__count {
+    font-size: 1.5rem;
+  }
+
+  .spell-prep__max {
+    font-size: 0.9rem;
+  }
+
+  .spell-prep__sep {
+    font-size: 0.85rem;
+  }
+
+  .spell-prep__formula {
+    font-size: 0.5rem;
+    text-align: center;
+    margin-top: 2px;
+  }
+
+  .spell-stat--prep {
+    min-width: 0;
+  }
+
+  /* ── Spell section heading action buttons ── */
   .spells-prepare-btn {
     font-size: 0.55rem;
-    padding: 6px 10px;
-    min-height: 32px;
+    padding: 7px 10px;
+    min-height: 34px;
+    letter-spacing: 0.08em;
   }
 
   .spells-add-btn {
     font-size: 0.58rem;
-    padding: 6px 12px;
-    min-height: 32px;
+    padding: 7px 12px;
+    min-height: 34px;
+    letter-spacing: 0.08em;
   }
 
-  /* ── Defense row wraps ── */
+  /* ── Spell rows — bigger tap targets, always-visible actions ── */
+  .spell-row__top {
+    min-height: 44px;
+    padding: 8px 10px 6px;
+    gap: 8px;
+  }
+
+  .spell-row__bottom {
+    padding: 0 10px 8px 50px;
+    gap: 6px;
+  }
+
+  /* Cast button — finger-friendly */
+  .spell-cast-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 0.7rem;
+    flex-shrink: 0;
+  }
+
+  /* Prepared toggle — larger tap area */
+  .spell-prepared-btn {
+    padding: 6px 6px;
+    font-size: 0.75rem;
+    min-width: 24px;
+    min-height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Action buttons — always visible on mobile (no hover available) */
+  .spell-action-btn {
+    opacity: 0.5;
+    padding: 6px 6px;
+    font-size: 1rem;
+    min-width: 28px;
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .spell-end-btn {
+    padding: 6px 10px;
+    font-size: 0.54rem;
+    min-height: 30px;
+  }
+
+  .spell-row__name {
+    font-size: 0.88rem;
+  }
+
+  /* ── Defense — compact 2-row layout ── */
   .defense-row {
-    flex-direction: column;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: var(--gap-sm);
+    align-items: start;
+  }
+
+  /* Armor type buttons span full width on top row */
+  .armor-type-btns {
+    grid-column: 1 / -1;
+    display: flex;
+  }
+
+  /* Base AC + shield sit inline on second row */
+  .defense-base-ac {
+    grid-column: 1;
+  }
+
+  .shield-toggle {
+    grid-column: 1;
+    flex-direction: row;
+    align-items: center;
     gap: var(--gap-sm);
   }
 
+  /* AC hero number floats to the right, spanning rows */
+  .defense-formula {
+    grid-column: 2;
+    grid-row: 2 / span 2;
+    align-items: flex-end;
+  }
+
+  .defense-formula__total {
+    font-size: 2.8rem;
+  }
+
   .armor-type-btn {
-    font-size: 0.7rem;
-    padding: 8px 12px;
-    min-height: 38px;
+    flex: 1;
+    font-size: 0.68rem;
+    padding: 8px 4px;
+    min-height: 40px;
+    text-align: center;
+    letter-spacing: 0.06em;
   }
 
   .shield-btn {
     font-size: 0.7rem;
-    padding: 8px 12px;
+    padding: 8px 14px;
     min-height: 38px;
+  }
+
+  .defense-base-ac__input {
+    width: 64px;
+  }
+
+  .shield-bonus-input {
+    width: 54px;
   }
 
   /* HP bar taller on mobile for visibility */
@@ -7153,18 +7324,99 @@ input[type="number"] { -moz-appearance: textfield; }
     font-size: 1rem;
   }
 
+  /* ── Weapon cards — always-visible actions, tighter stats ── */
+  .weapon-card__name-row {
+    min-height: 44px;
+    padding: 10px 12px 8px;
+  }
+
+  .weapon-card__name {
+    font-size: 0.82rem;
+  }
+
+  /* Action buttons always visible on mobile */
+  .weapon-action-btn {
+    opacity: 1;
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .weapon-card__stats {
+    padding: 10px 14px;
+    gap: 0;
+    flex-wrap: wrap;
+  }
+
+  .weapon-stat--atk .weapon-stat__number {
+    font-size: 1.7rem;
+  }
+
+  .weapon-stat--dmg .weapon-stat__number {
+    font-size: 1.1rem;
+  }
+
+  .weapon-stat__divider {
+    height: 30px;
+    margin: 0 12px;
+  }
+
+  /* Weapons add button */
+  .weapons-add-btn {
+    padding: 10px 16px;
+    font-size: 0.65rem;
+    min-height: 40px;
+    width: 100%;
+    text-align: center;
+    margin-top: var(--gap-sm);
+  }
+
   /* ── Weapon form fields wrap tighter ── */
   .weapon-form__field--wide {
     min-width: 100%;
   }
 
-  /* ── Identity row full-width fields ── */
+  /* ── Identity / Character fields ── */
   .identity-row {
-    gap: var(--gap-sm);
+    gap: var(--gap-md) var(--gap-sm);
   }
 
   .field--grow {
     min-width: 100%;
+  }
+
+  .field__label {
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    margin-bottom: 2px;
+  }
+
+  .field__input {
+    font-size: 1rem;
+    padding: 9px 10px;
+    min-height: 40px;
+  }
+
+  .field__input--select {
+    min-height: 40px;
+  }
+
+  .field__computed {
+    font-size: 1rem;
+    padding: 8px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Level + Prof sit side by side on mobile instead of stacking */
+  .field--sm {
+    min-width: 80px;
+    flex: 1;
   }
 
   /* ── Inventory ── */

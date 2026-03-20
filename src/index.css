@@ -6657,6 +6657,7 @@ input[type="number"] { -moz-appearance: textfield; }
 .sheet-tab--active {
   color: var(--text-gold);
   border-bottom-color: var(--border-gold);
+  background: rgba(200, 164, 78, 0.05);
 }
 
 .sheet-tab-content {
@@ -6704,6 +6705,17 @@ input[type="number"] { -moz-appearance: textfield; }
 
   .spell-stats {
     flex-wrap: wrap;
+  }
+
+  /* Better tab sizing for tablet touch */
+  .sheet-tab {
+    font-size: 0.72rem;
+    padding: var(--gap-sm) var(--gap-md);
+  }
+
+  /* Slightly larger touch targets for skill rows */
+  .attr-check-row {
+    padding: 4px 6px;
   }
 }
 
@@ -6753,7 +6765,7 @@ input[type="number"] { -moz-appearance: textfield; }
     pointer-events: auto;
   }
 
-  /* ── Hamburger toggle ── */
+  /* ── Hamburger toggle — proper touch target ── */
   .sidebar-toggle {
     display: flex;
     align-items: center;
@@ -6762,8 +6774,8 @@ input[type="number"] { -moz-appearance: textfield; }
     top: var(--gap-sm);
     left: var(--gap-sm);
     z-index: 1001;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     background: var(--bg-panel);
     border: 1px solid var(--border-gold-dim);
     color: var(--text-gold);
@@ -6782,36 +6794,104 @@ input[type="number"] { -moz-appearance: textfield; }
 
   .main-inner {
     padding: var(--gap-md);
-    padding-top: 52px; /* room for hamburger */
+    padding-top: 56px; /* room for 44px hamburger + spacing */
   }
 
-  /* ── Character header stacks ── */
+  /* ── Character header — row layout with portrait + name ── */
   .char-header {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--gap-sm);
+    padding-bottom: var(--gap-sm);
+    margin-bottom: var(--gap-md);
   }
 
   .char-portrait-area {
-    width: 72px;
-    height: 72px;
-    min-width: 72px;
+    width: 64px;
+    height: 64px;
+    min-width: 64px;
+  }
+
+  .char-header__main {
+    flex: 1;
+    min-width: 0;
   }
 
   .char-name-input {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
   }
 
+  .char-header__tagline {
+    font-size: 0.8rem;
+  }
+
+  /* Badges: compact horizontal row under name */
   .char-header-badges {
     margin-left: 0;
     flex-basis: 100%;
-    justify-content: flex-start;
+    justify-content: space-between;
+    gap: 6px;
+    padding-top: var(--gap-xs);
+    border-top: 1px solid var(--border-inner);
   }
 
-  /* ── Tabs: smaller text, scroll horizontally ── */
+  .gold-coin-badge {
+    width: 46px;
+    height: 46px;
+  }
+
+  .gold-coin__value {
+    font-size: 14px;
+    width: 38px;
+  }
+
+  .ac-shield-svg {
+    width: 38px;
+    height: 46px;
+  }
+
+  .pp-badge__svg {
+    width: 50px;
+    height: 32px;
+  }
+
+  .hd-badge__svg {
+    width: 40px;
+    height: 46px;
+  }
+
+  /* Conditions — larger touch targets */
+  .cond-badge {
+    font-size: 0.62rem;
+  }
+
+  .cond-badge__label {
+    padding: 6px 10px;
+  }
+
+  .cond-badge__tick {
+    padding: 0 8px;
+    min-width: 32px;
+    justify-content: center;
+  }
+
+  .cond-add-btn {
+    font-size: 0.58rem;
+    padding: 6px 10px;
+    min-height: 30px;
+  }
+
+  /* ── Tabs — readable, tappable, scrollable ── */
   .sheet-tabs {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    gap: 0;
+    margin-bottom: var(--gap-md);
+    /* Fade hint for horizontal scroll */
+    -webkit-mask-image: linear-gradient(90deg, #000 90%, transparent);
+    mask-image: linear-gradient(90deg, #000 90%, transparent);
   }
 
   .sheet-tabs::-webkit-scrollbar {
@@ -6819,10 +6899,21 @@ input[type="number"] { -moz-appearance: textfield; }
   }
 
   .sheet-tab {
-    font-size: 0.6rem;
-    letter-spacing: 0.1em;
-    padding: var(--gap-xs) var(--gap-sm);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    padding: 10px 14px;
     white-space: nowrap;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+
+  /* Stronger active tab indicator on mobile */
+  .sheet-tab--active {
+    background: rgba(200, 164, 78, 0.08);
+    border-bottom-width: 3px;
   }
 
   /* ── Ability grid: 2 columns on phone ── */
@@ -6831,40 +6922,182 @@ input[type="number"] { -moz-appearance: textfield; }
     gap: var(--gap-md) var(--gap-sm);
   }
 
-  /* ── HP block stacks ── */
-  .hp-block {
-    flex-direction: column;
-    align-items: stretch;
+  /* Ability card labels — ensure readability */
+  .ability-card__label {
+    font-size: 0.7rem;
   }
 
-  .hp-block > .hp-display {
+  .ability-card__score {
+    font-size: 1.15rem;
+    padding: 4px 3px;
+  }
+
+  .ability-card__mod {
+    font-size: 0.9rem;
+  }
+
+  /* Skill/save rows — larger touch targets */
+  .attr-check-row {
+    padding: 6px 6px;
+    gap: 6px;
+    min-height: 36px;
+  }
+
+  .attr-check-row__dot {
+    width: 10px;
+    height: 10px;
+  }
+
+  .attr-check-row__name {
+    font-size: 0.85rem;
+  }
+
+  .attr-check-row__bonus {
+    font-size: 0.9rem;
+  }
+
+  .attr-check-row--save .attr-check-row__name {
+    font-size: 0.7rem;
+  }
+
+  /* ── HP block — compact horizontal on mobile ── */
+  .hp-block {
     flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
+    align-items: stretch;
+    flex-wrap: wrap;
+    gap: var(--gap-sm);
+  }
+
+  .hp-display {
+    flex: 0 0 auto;
+  }
+
+  .hp-display__label {
+    font-size: 0.65rem;
+  }
+
+  .hp-display__value {
+    font-size: 1.5rem;
+    width: 60px;
+    padding: 4px 4px;
+  }
+
+  .hp-display__value--current {
+    font-size: 1.8rem;
+    width: 68px;
+  }
+
+  .hp-display__value--temp {
+    font-size: 1.2rem;
+    width: 50px;
+  }
+
+  .hp-separator {
+    font-size: 1.2rem;
+    margin-top: 10px;
   }
 
   .hp-bar-container {
     min-width: 0;
+    flex-basis: 100%;
   }
 
+  /* HP Quick Buttons — proper touch targets */
   .hp-quick-btns {
     flex-wrap: wrap;
+    gap: 6px;
+    margin-top: var(--gap-sm);
+  }
+
+  .hp-quick-btns__label {
+    flex-basis: 100%;
+    font-size: 0.65rem;
+    margin-right: 0;
+    margin-bottom: 2px;
+  }
+
+  .hp-quick-btn {
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    min-height: 38px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .hp-custom {
     margin-left: 0;
-    margin-top: var(--gap-xs);
+    margin-top: 2px;
     flex-basis: 100%;
+    gap: 6px;
+  }
+
+  .hp-custom__input {
+    font-size: 1rem;
+    width: 56px;
+    padding: 6px 4px;
+    min-height: 38px;
+  }
+
+  .hp-custom__btn {
+    font-size: 0.85rem;
+    padding: 8px 14px;
+    min-height: 38px;
+  }
+
+  /* ── Section headings — slightly larger on mobile ── */
+  .section__heading {
+    font-size: 0.78rem;
+    padding-bottom: 8px;
+    margin-bottom: var(--gap-sm);
   }
 
   /* ── Spell stats banner wraps ── */
   .spell-stats {
     flex-wrap: wrap;
     gap: var(--gap-sm);
+    padding: 0.5rem;
   }
 
   .spell-stats__divider {
     display: none;
+  }
+
+  .spell-stat {
+    min-width: 3.2rem;
+    padding: 0.35rem 0.6rem;
+  }
+
+  .spell-stat__value {
+    font-size: 1.3rem;
+  }
+
+  .spell-stat__label {
+    font-size: 0.46rem;
+  }
+
+  .spell-ability-btn {
+    font-size: 0.58rem;
+    padding: 6px 8px;
+    min-height: 32px;
+  }
+
+  .spell-stats__group-label {
+    font-size: 0.5rem;
+  }
+
+  /* Spell action buttons — larger touch targets */
+  .spells-prepare-btn {
+    font-size: 0.55rem;
+    padding: 6px 10px;
+    min-height: 32px;
+  }
+
+  .spells-add-btn {
+    font-size: 0.58rem;
+    padding: 6px 12px;
+    min-height: 32px;
   }
 
   /* ── Defense row wraps ── */
@@ -6872,6 +7105,52 @@ input[type="number"] { -moz-appearance: textfield; }
     flex-direction: column;
     align-items: flex-start;
     gap: var(--gap-sm);
+  }
+
+  .armor-type-btn {
+    font-size: 0.7rem;
+    padding: 8px 12px;
+    min-height: 38px;
+  }
+
+  .shield-btn {
+    font-size: 0.7rem;
+    padding: 8px 12px;
+    min-height: 38px;
+  }
+
+  /* HP bar taller on mobile for visibility */
+  .hp-bar {
+    height: 28px;
+  }
+
+  .hp-bar__text {
+    font-size: 0.85rem;
+  }
+
+  /* ── Spell pips & slot adjusters — larger touch targets ── */
+  .spell-pip {
+    width: 20px;
+    height: 20px;
+  }
+
+  .spell-pips {
+    gap: 8px;
+  }
+
+  .spell-level-row {
+    min-height: 36px;
+    gap: var(--gap-md);
+  }
+
+  .spell-slot-adj-row {
+    opacity: 1; /* always visible on touch */
+  }
+
+  .spell-slot-adj {
+    width: 28px;
+    height: 28px;
+    font-size: 1rem;
   }
 
   /* ── Weapon form fields wrap tighter ── */
@@ -6891,6 +7170,20 @@ input[type="number"] { -moz-appearance: textfield; }
   /* ── Inventory ── */
   .inv-row__main {
     flex-wrap: wrap;
+    min-height: 40px;
+    padding: 6px 10px;
+  }
+
+  .inv-qty-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 0.9rem;
+  }
+
+  /* ── Resource tracked ability pips — always show controls ── */
+  .res-row:hover .spell-slot-adj-row,
+  .spell-level-row:hover .spell-slot-adj-row {
+    opacity: 1;
   }
 }
 
@@ -6909,14 +7202,55 @@ input[type="number"] { -moz-appearance: textfield; }
     min-width: 56px;
   }
 
-  .hp-display__value {
-    font-size: 1.4rem;
-    width: 56px;
+  .char-name-input {
+    font-size: 1.05rem;
   }
 
+  .hp-display__value {
+    font-size: 1.3rem;
+    width: 52px;
+  }
+
+  .hp-display__value--current {
+    font-size: 1.5rem;
+    width: 60px;
+  }
+
+  /* Tabs: still readable on smallest screens */
   .sheet-tab {
-    font-size: 0.55rem;
-    padding: var(--gap-xs) 6px;
+    font-size: 0.62rem;
+    padding: 10px 10px;
+    letter-spacing: 0.06em;
+  }
+
+  /* Tighter badge row */
+  .gold-coin-badge {
+    width: 40px;
+    height: 40px;
+  }
+
+  .gold-coin__value {
+    font-size: 12px;
+    width: 32px;
+  }
+
+  .gold-coin__label {
+    font-size: 6.5px;
+  }
+
+  .ac-shield-svg {
+    width: 32px;
+    height: 40px;
+  }
+
+  .pp-badge__svg {
+    width: 44px;
+    height: 28px;
+  }
+
+  .hd-badge__svg {
+    width: 34px;
+    height: 40px;
   }
 }
 

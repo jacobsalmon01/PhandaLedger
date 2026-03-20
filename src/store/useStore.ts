@@ -2,6 +2,7 @@ import { useSyncExternalStore, useCallback } from 'react';
 import { type Character, createCharacter } from '../types/character';
 import { type InitiativeEntry } from '../types/initiative';
 import { type PartyExport } from '../utils/importExport';
+import seedData from '../../our_party_setup_seed.json';
 
 const STORAGE_KEY = 'phandaLedger_state';
 
@@ -26,50 +27,50 @@ function persist() {
   } catch { /* quota errors, etc */ }
 }
 
+function migrateState(parsed: AppState): AppState {
+  const template = createCharacter();
+  parsed.characters.forEach((ch) => {
+    for (const key of Object.keys(template) as (keyof Character)[]) {
+      if (!(key in ch)) {
+        (ch as unknown as Record<string, unknown>)[key] = template[key];
+      }
+    }
+    ch.inventory = (ch.inventory || []).map((item) => {
+      const raw = item as unknown as Record<string, unknown>;
+      return { equipped: false, modifiers: [], ...raw } as unknown as typeof item;
+    });
+    if (!ch.conditions) {
+      (ch as unknown as Record<string, unknown>).conditions = [];
+    } else {
+      ch.conditions = (ch.conditions as unknown[]).map((c) =>
+        typeof c === 'string' ? { name: c } : c
+      ) as typeof ch.conditions;
+    }
+    ch.spells = (ch.spells || []).map((s) => {
+      const raw = s as unknown as Record<string, unknown>;
+      return {
+        concentration: false, duration: '', durationRounds: 0,
+        castingTime: '1 action', notes: '', prepared: true, alwaysPrepared: false, active: false, roundsRemaining: 0,
+        ...raw,
+      } as unknown as typeof s;
+    });
+    ch.weapons = (ch.weapons || []).map((w) => {
+      const raw = w as unknown as Record<string, unknown>;
+      return { versatile: false, versatileDice: '', twoHanded: false, proficient: true, ranged: false, ...raw } as unknown as typeof w;
+    });
+  });
+  if (!parsed.initiative) parsed.initiative = [];
+  return parsed;
+}
+
 function hydrate() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw) as AppState;
-      // Migration: fill in any missing fields on each character
-      const template = createCharacter();
-      parsed.characters.forEach((ch) => {
-        for (const key of Object.keys(template) as (keyof Character)[]) {
-          if (!(key in ch)) {
-            (ch as unknown as Record<string, unknown>)[key] = template[key];
-          }
-        }
-        // Migration: fill in missing fields on each inventory item
-        ch.inventory = (ch.inventory || []).map((item) => {
-          const raw = item as unknown as Record<string, unknown>;
-          return { equipped: false, modifiers: [], ...raw } as unknown as typeof item;
-        });
-        // Migration: ensure conditions array exists and has object shape
-        if (!ch.conditions) {
-          (ch as unknown as Record<string, unknown>).conditions = [];
-        } else {
-          ch.conditions = (ch.conditions as unknown[]).map((c) =>
-            typeof c === 'string' ? { name: c } : c
-          ) as typeof ch.conditions;
-        }
-        // Migration: fill in missing fields on each spell
-        ch.spells = (ch.spells || []).map((s) => {
-          const raw = s as unknown as Record<string, unknown>;
-          return {
-            concentration: false, duration: '', durationRounds: 0,
-            castingTime: '1 action', notes: '', prepared: true, alwaysPrepared: false, active: false, roundsRemaining: 0,
-            ...raw,
-          } as unknown as typeof s;
-        });
-        // Migration: fill in missing fields on each weapon
-        ch.weapons = (ch.weapons || []).map((w) => {
-          const raw = w as unknown as Record<string, unknown>;
-          return { versatile: false, versatileDice: '', twoHanded: false, proficient: true, ranged: false, ...raw } as unknown as typeof w;
-        });
-      });
-      // Migration: ensure initiative array exists
-      if (!parsed.initiative) parsed.initiative = [];
-      state = parsed;
+      state = migrateState(JSON.parse(raw) as AppState);
+    } else {
+      state = migrateState(seedData as unknown as AppState);
+      persist();
     }
   } catch { /* corrupted data, start fresh */ }
 }

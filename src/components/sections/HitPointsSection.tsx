@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import type { Character, PreparedSpell } from '../../types/character';
 import { NumericInput } from '../NumericInput';
 import { ConcentrationCheckModal } from '../ConcentrationCheckModal';
+import { DeathSavingThrowModal } from '../DeathSavingThrowModal';
 
 interface Props {
   ch: Character;
@@ -16,6 +17,7 @@ interface ConcCheck {
 export function HitPointsSection({ ch, updateSelected }: Props) {
   const [customAmount, setCustomAmount] = useState('');
   const [concCheck, setConcCheck] = useState<ConcCheck | null>(null);
+  const [deathSavesDismissed, setDeathSavesDismissed] = useState(false);
   const currentHpRef = useRef<HTMLInputElement>(null);
 
   const pct = ch.hp.max > 0 ? Math.max(0, Math.min(100, (ch.hp.current / ch.hp.max) * 100)) : 0;
@@ -25,6 +27,16 @@ export function HitPointsSection({ ch, updateSelected }: Props) {
   const activeConc = ch.spells.find((s) => s.concentration && s.active) ?? null;
 
   function applyHP(amount: number) {
+    // Compute expected new HP to determine whether to show/hide death saves
+    let expectedNewHp = ch.hp.current;
+    if (amount < 0) {
+      let dmg = Math.abs(amount);
+      if (ch.hp.temp > 0) dmg = Math.max(0, dmg - ch.hp.temp);
+      expectedNewHp = Math.max(0, ch.hp.current - dmg);
+    } else {
+      expectedNewHp = Math.min(ch.hp.current + amount, ch.hp.max);
+    }
+
     updateSelected((c) => {
       if (amount < 0) {
         let dmg = Math.abs(amount);
@@ -36,9 +48,22 @@ export function HitPointsSection({ ch, updateSelected }: Props) {
         c.hp.current = Math.max(0, c.hp.current - dmg);
       } else {
         c.hp.current = Math.min(c.hp.current + amount, c.hp.max);
+        // Reset death saves on healing
+        if (c.hp.current > 0) {
+          c.deathSaves = { successes: 0, failures: 0 };
+        }
       }
       return c;
     });
+
+    if (amount < 0 && ch.hp.current > 0 && expectedNewHp === 0) {
+      // HP just hit 0 — show death saves
+      setDeathSavesDismissed(false);
+    }
+    if (amount > 0) {
+      // Healing — hide death saves
+      setDeathSavesDismissed(true);
+    }
 
     // Trigger concentration check if taking damage while concentrating
     if (amount < 0 && activeConc) {
@@ -167,6 +192,14 @@ export function HitPointsSection({ ch, updateSelected }: Props) {
           damage={concCheck.damage}
           onBreak={breakConcentration}
           onKeep={keepConcentration}
+        />
+      )}
+
+      {ch.hp.current === 0 && !deathSavesDismissed && !ch.dead && (
+        <DeathSavingThrowModal
+          ch={ch}
+          updateSelected={updateSelected}
+          onDismiss={() => setDeathSavesDismissed(true)}
         />
       )}
     </section>

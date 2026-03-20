@@ -66,19 +66,24 @@ export function Sidebar({ open, onNavigate }: SidebarProps) {
         {characters.map((ch) => (
           <div
             key={ch.id}
-            className={`pc-item${ch.id === selectedId ? ' pc-item--selected' : ''}`}
+            className={[
+              'pc-item',
+              ch.id === selectedId ? 'pc-item--selected' : '',
+              ch.dead ? 'pc-item--dead' : '',
+            ].filter(Boolean).join(' ')}
             onClick={() => { selectCharacter(ch.id); onNavigate?.(); }}
           >
             <SidebarPortrait ch={ch} />
             <div className="pc-item__info">
               <span className="pc-item__name">
+                {ch.dead && <span className="pc-item__dead-skull">☠</span>}
                 {ch.name || 'Unnamed'}
               </span>
               <span className="pc-item__meta">
                 {[ch.class, ch.race].filter(Boolean).join(' · ') || <em>No class set</em>}
               </span>
-              <span className="pc-item__hp" style={{ color: hpColor(ch) }}>
-                {ch.hp.current}/{ch.hp.max} hp
+              <span className="pc-item__hp" style={{ color: ch.dead ? 'var(--accent-red-dim)' : hpColor(ch) }}>
+                {ch.dead ? 'Dead' : `${ch.hp.current}/${ch.hp.max} hp`}
               </span>
             </div>
             <button

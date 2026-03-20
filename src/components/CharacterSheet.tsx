@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useStore } from '../store/useStore';
 import { CharacterHeader } from './sections/CharacterHeader';
 import { IdentitySection } from './sections/IdentitySection';
@@ -25,6 +25,15 @@ export function CharacterSheet() {
   const { selected, updateSelected } = useStore();
   const [activeTab, setActiveTab] = useState<Tab>('stats');
 
+  const resurrect = useCallback(() => {
+    updateSelected((c) => ({
+      ...c,
+      dead: false,
+      hp: { ...c.hp, current: 1 },
+      deathSaves: { successes: 0, failures: 0 },
+    }));
+  }, [updateSelected]);
+
   if (!selected) {
     return (
       <main className="main">
@@ -42,6 +51,18 @@ export function CharacterSheet() {
 
   return (
     <main className="main">
+      {selected.dead && (
+        <div className="dead-overlay">
+          <div className="dead-overlay__content">
+            <span className="dead-overlay__skull">☠</span>
+            <span className="dead-overlay__name">{selected.name || 'The Adventurer'}</span>
+            <span className="dead-overlay__tagline">This adventurer has fallen.</span>
+            <button className="dead-overlay__resurrect" onClick={resurrect}>
+              Resurrect
+            </button>
+          </div>
+        </div>
+      )}
       <div className="main-inner" key={selected.id}>
         <CharacterHeader ch={selected} updateSelected={updateSelected} />
         <HitPointsSection ch={selected} updateSelected={updateSelected} />

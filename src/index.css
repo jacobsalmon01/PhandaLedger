@@ -1513,6 +1513,7 @@ body::after {
 
 /* ── Main Content ── */
 .main {
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -6885,4 +6886,561 @@ input[type="number"] { -moz-appearance: textfield; }
     font-size: 0.55rem;
     padding: var(--gap-xs) 6px;
   }
+}
+
+/* ══════════════════════════════════════════
+   Death Saving Throws Modal
+   ══════════════════════════════════════════ */
+
+@keyframes death-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+
+@keyframes death-pip-fill {
+  0%   { transform: scale(0.5); opacity: 0; }
+  60%  { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ── Overlay ── */
+.death-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 2, 2, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: overlay-in 0.2s ease;
+}
+
+.death-modal-overlay--dead {
+  background: rgba(12, 2, 2, 0.88);
+}
+
+/* ── Modal ── */
+.death-modal {
+  position: relative;
+  width: 340px;
+  max-width: 92vw;
+  background: var(--bg-panel);
+  border: 1px solid rgba(155, 44, 44, 0.55);
+  border-radius: 3px;
+  box-shadow:
+    0 0 48px rgba(0, 0, 0, 0.7),
+    0 0 1px rgba(155, 44, 44, 0.4),
+    inset 0 1px 0 rgba(155, 44, 44, 0.08);
+  animation: modal-in 0.28s cubic-bezier(0.34, 1.26, 0.64, 1) both;
+}
+
+.death-modal--stabilized {
+  border-color: rgba(106, 170, 74, 0.45);
+  box-shadow:
+    0 0 48px rgba(0, 0, 0, 0.6),
+    0 0 1px rgba(106, 170, 74, 0.4),
+    inset 0 1px 0 rgba(106, 170, 74, 0.08);
+}
+
+.death-modal--dead {
+  border-color: rgba(155, 44, 44, 0.75);
+  box-shadow:
+    0 0 60px rgba(80, 10, 10, 0.5),
+    0 0 2px rgba(155, 44, 44, 0.6),
+    inset 0 1px 0 rgba(155, 44, 44, 0.12);
+}
+
+/* ── Close button ── */
+.death-modal__close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: 1px solid var(--border-inner);
+  color: var(--text-dim);
+  font-size: 0.6rem;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 2px;
+  padding: 0;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+}
+
+.death-modal__close:hover {
+  color: var(--text-parchment);
+  border-color: var(--border-frame);
+  background: var(--bg-hover);
+}
+
+/* ── Header ── */
+.death-modal__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px 36px 12px 16px;
+  border-bottom: 1px solid var(--border-inner);
+}
+
+.death-modal__icon {
+  font-size: 1.1rem;
+  color: rgba(200, 80, 80, 0.85);
+  flex-shrink: 0;
+  animation: death-pulse 2s ease-in-out infinite;
+  margin-top: 1px;
+}
+
+.death-modal--stabilized .death-modal__icon {
+  color: rgba(106, 170, 74, 0.85);
+  animation: none;
+}
+
+.death-modal--dead .death-modal__icon {
+  color: rgba(200, 50, 50, 0.9);
+  animation: none;
+}
+
+.death-modal__header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.death-modal__title {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-gold);
+}
+
+.death-modal--dead .death-modal__title {
+  color: rgba(210, 100, 100, 0.9);
+}
+
+.death-modal--stabilized .death-modal__title {
+  color: rgba(106, 170, 74, 0.9);
+}
+
+.death-modal__subtitle {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+/* ── Pips ── */
+.death-modal__pips {
+  padding: 14px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-bottom: 1px solid var(--border-inner);
+}
+
+.death-modal__pip-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.death-modal__pip-label {
+  font-family: var(--font-display);
+  font-size: 0.48rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  width: 54px;
+  flex-shrink: 0;
+}
+
+.death-modal__pip-track {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.death-pip {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid;
+  display: inline-block;
+  transition: background 0.18s, border-color 0.18s, box-shadow 0.18s;
+}
+
+.death-pip--success.death-pip--empty {
+  border-color: rgba(106, 170, 74, 0.25);
+  background: transparent;
+}
+
+.death-pip--success.death-pip--filled {
+  border-color: rgba(106, 170, 74, 0.75);
+  background: rgba(106, 170, 74, 0.28);
+  box-shadow: 0 0 6px rgba(106, 170, 74, 0.3);
+  animation: death-pip-fill 0.25s ease-out;
+}
+
+.death-pip--failure.death-pip--empty {
+  border-color: rgba(200, 80, 80, 0.25);
+  background: transparent;
+}
+
+.death-pip--failure.death-pip--filled {
+  border-color: rgba(200, 80, 80, 0.75);
+  background: rgba(200, 80, 80, 0.28);
+  box-shadow: 0 0 6px rgba(200, 80, 80, 0.3);
+  animation: death-pip-fill 0.25s ease-out;
+}
+
+/* ── Action buttons ── */
+.death-modal__actions {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-inner);
+}
+
+.death-modal__btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-inner);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.death-modal__btn:hover {
+  background: var(--bg-hover);
+}
+
+.death-modal__btn--wide {
+  width: 100%;
+}
+
+.death-modal__btn-icon {
+  font-size: 1.0rem;
+  line-height: 1;
+}
+
+.death-modal__btn-text {
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+}
+
+.death-modal__btn-sub {
+  font-family: var(--font-body);
+  font-size: 0.58rem;
+  color: var(--text-dim);
+}
+
+/* Roll button */
+.death-modal__btn--roll {
+  border-color: var(--border-gold-dim);
+  background: linear-gradient(180deg, rgba(200,164,78,0.08) 0%, rgba(200,164,78,0.02) 100%);
+}
+.death-modal__btn--roll .death-modal__btn-icon { color: var(--text-gold); }
+.death-modal__btn--roll:hover {
+  border-color: var(--border-gold);
+  background: linear-gradient(180deg, rgba(200,164,78,0.16) 0%, rgba(200,164,78,0.06) 100%);
+}
+
+/* Failure button */
+.death-modal__btn--failure {
+  border-color: rgba(200, 80, 80, 0.3);
+}
+.death-modal__btn--failure .death-modal__btn-icon { color: #d46a6a; }
+.death-modal__btn--failure:hover {
+  border-color: rgba(200, 80, 80, 0.55);
+  background: rgba(200, 80, 80, 0.06);
+}
+
+/* Success button */
+.death-modal__btn--success {
+  border-color: rgba(106, 170, 74, 0.3);
+}
+.death-modal__btn--success .death-modal__btn-icon { color: rgba(106, 170, 74, 0.9); }
+.death-modal__btn--success:hover {
+  border-color: rgba(106, 170, 74, 0.5);
+  background: rgba(106, 170, 74, 0.06);
+}
+
+/* ── Rolling area ── */
+.death-modal__roll-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 22px 16px;
+}
+
+.death-modal__die {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 3.5rem;
+  color: var(--text-gold);
+  line-height: 1;
+  min-width: 64px;
+  text-align: center;
+}
+
+.death-modal__die--spin {
+  animation: dice-spin 0.11s ease-in-out infinite;
+}
+
+.death-modal__die--land {
+  animation: dice-land 0.5s ease-out forwards;
+}
+
+.death-modal__roll-label {
+  font-family: var(--font-display);
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* ── Result area ── */
+.death-modal__result-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 16px;
+  animation: modal-in 0.22s ease both;
+}
+
+.death-modal__result-roll {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.death-modal__result-num {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 3.5rem;
+  line-height: 1;
+  color: var(--text-gold);
+}
+
+.death-modal__result-num--nat20 {
+  color: var(--text-gold) !important;
+  text-shadow: 0 0 14px rgba(212, 180, 90, 0.5);
+}
+
+.death-modal__result-num--nat1 {
+  color: rgba(200, 70, 70, 0.9) !important;
+  text-shadow: 0 0 12px rgba(160, 40, 40, 0.4);
+}
+
+.death-modal__result-num--success {
+  color: rgba(106, 170, 74, 0.9) !important;
+  text-shadow: 0 0 12px rgba(106, 170, 74, 0.3);
+}
+
+.death-modal__result-num--failure {
+  color: rgba(200, 80, 80, 0.9) !important;
+  text-shadow: 0 0 12px rgba(200, 80, 80, 0.3);
+}
+
+.death-modal__result-die-label {
+  font-family: var(--font-display);
+  font-size: 0.38rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.death-modal__verdict {
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: center;
+  color: var(--text-dim);
+}
+
+.death-modal__verdict--nat20  { color: var(--text-gold);           text-shadow: 0 0 10px rgba(212,180,90,0.3); }
+.death-modal__verdict--nat1   { color: rgba(200, 70, 70, 0.9);     text-shadow: 0 0 8px rgba(160,40,40,0.3); }
+.death-modal__verdict--success { color: rgba(106, 170, 74, 0.9);   text-shadow: 0 0 8px rgba(106,170,74,0.2); }
+.death-modal__verdict--failure { color: rgba(200, 80, 80, 0.88);   text-shadow: 0 0 8px rgba(200,80,80,0.2); }
+
+.death-modal__continue-btn {
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-frame);
+  border-radius: 2px;
+  padding: 8px 28px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+  margin-top: 4px;
+}
+
+.death-modal__continue-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-gold-dim);
+}
+
+/* ── Terminal area ── */
+.death-modal__terminal {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.death-modal__terminal-text {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+  font-style: italic;
+  text-align: center;
+  margin: 0;
+}
+
+.death-modal__terminal-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ── Footer ── */
+.death-modal__footer {
+  padding: 8px 16px;
+  border-top: 1px solid var(--border-inner);
+  font-family: var(--font-body);
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  text-align: center;
+  font-style: italic;
+}
+
+/* ══════════════════════════════════════════
+   Dead Overlay (covers character sheet)
+   ══════════════════════════════════════════ */
+
+@keyframes dead-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes dead-skull-drop {
+  0%   { transform: translateY(-12px) scale(0.8); opacity: 0; }
+  60%  { transform: translateY(3px) scale(1.05); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.dead-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  background:
+    linear-gradient(180deg,
+      rgba(8, 2, 2, 0.97) 0%,
+      rgba(14, 4, 4, 0.98) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: dead-overlay-in 0.4s ease both;
+}
+
+.dead-overlay__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 40px 32px;
+  text-align: center;
+}
+
+.dead-overlay__skull {
+  font-size: 3.5rem;
+  line-height: 1;
+  color: rgba(180, 40, 40, 0.75);
+  animation: dead-skull-drop 0.5s 0.15s cubic-bezier(0.34, 1.26, 0.64, 1) both;
+  filter: drop-shadow(0 0 18px rgba(160, 30, 30, 0.4));
+}
+
+.dead-overlay__name {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-bright);
+  opacity: 0.7;
+  animation: dead-skull-drop 0.45s 0.25s ease both;
+}
+
+.dead-overlay__tagline {
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  font-style: italic;
+  color: var(--text-dim);
+  opacity: 0.8;
+  animation: dead-skull-drop 0.4s 0.35s ease both;
+}
+
+.dead-overlay__resurrect {
+  margin-top: 8px;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--border-inner);
+  border-radius: 2px;
+  padding: 7px 18px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  animation: dead-skull-drop 0.4s 0.45s ease both;
+}
+
+.dead-overlay__resurrect:hover {
+  color: var(--text-parchment);
+  border-color: var(--border-gold-dim);
+  background: rgba(200, 164, 78, 0.06);
+}
+
+/* ── Sidebar: dead PC entry ── */
+
+.pc-item--dead {
+  opacity: 0.55;
+  filter: grayscale(0.5);
+}
+
+.pc-item--dead:hover {
+  opacity: 0.75;
+  filter: grayscale(0.3);
+}
+
+.pc-item__dead-skull {
+  font-size: 0.65rem;
+  margin-right: 4px;
+  color: rgba(200, 80, 80, 0.7);
+  vertical-align: middle;
 }

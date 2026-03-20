@@ -115,6 +115,11 @@ export interface Gold {
   pp: number;
 }
 
+export interface DeathSaves {
+  successes: number; // 0–3
+  failures: number;  // 0–3
+}
+
 export interface Character {
   id: string;
   name: string;
@@ -154,6 +159,8 @@ export interface Character {
   notes: string;
   portrait: string; // base64 data URL
   portraitCrop: PortraitCrop;
+  deathSaves: DeathSaves;
+  dead: boolean;
 }
 
 export function createCharacter(name = ''): Character {
@@ -195,6 +202,8 @@ export function createCharacter(name = ''): Character {
     notes: '',
     portrait: '',
     portraitCrop: { scale: 1, offsetX: 0, offsetY: 0 },
+    deathSaves: { successes: 0, failures: 0 },
+    dead: false,
   };
 }
 

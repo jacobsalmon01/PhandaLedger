@@ -18,7 +18,9 @@
       "Bash(ls:*)",
       "Bash(curl:*)",
       "Bash(lsof:*)",
-      "Bash(node -e \":*)"
+      "Bash(node -e \":*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)"
     ]
   }
 }

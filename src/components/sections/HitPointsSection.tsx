@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import type { Character, PreparedSpell } from '../../types/character';
+import { abilityMod, applyModifiers } from '../../types/character';
 import { NumericInput } from '../NumericInput';
 import { ConcentrationCheckModal } from '../ConcentrationCheckModal';
 import { DeathSavingThrowModal } from '../DeathSavingThrowModal';
@@ -19,6 +20,11 @@ export function HitPointsSection({ ch, updateSelected }: Props) {
   const [concCheck, setConcCheck] = useState<ConcCheck | null>(null);
   const [deathSavesDismissed, setDeathSavesDismissed] = useState(false);
   const currentHpRef = useRef<HTMLInputElement>(null);
+
+  const effectiveCon = applyModifiers(ch.abilities.con, ch.inventory, 'abilities.con');
+  const conMod = abilityMod(effectiveCon);
+  const fromCON = ch.level * conMod;
+  const baseHP = ch.hp.max - fromCON;
 
   const pct = ch.hp.max > 0 ? Math.max(0, Math.min(100, (ch.hp.current / ch.hp.max) * 100)) : 0;
   const barColor =
@@ -118,7 +124,7 @@ export function HitPointsSection({ ch, updateSelected }: Props) {
           />
         </div>
         <div className="hp-separator">/</div>
-        <div className="hp-display">
+        <div className="hp-display hp-display--max">
           <span className="hp-display__label">Maximum</span>
           <NumericInput
             className="hp-display__value"
@@ -127,6 +133,20 @@ export function HitPointsSection({ ch, updateSelected }: Props) {
             min={1}
             onCommit={(v) => updateSelected((c) => ({ ...c, hp: { ...c.hp, max: Math.max(1, v) } }))}
           />
+          {conMod !== 0 && (
+            <div className="hp-max-tooltip">
+              <div className="hp-max-tooltip__row">
+                <span className="hp-max-tooltip__label">Base HP</span>
+                <span className="hp-max-tooltip__value">{baseHP}</span>
+              </div>
+              <div className="hp-max-tooltip__row">
+                <span className="hp-max-tooltip__label">
+                  From CON ({conMod > 0 ? `+${conMod}` : conMod}×{ch.level})
+                </span>
+                <span className="hp-max-tooltip__value">{fromCON > 0 ? `+${fromCON}` : fromCON}</span>
+              </div>
+            </div>
+          )}
         </div>
         <div className="hp-display">
           <span className="hp-display__label">Temp HP</span>

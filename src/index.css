@@ -4812,6 +4812,52 @@ body::after {
   flex-direction: column;
   align-items: center;
   gap: var(--gap-xs);
+  position: relative;
+}
+
+/* ── HP Max breakdown tooltip ── */
+.hp-max-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  min-width: 170px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-gold-dim);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border-inner) inset;
+  padding: var(--gap-sm) var(--gap-md);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.hp-display--max:hover .hp-max-tooltip {
+  display: block;
+}
+
+.hp-max-tooltip__row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--gap-md);
+}
+
+.hp-max-tooltip__row + .hp-max-tooltip__row {
+  margin-top: 3px;
+  padding-top: 3px;
+  border-top: 1px solid var(--border-inner);
+}
+
+.hp-max-tooltip__label {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text-parchment);
+}
+
+.hp-max-tooltip__value {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-gold);
 }
 
 .hp-display__label {

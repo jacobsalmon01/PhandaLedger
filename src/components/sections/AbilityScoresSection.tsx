@@ -87,10 +87,24 @@ export function AbilityScoresSection({ ch, updateSelected }: Props) {
                     fallback={10}
                     min={1}
                     max={30}
-                    onCommit={(v) => updateSelected((c) => ({
-                      ...c,
-                      abilities: { ...c.abilities, [abilityKey]: Math.max(1, Math.min(30, v)) },
-                    }))}
+                    onCommit={(v) => {
+                      const newScore = Math.max(1, Math.min(30, v));
+                      updateSelected((c) => {
+                        const updatedAbilities = { ...c.abilities, [abilityKey]: newScore };
+                        if (abilityKey === 'con') {
+                          const oldMod = abilityMod(c.abilities.con);
+                          const newMod = abilityMod(newScore);
+                          const delta = newMod - oldMod;
+                          if (delta !== 0) {
+                            const hpDelta = c.level * delta;
+                            const newMax = Math.max(1, c.hp.max + hpDelta);
+                            const newCurrent = Math.max(0, Math.min(c.hp.current + hpDelta, newMax));
+                            return { ...c, abilities: updatedAbilities, hp: { ...c.hp, max: newMax, current: newCurrent } };
+                          }
+                        }
+                        return { ...c, abilities: updatedAbilities };
+                      });
+                    }}
                   />
                   {effectiveScore !== score && (
                     <span className="ability-card__effective">{effectiveScore}</span>

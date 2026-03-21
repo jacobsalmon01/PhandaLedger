@@ -21,6 +21,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import os from 'os';
 import { randomBytes } from 'crypto';
+import qrcode from 'qrcode-terminal';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT ?? 3000);
@@ -167,6 +168,11 @@ httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`  │  DM (you)  →  ${dmUrl.padEnd(36)}  │`);
   console.log(`  │  Players   →  ${playerUrl.padEnd(36)}  │`);
   console.log(`  ╰${bar}╯\n`);
-  console.log('  Open your DM URL — players use the Players URL.');
-  console.log('  Press Ctrl+C to end the session.\n');
+  console.log('  Open your DM URL — players scan the QR code below:\n');
+
+  qrcode.generate(playerUrl, { small: true }, (qr) => {
+    qr.split('\n').forEach(line => console.log('  ' + line));
+    console.log(`  ${playerUrl}\n`);
+    console.log('  Press Ctrl+C to end the session.\n');
+  });
 });

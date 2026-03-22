@@ -7,6 +7,7 @@ import { WatcherBadge } from './PlayerBanner';
 import { InitiativeTracker } from './InitiativeTracker';
 import { DiceRoller } from './DiceRoller';
 import { RestsSection } from './RestsSection';
+import { SpellCompendium } from './SpellCompendium';
 
 function SidebarPortrait({ ch }: { ch: Character }) {
   if (!ch.portrait) {
@@ -49,6 +50,7 @@ interface SidebarProps {
 export function Sidebar({ open, onNavigate }: SidebarProps) {
   const { characters, selectedId, addCharacter, removeCharacter, selectCharacter, replaceParty } = useStore();
   const [pendingRemove, setPendingRemove] = useState<Character | null>(null);
+  const [showCompendium, setShowCompendium] = useState(false);
 
   function confirmRemove() {
     if (pendingRemove) {
@@ -128,9 +130,16 @@ export function Sidebar({ open, onNavigate }: SidebarProps) {
       <DiceRoller />
       <RestsSection />
 
+      {showCompendium && (
+        <SpellCompendium onClose={() => setShowCompendium(false)} />
+      )}
+
       <div className="sidebar-footer">
         <button className="btn-add-pc" onClick={addCharacter}>
           + New Adventurer
+        </button>
+        <button className="btn-compendium" onClick={() => setShowCompendium(true)}>
+          ✦ Spell Compendium
         </button>
         <div className="ie-divider" />
         <ImportExportControls

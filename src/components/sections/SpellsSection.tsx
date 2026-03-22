@@ -2,6 +2,8 @@ import { useState } from 'react';
 import type { Character, PreparedSpell, SpellcastingAbility } from '../../types/character';
 import { spellAttackBonus, spellSaveDC, abilityMod, profBonus } from '../../types/character';
 import { uuid } from '../../utils/uuid';
+import { SpellCompendium } from '../SpellCompendium';
+import type { SpellEntry } from '../../data/spells';
 
 interface Props {
   ch: Character;
@@ -166,6 +168,25 @@ function SpellForm({ form, patch, onSave, onCancel }: FormProps) {
 export function SpellsSection({ ch, updateSelected }: Props) {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<Omit<PreparedSpell, 'id'>>(blankSpell());
+  const [showCompendium, setShowCompendium] = useState(false);
+
+  function addFromCompendium(entry: SpellEntry, alwaysPrepared: boolean) {
+    const spell: PreparedSpell = {
+      id: uuid(),
+      name: entry.name,
+      level: entry.level,
+      concentration: entry.concentration,
+      duration: entry.duration,
+      durationRounds: 0,
+      castingTime: entry.castingTime,
+      notes: '',
+      prepared: true,
+      alwaysPrepared,
+      active: false,
+      roundsRemaining: 0,
+    };
+    updateSelected((c) => ({ ...c, spells: [...c.spells, spell] }));
+  }
 
   function patch<K extends keyof Omit<PreparedSpell, 'id'>>(
     k: K, v: Omit<PreparedSpell, 'id'>[K]
@@ -339,7 +360,8 @@ export function SpellsSection({ ch, updateSelected }: Props) {
                 <button className="spells-prepare-btn spells-prepare-btn--prepare" onClick={prepareAll} title="Mark all spells as prepared">Prepare All</button>
               </>
             )}
-            <button className="spells-add-btn" onClick={openAdd}>+ Add Spell</button>
+            <button className="spells-add-btn spells-add-btn--compendium" onClick={() => setShowCompendium(true)}>⊕ Browse</button>
+            <button className="spells-add-btn" onClick={openAdd}>+ Custom</button>
           </div>
         )}
       </h2>
@@ -566,6 +588,16 @@ export function SpellsSection({ ch, updateSelected }: Props) {
           );
         })}
       </div>
+
+      {showCompendium && (
+        <SpellCompendium
+          onClose={() => setShowCompendium(false)}
+          onAddSpell={addFromCompendium}
+          characterName={ch.name || 'spell list'}
+          existingSpellNames={new Set(ch.spells.map((s) => s.name))}
+          defaultClass={ch.class}
+        />
+      )}
     </section>
   );
 }

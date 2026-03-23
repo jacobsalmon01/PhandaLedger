@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { CharacterSheet } from './components/CharacterSheet';
+import { BattleMap } from './components/BattleMap';
 import { PlayerBanner } from './components/PlayerBanner';
 import { useStore } from './store/useStore';
 import { isPlayerMode } from './store/wsClient';
@@ -75,6 +76,7 @@ export default function App() {
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
   const { characters, replaceParty, mergeCharacters } = useStore();
   const [incomingShare, setIncomingShare] = useState<PartyExport | null>(null);
+  const [showBattleMap, setShowBattleMap] = useState(false);
 
   // Apply player-mode body class for CSS-based read-only enforcement.
   useEffect(() => {
@@ -119,8 +121,13 @@ export default function App() {
         className={`sidebar-overlay${sidebarOpen ? ' sidebar-overlay--open' : ''}`}
         onClick={closeSidebar}
       />
-      <Sidebar open={sidebarOpen} onNavigate={closeSidebar} />
-      <CharacterSheet />
+      <Sidebar
+        open={sidebarOpen}
+        onNavigate={closeSidebar}
+        showBattleMap={showBattleMap}
+        onSetView={(v) => setShowBattleMap(v === 'map')}
+      />
+      {showBattleMap ? <BattleMap /> : <CharacterSheet />}
 
       {incomingShare && (
         <IncomingShareModal

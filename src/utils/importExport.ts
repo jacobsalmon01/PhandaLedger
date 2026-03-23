@@ -13,10 +13,11 @@
  */
 
 import { type Character, createCharacter } from '../types/character';
+import type { BattleMapExport } from '../store/useBattleMapStore';
 
 // ── Public types ──────────────────────────────────────────────────────────────
 
-export const CURRENT_EXPORT_VERSION = 1;
+export const CURRENT_EXPORT_VERSION = 2;
 
 /** The shape written to / read from the JSON file. */
 export interface PartyExport {
@@ -24,6 +25,7 @@ export interface PartyExport {
   exportedAt: string;   // ISO-8601 timestamp
   selectedId: string | null;
   characters: Character[];
+  battleMap?: BattleMapExport;
 }
 
 /** Structured error thrown when an import file is malformed. */
@@ -79,12 +81,19 @@ export function validatePartyExport(data: unknown): PartyExport {
     }
   });
 
-  return {
+  const result: PartyExport = {
     version: obj.version,
     exportedAt: typeof obj.exportedAt === 'string' ? obj.exportedAt : new Date().toISOString(),
     selectedId: typeof obj.selectedId === 'string' ? obj.selectedId : null,
     characters: obj.characters as Character[],
   };
+
+  // v2+: optional battle map state
+  if (obj.battleMap && typeof obj.battleMap === 'object' && !Array.isArray(obj.battleMap)) {
+    result.battleMap = obj.battleMap as BattleMapExport;
+  }
+
+  return result;
 }
 
 // ── Migration ─────────────────────────────────────────────────────────────────
@@ -118,14 +127,17 @@ export function migrateCharacters(characters: Character[]): Character[] {
  */
 export function buildExport(
   characters: Character[],
-  selectedId: string | null
+  selectedId: string | null,
+  battleMap?: BattleMapExport,
 ): PartyExport {
-  return {
+  const result: PartyExport = {
     version: CURRENT_EXPORT_VERSION,
     exportedAt: new Date().toISOString(),
     selectedId,
     characters,
   };
+  if (battleMap) result.battleMap = battleMap;
+  return result;
 }
 
 /**
@@ -152,9 +164,10 @@ export function triggerDownload(filename: string, data: unknown): void {
  */
 export function exportParty(
   characters: Character[],
-  selectedId: string | null
+  selectedId: string | null,
+  battleMap?: BattleMapExport,
 ): void {
-  const data = buildExport(characters, selectedId);
+  const data = buildExport(characters, selectedId, battleMap);
   const date = new Date().toISOString().slice(0, 10);
   triggerDownload(`phandaLedger-${date}.json`, data);
 }

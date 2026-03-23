@@ -43,6 +43,11 @@ const statusListeners   = new Set<AnyFn<WsStatus>>();
 const stateListeners    = new Set<AnyFn<unknown>>();
 const playerCountListeners = new Set<AnyFn<number>>();
 
+// Battle map listeners
+const battleMapListeners      = new Set<AnyFn<unknown>>();
+const battleMapImageListeners = new Set<AnyFn<string>>();
+const battleMapClearListeners = new Set<() => void>();
+
 function setStatus(s: WsStatus) {
   _status = s;
   statusListeners.forEach((fn) => fn(s));
@@ -55,6 +60,8 @@ let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
 /** State queued to send the moment the socket opens (admin only). */
 let pendingState: unknown = null;
+let pendingBattleMap: unknown = null;
+let pendingBattleMapImage: string | null = null;
 
 function connect() {
   retryTimer = null;
@@ -76,6 +83,14 @@ function connect() {
       _send({ type: 'state', payload: pendingState });
       pendingState = null;
     }
+    if (pendingBattleMap !== null) {
+      _send({ type: 'battle_map', payload: pendingBattleMap });
+      pendingBattleMap = null;
+    }
+    if (pendingBattleMapImage !== null) {
+      _send({ type: 'battle_map_image', payload: pendingBattleMapImage });
+      pendingBattleMapImage = null;
+    }
   };
 
   socket.onmessage = ({ data }) => {
@@ -91,6 +106,15 @@ function connect() {
           break;
         case 'state':
           stateListeners.forEach((fn) => fn(msg.payload));
+          break;
+        case 'battle_map':
+          battleMapListeners.forEach((fn) => fn(msg.payload));
+          break;
+        case 'battle_map_image':
+          battleMapImageListeners.forEach((fn) => fn(msg.payload));
+          break;
+        case 'battle_map_clear':
+          battleMapClearListeners.forEach((fn) => fn());
           break;
         case 'waiting':
           // Player connected before the DM — banner handles this via 'connecting' status.
@@ -166,6 +190,56 @@ export function onPlayerCountChange(fn: AnyFn<number>): () => void {
 }
 
 export function getStatus(): WsStatus { return _status; }
+
+// ── Battle Map API ────────────────────────────────────────────────────────────
+
+/** Broadcast battle map metadata (tokens + grid config) to players. */
+export function broadcastBattleMap(meta: unknown) {
+  if (role !== 'admin') return;
+  if (_status === 'connected') {
+    _send({ type: 'battle_map', payload: meta });
+  } else {
+    pendingBattleMap = meta;
+  }
+}
+
+/** Broadcast the battle map image (data URL) to players. Sent only on upload. */
+export function broadcastBattleMapImage(dataUrl: string) {
+  if (role !== 'admin') return;
+  if (_status === 'connected') {
+    _send({ type: 'battle_map_image', payload: dataUrl });
+  } else {
+    pendingBattleMapImage = dataUrl;
+  }
+}
+
+/** Notify players that the battle map has been cleared. */
+export function broadcastBattleMapClear() {
+  if (role !== 'admin') return;
+  pendingBattleMap = null;
+  pendingBattleMapImage = null;
+  if (_status === 'connected') {
+    _send({ type: 'battle_map_clear' });
+  }
+}
+
+/** Subscribe to battle map metadata updates (player only). */
+export function onBattleMapReceived(fn: AnyFn<unknown>): () => void {
+  battleMapListeners.add(fn);
+  return () => battleMapListeners.delete(fn);
+}
+
+/** Subscribe to battle map image updates (player only). */
+export function onBattleMapImageReceived(fn: AnyFn<string>): () => void {
+  battleMapImageListeners.add(fn);
+  return () => battleMapImageListeners.delete(fn);
+}
+
+/** Subscribe to battle map clear events (player only). */
+export function onBattleMapCleared(fn: () => void): () => void {
+  battleMapClearListeners.add(fn);
+  return () => battleMapClearListeners.delete(fn);
+}
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 

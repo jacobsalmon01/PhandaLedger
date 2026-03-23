@@ -14,10 +14,12 @@
 import { useRef, useState } from 'react';
 import { type PartyExport, exportParty, parseImportFile, ImportValidationError } from '../utils/importExport';
 import type { Character } from '../types/character';
+import type { BattleMapExport } from '../store/useBattleMapStore';
 
 interface Props {
   characters: Character[];
   selectedId: string | null;
+  battleMap?: BattleMapExport;
   onImport: (exported: PartyExport) => void;
 }
 
@@ -26,7 +28,7 @@ interface PendingImport {
   filename: string;
 }
 
-export function ImportExportControls({ characters, selectedId, onImport }: Props) {
+export function ImportExportControls({ characters, selectedId, battleMap, onImport }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // A successfully parsed file waiting for user confirmation.
@@ -37,7 +39,7 @@ export function ImportExportControls({ characters, selectedId, onImport }: Props
   // ── Export ──────────────────────────────────────────────────────────────────
 
   function handleExport() {
-    exportParty(characters, selectedId);
+    exportParty(characters, selectedId, battleMap);
   }
 
   // ── Import: file selection ──────────────────────────────────────────────────
@@ -133,8 +135,13 @@ export function ImportExportControls({ characters, selectedId, onImport }: Props
               </p>
               {currentCount > 0 && (
                 <div className="lr-modal__warning">
-                  ⚠ Your current party will be lost. Export first if you want to keep it.
+                  Your current party will be lost. Export first if you want to keep it.
                 </div>
+              )}
+              {pending.data.battleMap && (
+                <p className="ie-modal-desc" style={{ marginTop: 6 }}>
+                  This save includes battle map configuration (tokens, grid, fog). It will be restored.
+                </p>
               )}
               <ul className="ie-char-list">
                 {pending.data.characters.map((ch) => (

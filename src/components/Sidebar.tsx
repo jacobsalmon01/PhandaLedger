@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useStore } from '../store/useStore';
 import type { Character } from '../types/character';
+import type { PartyExport } from '../utils/importExport';
 import { ImportExportControls } from './ImportExportControls';
 import { ShareControls } from './ShareControls';
 import { WatcherBadge } from './PlayerBanner';
@@ -8,6 +9,7 @@ import { InitiativeTracker } from './InitiativeTracker';
 import { DiceRoller } from './DiceRoller';
 import { RestsSection } from './RestsSection';
 import { SpellCompendium } from './SpellCompendium';
+import { getBattleMapExport, loadBattleMapExport } from '../store/useBattleMapStore';
 
 function SidebarPortrait({ ch }: { ch: Character }) {
   if (!ch.portrait) {
@@ -45,12 +47,19 @@ function hpColor(ch: Character): string {
 interface SidebarProps {
   open?: boolean;
   onNavigate?: () => void;
+  showBattleMap: boolean;
+  onSetView: (view: 'roster' | 'map') => void;
 }
 
-export function Sidebar({ open, onNavigate }: SidebarProps) {
+export function Sidebar({ open, onNavigate, showBattleMap, onSetView }: SidebarProps) {
   const { characters, selectedId, addCharacter, removeCharacter, selectCharacter, replaceParty } = useStore();
   const [pendingRemove, setPendingRemove] = useState<Character | null>(null);
   const [showCompendium, setShowCompendium] = useState(false);
+
+  const handleImport = useCallback((exported: PartyExport) => {
+    replaceParty(exported);
+    if (exported.battleMap) loadBattleMapExport(exported.battleMap);
+  }, [replaceParty]);
 
   function confirmRemove() {
     if (pendingRemove) {
@@ -63,9 +72,23 @@ export function Sidebar({ open, onNavigate }: SidebarProps) {
     <aside className={`sidebar${open ? ' sidebar--open' : ''}`}>
       <div className="sidebar-header">
         <div className="sidebar-title">PhandaLedger</div>
-        <div className="sidebar-subtitle">Party Roster</div>
         <WatcherBadge />
       </div>
+
+      <nav className="sidebar-nav">
+        <button
+          className={`sidebar-nav__btn${!showBattleMap ? ' sidebar-nav__btn--active' : ''}`}
+          onClick={() => onSetView('roster')}
+        >
+          Party Roster
+        </button>
+        <button
+          className={`sidebar-nav__btn${showBattleMap ? ' sidebar-nav__btn--active' : ''}`}
+          onClick={() => onSetView('map')}
+        >
+          Battle Map
+        </button>
+      </nav>
 
       <div className="pc-list">
         {characters.map((ch) => (
@@ -145,7 +168,8 @@ export function Sidebar({ open, onNavigate }: SidebarProps) {
         <ImportExportControls
           characters={characters}
           selectedId={selectedId}
-          onImport={replaceParty}
+          battleMap={getBattleMapExport()}
+          onImport={handleImport}
         />
         <div className="ie-divider" />
         <div className="ie-controls">

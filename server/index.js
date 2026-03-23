@@ -49,6 +49,10 @@ const wss = new WebSocketServer({ server: httpServer });
 /** Most recent party state pushed by the admin. Sent to players on connect. */
 let latestState = null;
 
+/** Battle map state cached for late-joining players. */
+let latestBattleMap = null;
+let latestBattleMapImage = null;
+
 /** The active admin WebSocket (only one at a time — the DM's tab). */
 let adminWs = null;
 
@@ -100,6 +104,20 @@ wss.on('connection', (ws, req) => {
           const charCount = latestState?.characters?.length ?? 0;
           console.log(`  ↑ State received from DM (${charCount} characters) — broadcasting to ${players.size} player(s)`);
           broadcastPlayers({ type: 'state', payload: latestState });
+        } else if (msg.type === 'battle_map') {
+          latestBattleMap = msg.payload;
+          console.log(`  ↑ Battle map update from DM — broadcasting to ${players.size} player(s)`);
+          broadcastPlayers({ type: 'battle_map', payload: latestBattleMap });
+        } else if (msg.type === 'battle_map_image') {
+          latestBattleMapImage = msg.payload;
+          const sizeKB = Math.round(JSON.stringify(msg.payload).length / 1024);
+          console.log(`  ↑ Battle map image from DM (${sizeKB} KB) — broadcasting to ${players.size} player(s)`);
+          broadcastPlayers({ type: 'battle_map_image', payload: latestBattleMapImage });
+        } else if (msg.type === 'battle_map_clear') {
+          latestBattleMap = null;
+          latestBattleMapImage = null;
+          console.log(`  ↑ Battle map cleared by DM — broadcasting to ${players.size} player(s)`);
+          broadcastPlayers({ type: 'battle_map_clear' });
         }
       } catch { /* ignore malformed */ }
     });
@@ -121,6 +139,14 @@ wss.on('connection', (ws, req) => {
     } else {
       send(ws, { type: 'waiting' });
       console.log('    (no state yet — waiting for DM to connect)');
+    }
+
+    // Send cached battle map state to late-joining players
+    if (latestBattleMapImage) {
+      send(ws, { type: 'battle_map_image', payload: latestBattleMapImage });
+    }
+    if (latestBattleMap) {
+      send(ws, { type: 'battle_map', payload: latestBattleMap });
     }
 
     ws.on('close', () => {

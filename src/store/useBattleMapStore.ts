@@ -182,6 +182,13 @@ function _moveToken(id: string, col: number, row: number) {
   emit();
 }
 
+function _updateToken(id: string, updates: Partial<Omit<MapToken, 'id'>>) {
+  state = { ...state, tokens: state.tokens.map((t) => t.id === id ? { ...t, ...updates } : t) };
+  persist();
+  if (!isPlayerMode) _broadcastMeta();
+  emit();
+}
+
 function _removeToken(id: string) {
   state = { ...state, tokens: state.tokens.filter((t) => t.id !== id) };
   persist();
@@ -288,6 +295,7 @@ export function useBattleMapStore() {
     fogRevealed: snap.fogRevealed,
     setMapImage:      useCallback((url: string) => _setMapImage(url), []),
     addToken:         useCallback((t: Omit<MapToken, 'id'>) => _addToken(t), []),
+    updateToken:      useCallback((id: string, u: Partial<Omit<MapToken, 'id'>>) => _updateToken(id, u), []),
     moveToken:        useCallback((id: string, col: number, row: number) => _moveToken(id, col, row), []),
     removeToken:      useCallback((id: string) => _removeToken(id), []),
     addTemplate:      useCallback((t: Omit<MapTemplate, 'id'>) => _addTemplate(t), []),

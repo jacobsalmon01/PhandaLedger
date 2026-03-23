@@ -6,6 +6,8 @@ export interface MapToken {
   row: number;
   size: number; // grid squares: 0.5 = Tiny, 1 = Small/Medium, 2 = Large, 3 = Huge, 4 = Gargantuan
   characterId?: string;
+  initiativeEntryId?: string; // links to InitiativeEntry.id for HP tracking
+  initiativeEnemyId?: string; // links to EnemyInstance.id within that entry
 }
 
 export interface MapTemplate {

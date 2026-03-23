@@ -1,10 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useBattleMapStore } from '../store/useBattleMapStore';
 import { useStore } from '../store/useStore';
 import { isPlayerMode } from '../store/wsClient';
 import type { MapToken, MapTemplate } from '../types/battlemap';
 import type { Character } from '../types/character';
+import { uuid } from '../utils/uuid';
 
 // ── Token color palette ──────────────────────────────────────────────────────
 
@@ -452,6 +453,122 @@ function TemplateShape({
   );
 }
 
+// ── Send to Initiative form ───────────────────────────────────────────────────
+
+function SendToInitiativeForm({
+  token,
+  allTokens,
+  initiative,
+  onSend,
+  onClose,
+  style,
+}: {
+  token: MapToken;
+  allTokens: MapToken[];
+  initiative: import('../types/initiative').InitiativeEntry[];
+  onSend: (opts: { name: string; init: number; maxHp: number; tokenIds: string[] }) => void;
+  onClose: () => void;
+  style?: React.CSSProperties;
+}) {
+  const matchingTokens = allTokens.filter(
+    (t) => t.label === token.label && !t.characterId && !t.initiativeEntryId,
+  );
+  const hasMultiple = matchingTokens.length > 1;
+
+  const [name, setName] = useState(token.label);
+  const [init, setInit] = useState('');
+  const [maxHp, setMaxHp] = useState('');
+  const [sendAll, setSendAll] = useState(true);
+
+  // Check if an initiative entry already exists for this name
+  const existingEntry = initiative.find(
+    (e) => e.type === 'npc' && e.name.toLowerCase() === name.trim().toLowerCase(),
+  );
+
+  function handleSubmit() {
+    const hp = parseInt(maxHp, 10);
+    if (!name.trim() || !hp || hp <= 0) return;
+    const initVal = parseInt(init, 10) || 0;
+    const ids = sendAll && hasMultiple
+      ? matchingTokens.map((t) => t.id)
+      : [token.id];
+    onSend({ name: name.trim(), init: initVal, maxHp: hp, tokenIds: ids });
+  }
+
+  return (
+    <div className="bm-init-form" style={style} onClick={(e) => e.stopPropagation()}>
+      <div className="bm-init-form__header">
+        <span className="bm-init-form__title">Send to Initiative</span>
+        <button className="bm-init-form__close" onClick={onClose}>&times;</button>
+      </div>
+
+      <div className="bm-init-form__field">
+        <label className="bm-init-form__label">Name</label>
+        <input
+          className="bm-init-form__input bm-init-form__input--name"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+          autoFocus
+        />
+      </div>
+
+      <div className="bm-init-form__row">
+        <div className="bm-init-form__field">
+          <label className="bm-init-form__label">Initiative</label>
+          <input
+            className="bm-init-form__input bm-init-form__input--num"
+            type="number"
+            placeholder="0"
+            value={existingEntry ? String(existingEntry.initiative) : init}
+            onChange={(e) => setInit(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+            disabled={!!existingEntry}
+          />
+        </div>
+        <div className="bm-init-form__field">
+          <label className="bm-init-form__label">Max HP</label>
+          <input
+            className="bm-init-form__input bm-init-form__input--num"
+            type="number"
+            placeholder="—"
+            min={1}
+            value={maxHp}
+            onChange={(e) => setMaxHp(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+          />
+        </div>
+      </div>
+
+      {existingEntry && (
+        <div className="bm-init-form__note">
+          Adding to existing group (Init: {existingEntry.initiative})
+        </div>
+      )}
+
+      {hasMultiple && (
+        <label className="bm-init-form__check">
+          <input
+            type="checkbox"
+            checked={sendAll}
+            onChange={(e) => setSendAll(e.target.checked)}
+          />
+          <span>Send all {matchingTokens.length} "{token.label}" tokens</span>
+        </label>
+      )}
+
+      <button
+        className="bm-init-form__submit"
+        onClick={handleSubmit}
+        disabled={!name.trim() || !maxHp || parseInt(maxHp, 10) <= 0}
+      >
+        {existingEntry ? 'Add to Group' : 'Send'}
+      </button>
+    </div>
+  );
+}
+
 // ── BattleMap component ───────────────────────────────────────────────────────
 
 export function BattleMap() {
@@ -459,12 +576,12 @@ export function BattleMap() {
     mapImage, tokens, templates,
     gridCellSize, gridOffsetX, gridOffsetY, gridVisible, gridColor,
     fogEnabled, fogRevealed,
-    setMapImage, addToken, moveToken, removeToken,
+    setMapImage, addToken, updateToken, moveToken, removeToken,
     addTemplate, updateTemplate, removeTemplate,
     updateGridConfig, clearMap,
     setFogEnabled, revealFog, coverFog,
   } = useBattleMapStore();
-  const { characters } = useStore();
+  const { characters, initiative, addInitiativeEntry, removeInitiativeEntry } = useStore();
 
   // ── View state ──
   const [zoom, setZoom] = useState(1);
@@ -496,6 +613,11 @@ export function BattleMap() {
 
   // ── Confirm clear ──
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  // ── Send to Initiative ──
+  const [showInitForm, setShowInitForm] = useState(false);
+  const initFormBtnRef = useRef<HTMLButtonElement>(null);
+  const [initFormAnchor, setInitFormAnchor] = useState<{ top: number; left: number } | null>(null);
 
   // ── Grid config panel ──
   const [showGridPanel, setShowGridPanel] = useState(false);
@@ -1196,6 +1318,44 @@ export function BattleMap() {
     });
   }
 
+  // ── Send to Initiative handler ──
+
+  function handleSendToInitiative(opts: { name: string; init: number; maxHp: number; tokenIds: string[] }) {
+    const existing = initiative.find(
+      (e) => e.type === 'npc' && e.name.toLowerCase() === opts.name.toLowerCase(),
+    );
+
+    const entryId = existing?.id ?? uuid();
+
+    // Create enemy instances with known IDs, link each token
+    const newEnemies = opts.tokenIds.map((tokenId) => {
+      const enemyId = uuid();
+      updateToken(tokenId, { initiativeEntryId: entryId, initiativeEnemyId: enemyId });
+      return { id: enemyId, hp: opts.maxHp, maxHp: opts.maxHp };
+    });
+
+    if (existing) {
+      // Remove + re-add with same ID to append enemies (store doesn't expose bulk add with controlled IDs)
+      const merged = {
+        ...existing,
+        enemies: [...(existing.enemies ?? []), ...newEnemies],
+      };
+      removeInitiativeEntry(existing.id);
+      addInitiativeEntry(merged);
+    } else {
+      addInitiativeEntry({
+        id: entryId,
+        name: opts.name,
+        initiative: opts.init,
+        type: 'npc',
+        enemies: newEnemies,
+      });
+    }
+
+    setShowInitForm(false);
+    setSelectedTokenId(null);
+  }
+
   // ── Template add handler ──
 
   function handleAddTemplate(opts: { type: MapTemplate['type']; size: number; color: string }) {
@@ -1214,6 +1374,7 @@ export function BattleMap() {
       const tag = document.activeElement?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
       if (e.key === 'Escape') {
+        if (showInitForm) { setShowInitForm(false); return; }
         if (fogMode) { setFogMode(false); setFogBrushPreview([]); }
         setMeasureMode(false);
         setMeasureStart(null);
@@ -1228,7 +1389,7 @@ export function BattleMap() {
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedTokenId, selectedTemplateId, removeToken, removeTemplate]);
+  }, [selectedTokenId, selectedTemplateId, removeToken, removeTemplate, showInitForm]);
 
   // ── Clear map ──
 
@@ -1492,13 +1653,53 @@ export function BattleMap() {
               )}
             </div>
 
+            {selectedTokenId && (() => {
+              const selToken = tokens.find((t) => t.id === selectedTokenId);
+              const alreadyLinked = selToken?.initiativeEntryId;
+              const isPC = selToken?.characterId;
+              return !isPC ? (
+                <>
+                  <span className="bm-toolbar__div" />
+                  <button
+                    ref={initFormBtnRef}
+                    className={`bm-toolbar__icon-btn${alreadyLinked ? ' bm-toolbar__icon-btn--active bm-toolbar__icon-btn--green' : ''}`}
+                    onClick={() => {
+                      if (alreadyLinked) return;
+                      const rect = initFormBtnRef.current?.getBoundingClientRect();
+                      if (rect) setInitFormAnchor({ top: rect.bottom + 6, left: Math.min(rect.left, window.innerWidth - 260) });
+                      setShowInitForm(true);
+                    }}
+                    title={alreadyLinked ? 'Linked to initiative' : 'Send to initiative'}
+                    disabled={!!alreadyLinked}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M8 1.5v5M5.5 4l2.5 2.5L10.5 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                      <rect x="3" y="8.5" width="10" height="6" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+                      <path d="M5.5 11h5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                    </svg>
+                  </button>
+                  {showInitForm && initFormAnchor && selToken && createPortal(
+                    <SendToInitiativeForm
+                      token={selToken}
+                      allTokens={tokens}
+                      initiative={initiative}
+                      onSend={handleSendToInitiative}
+                      onClose={() => setShowInitForm(false)}
+                      style={{ position: 'fixed', top: initFormAnchor.top, left: initFormAnchor.left, zIndex: 1100 }}
+                    />,
+                    document.body,
+                  )}
+                </>
+              ) : null;
+            })()}
+
             {(selectedTokenId || selectedTemplateId) && (
               <>
                 <span className="bm-toolbar__div" />
                 <button
                   className="bm-toolbar__icon-btn bm-toolbar__icon-btn--danger"
                   onClick={() => {
-                    if (selectedTokenId) { removeToken(selectedTokenId); setSelectedTokenId(null); }
+                    if (selectedTokenId) { removeToken(selectedTokenId); setSelectedTokenId(null); setShowInitForm(false); }
                     else if (selectedTemplateId) { removeTemplate(selectedTemplateId); setSelectedTemplateId(null); }
                   }}
                   title="Remove selected"
@@ -1659,6 +1860,25 @@ export function BattleMap() {
             const size = token.size * gridCellSize;
             const fontSize = Math.min(20, Math.max(9, size * 0.22));
 
+            // HP bar — only for tokens linked to an initiative NPC enemy, DM only
+            let hpBar: React.ReactNode = null;
+            if (!isPlayerMode && token.initiativeEntryId && token.initiativeEnemyId) {
+              const entry = initiative.find((e) => e.id === token.initiativeEntryId);
+              const enemy = entry?.enemies?.find((en) => en.id === token.initiativeEnemyId);
+              if (enemy) {
+                const pct = enemy.maxHp > 0 ? Math.max(0, enemy.hp / enemy.maxHp) : 0;
+                const fillColor = pct <= 0.25 ? '#c0392b' : pct <= 0.5 ? '#d4a017' : '#4a7a3a';
+                hpBar = (
+                  <div className="bm-token__hp-bar">
+                    <div
+                      className="bm-token__hp-fill"
+                      style={{ width: `${Math.round(pct * 100)}%`, backgroundColor: fillColor }}
+                    />
+                  </div>
+                );
+              }
+            }
+
             return (
               <div
                 key={token.id}
@@ -1677,6 +1897,7 @@ export function BattleMap() {
                 <span className="bm-token__label" style={{ fontSize }}>
                   {token.label}
                 </span>
+                {hpBar}
               </div>
             );
           })}

@@ -9983,6 +9983,175 @@ input[type="number"] { -moz-appearance: textfield; }
   line-height: 1;
 }
 
+/* ── Token HP bar (DM-only) ── */
+
+.bm-token__hp-bar {
+  position: absolute;
+  bottom: -7px;
+  left: 12%;
+  width: 76%;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 2px;
+  overflow: hidden;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.bm-token__hp-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.25s ease;
+}
+
+/* ── Send to Initiative form ── */
+
+.bm-init-form {
+  width: 230px;
+  background: rgba(22, 20, 17, 0.97);
+  border: 1px solid var(--border-gold);
+  border-radius: 6px;
+  padding: 0;
+  box-shadow:
+    0 6px 24px rgba(0, 0, 0, 0.5),
+    0 0 1px rgba(200, 164, 78, 0.3);
+  font-family: var(--font-body);
+  color: var(--text-body);
+}
+
+.bm-init-form__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px 6px;
+  border-bottom: 1px solid var(--border-inner);
+}
+
+.bm-init-form__title {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.bm-init-form__close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.bm-init-form__close:hover {
+  color: var(--text-body);
+}
+
+.bm-init-form__field {
+  padding: 6px 10px 2px;
+}
+
+.bm-init-form__label {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 3px;
+}
+
+.bm-init-form__input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-inner);
+  border-radius: 3px;
+  color: var(--text-body);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  padding: 5px 7px;
+  box-sizing: border-box;
+}
+
+.bm-init-form__input:focus {
+  outline: none;
+  border-color: var(--border-gold);
+}
+
+.bm-init-form__input--num {
+  -moz-appearance: textfield;
+  text-align: center;
+}
+
+.bm-init-form__input--num::-webkit-inner-spin-button,
+.bm-init-form__input--num::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+.bm-init-form__row {
+  display: flex;
+  gap: 8px;
+  padding: 0 0;
+}
+
+.bm-init-form__row .bm-init-form__field {
+  flex: 1;
+}
+
+.bm-init-form__note {
+  font-size: 0.65rem;
+  color: var(--gold);
+  padding: 2px 10px 0;
+  opacity: 0.85;
+}
+
+.bm-init-form__check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px 0;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.bm-init-form__check input[type="checkbox"] {
+  accent-color: var(--gold);
+}
+
+.bm-init-form__submit {
+  display: block;
+  width: calc(100% - 20px);
+  margin: 8px 10px 10px;
+  padding: 6px 0;
+  background: linear-gradient(180deg, rgba(200, 164, 78, 0.2), rgba(200, 164, 78, 0.08));
+  border: 1px solid var(--border-gold);
+  border-radius: 4px;
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.bm-init-form__submit:hover:not(:disabled) {
+  background: linear-gradient(180deg, rgba(200, 164, 78, 0.35), rgba(200, 164, 78, 0.15));
+}
+
+.bm-init-form__submit:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.bm-toolbar__icon-btn--green {
+  color: #4a7a3a;
+}
+
 /* ── Add Token Menu ── */
 
 .bm-add-menu {
@@ -10283,6 +10452,10 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .player-mode .bm-token {
   cursor: default;
+}
+
+.player-mode .bm-token__hp-bar {
+  display: none;
 }
 
 /* ── AoE Templates ─────────────────────────────────────────── */

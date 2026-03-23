@@ -14,12 +14,11 @@
 import { useRef, useState } from 'react';
 import { type PartyExport, exportParty, parseImportFile, ImportValidationError } from '../utils/importExport';
 import type { Character } from '../types/character';
-import type { BattleMapExport } from '../store/useBattleMapStore';
+import { getBattleMapExport } from '../store/useBattleMapStore';
 
 interface Props {
   characters: Character[];
   selectedId: string | null;
-  battleMap?: BattleMapExport;
   onImport: (exported: PartyExport) => void;
 }
 
@@ -28,7 +27,7 @@ interface PendingImport {
   filename: string;
 }
 
-export function ImportExportControls({ characters, selectedId, battleMap, onImport }: Props) {
+export function ImportExportControls({ characters, selectedId, onImport }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // A successfully parsed file waiting for user confirmation.
@@ -39,7 +38,7 @@ export function ImportExportControls({ characters, selectedId, battleMap, onImpo
   // ── Export ──────────────────────────────────────────────────────────────────
 
   function handleExport() {
-    exportParty(characters, selectedId, battleMap);
+    exportParty(characters, selectedId, getBattleMapExport());
   }
 
   // ── Import: file selection ──────────────────────────────────────────────────

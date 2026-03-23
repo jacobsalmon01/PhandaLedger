@@ -9,7 +9,7 @@ import { InitiativeTracker } from './InitiativeTracker';
 import { DiceRoller } from './DiceRoller';
 import { RestsSection } from './RestsSection';
 import { SpellCompendium } from './SpellCompendium';
-import { getBattleMapExport, loadBattleMapExport } from '../store/useBattleMapStore';
+import { loadBattleMapExport } from '../store/useBattleMapStore';
 
 function SidebarPortrait({ ch }: { ch: Character }) {
   if (!ch.portrait) {
@@ -168,7 +168,6 @@ export function Sidebar({ open, onNavigate, showBattleMap, onSetView }: SidebarP
         <ImportExportControls
           characters={characters}
           selectedId={selectedId}
-          battleMap={getBattleMapExport()}
           onImport={handleImport}
         />
         <div className="ie-divider" />

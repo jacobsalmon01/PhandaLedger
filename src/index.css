@@ -10146,9 +10146,8 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .bm-add-menu__size-row {
   display: flex;
-  align-items: center;
-  gap: 3px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 4px;
   padding: 2px 0;
 }
 
@@ -10159,8 +10158,13 @@ input[type="number"] { -moz-appearance: textfield; }
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-dim);
-  margin-right: 3px;
   opacity: 0.7;
+}
+
+.bm-add-menu__size-btns {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
 }
 
 .bm-add-menu__size-btn {

@@ -4,7 +4,7 @@ export interface MapToken {
   color: string;
   col: number;
   row: number;
-  size: number; // grid squares: 1 = Medium, 2 = Large, 3 = Huge, 4 = Gargantuan
+  size: number; // grid squares: 0.5 = Tiny, 1 = Small/Medium, 2 = Large, 3 = Huge, 4 = Gargantuan
   characterId?: string;
 }
 

@@ -19,6 +19,16 @@ const TOKEN_COLORS = [
   { name: 'Silver',   hex: '#8a8a8a' },
 ];
 
+// ── Token size options ────────────────────────────────────────────────────────
+
+const TOKEN_SIZES = [
+  { size: 0.5, label: 'Tiny' },
+  { size: 1,   label: 'Med'  },
+  { size: 2,   label: 'Large' },
+  { size: 3,   label: 'Huge' },
+  { size: 4,   label: 'Garg' },
+];
+
 // ── AoE constants ─────────────────────────────────────────────────────────────
 
 const AOE_COLORS = [
@@ -167,15 +177,17 @@ function AddTokenMenu({
           </div>
           <div className="bm-add-menu__size-row">
             <span className="bm-add-menu__size-label">Size</span>
-            {[1, 2, 3, 4].map((s) => (
-              <button
-                key={s}
-                className={`bm-add-menu__size-btn${size === s ? ' bm-add-menu__size-btn--active' : ''}`}
-                onClick={() => setSize(s)}
-              >
-                {s}
-              </button>
-            ))}
+            <div className="bm-add-menu__size-btns">
+              {TOKEN_SIZES.map(({ size: s, label }) => (
+                <button
+                  key={s}
+                  className={`bm-add-menu__size-btn${size === s ? ' bm-add-menu__size-btn--active' : ''}`}
+                  onClick={() => setSize(s)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -569,10 +581,11 @@ export function BattleMap() {
     };
   }
 
-  function snapToGrid(worldX: number, worldY: number) {
+  function snapToGrid(worldX: number, worldY: number, step = 1) {
+    const invStep = 1 / step;
     return {
-      col: Math.round((worldX - gridOffsetX) / gridCellSize),
-      row: Math.round((worldY - gridOffsetY) / gridCellSize),
+      col: Math.round((worldX - gridOffsetX) / gridCellSize * invStep) / invStep,
+      row: Math.round((worldY - gridOffsetY) / gridCellSize * invStep) / invStep,
     };
   }
 
@@ -1116,7 +1129,9 @@ export function BattleMap() {
     }
 
     if (ix.type === 'drag' && ix.tokenId) {
-      const { col, row } = snapToGrid(ix.currentDragX, ix.currentDragY);
+      const dragged = tokens.find((t) => t.id === ix.tokenId);
+      const snapStep = dragged?.size === 0.5 ? 0.5 : 1;
+      const { col, row } = snapToGrid(ix.currentDragX, ix.currentDragY, snapStep);
       moveToken(ix.tokenId, col, row);
       setDragTokenId(null);
     } else if (ix.type === 'template-drag' && ix.templateId) {

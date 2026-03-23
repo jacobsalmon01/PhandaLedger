@@ -8,6 +8,7 @@ import type { Character } from '../types/character';
 
 // ── Token color palette ──────────────────────────────────────────────────────
 
+// NPC/custom token colors — includes Crimson (red) to mark enemies
 const TOKEN_COLORS = [
   { name: 'Cerulean', hex: '#4a6fa5' },
   { name: 'Crimson',  hex: '#9b3a3a' },
@@ -18,6 +19,9 @@ const TOKEN_COLORS = [
   { name: 'Gold',     hex: '#c8a44e' },
   { name: 'Silver',   hex: '#8a8a8a' },
 ];
+
+// Party character token colors — Crimson excluded so red is reserved for NPCs
+const PC_TOKEN_COLORS = TOKEN_COLORS.filter((c) => c.name !== 'Crimson');
 
 // ── Token size options ────────────────────────────────────────────────────────
 
@@ -139,7 +143,7 @@ function AddTokenMenu({
                 >
                   <span
                     className="bm-add-menu__party-initial"
-                    style={{ background: TOKEN_COLORS[i % TOKEN_COLORS.length].hex }}
+                    style={{ background: PC_TOKEN_COLORS[i % PC_TOKEN_COLORS.length].hex }}
                   >
                     {(ch.name || '?')[0].toUpperCase()}
                   </span>
@@ -972,7 +976,7 @@ export function BattleMap() {
 
     if (activeTouchesRef.current.size >= 2) {
       if (interactionRef.current.type === 'pan') setIsPanning(false);
-      const pts = [...activeTouchesRef.current.values()];
+      const pts = Array.from(activeTouchesRef.current.values());
       pinchStartRef.current = {
         dist: Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y),
         zoom: zoomRef.current,
@@ -1038,7 +1042,7 @@ export function BattleMap() {
     }
 
     if (ix.type === 'pinch' && activeTouchesRef.current.size >= 2 && pinchStartRef.current) {
-      const pts = [...activeTouchesRef.current.values()];
+      const pts = Array.from(activeTouchesRef.current.values());
       const dist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
       const midX = (pts[0].x + pts[1].x) / 2;
       const midY = (pts[0].y + pts[1].y) / 2;
@@ -1177,7 +1181,7 @@ export function BattleMap() {
     const center = viewportCenter();
     addToken({
       label: (ch.name || '?').slice(0, 2).toUpperCase(),
-      color: TOKEN_COLORS[characters.indexOf(ch) % TOKEN_COLORS.length].hex,
+      color: PC_TOKEN_COLORS[characters.indexOf(ch) % PC_TOKEN_COLORS.length].hex,
       col: center.col, row: center.row, size: 1,
       characterId: ch.id,
     });

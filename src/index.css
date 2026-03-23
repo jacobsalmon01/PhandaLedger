@@ -6825,6 +6825,64 @@ input[type="number"] { -moz-appearance: textfield; }
   color: var(--text-gold);
 }
 
+/* ── Send-to (item transfer) ── */
+.inv-send-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 4px;
+  border-top: 1px dashed var(--border-inner);
+  margin-top: 2px;
+}
+
+.inv-send-label {
+  font-family: var(--font-display);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  opacity: 0.7;
+}
+
+.inv-send-targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.inv-send-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: none;
+  border: 1px solid var(--border-inner);
+  color: var(--text-parchment);
+  font-family: var(--font-display);
+  font-size: 0.675rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.inv-send-btn:hover {
+  background: rgba(212, 180, 90, 0.08);
+  border-color: var(--border-gold-dim);
+  color: var(--text-gold);
+}
+
+.inv-send-btn__arrow {
+  font-size: 0.75rem;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+
+.inv-send-btn:hover .inv-send-btn__arrow {
+  opacity: 1;
+}
+
 /* ══════════════════════════════════════════
    Sheet Tabs
    ══════════════════════════════════════════ */
@@ -8571,6 +8629,7 @@ input[type="number"] { -moz-appearance: textfield; }
 .player-mode .inv-add-effect-btn,
 .player-mode .inv-effect-remove,
 .player-mode .inv-qty-btn,
+.player-mode .inv-send-section,
 .player-mode .char-portrait__remove,
 .player-mode .char-portrait__crop-btn,
 .player-mode .cond-add-btn,

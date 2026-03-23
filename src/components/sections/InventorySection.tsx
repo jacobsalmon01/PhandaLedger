@@ -23,7 +23,9 @@ import { NumericInput } from '../NumericInput';
 
 interface Props {
   ch: Character;
+  characters: Character[];
   updateSelected: (updater: (ch: Character) => Character) => void;
+  onTransfer: (fromCharId: string, toCharId: string, itemId: string) => void;
 }
 
 const STAT_OPTIONS: { key: StatKey; label: string }[] = [
@@ -55,9 +57,11 @@ interface RowProps {
   /** Partial update — only supply the fields that changed. */
   onUpdate: (patch: Partial<Omit<InventoryItem, 'id'>>) => void;
   onRemove: () => void;
+  otherCharacters: { id: string; name: string }[];
+  onSendTo: (targetCharId: string) => void;
 }
 
-function InventoryRow({ item, isEditing, onToggleEdit, onUpdate, onRemove }: RowProps) {
+function InventoryRow({ item, isEditing, onToggleEdit, onUpdate, onRemove, otherCharacters, onSendTo }: RowProps) {
   const [nameDraft, setNameDraft] = useState(item.name);
   const [descDraft, setDescDraft] = useState(item.description);
 
@@ -256,6 +260,25 @@ function InventoryRow({ item, isEditing, onToggleEdit, onUpdate, onRemove }: Row
             </button>
           </div>
 
+          {otherCharacters.length > 0 && (
+            <div className="inv-send-section">
+              <span className="inv-send-label">Send to</span>
+              <div className="inv-send-targets">
+                {otherCharacters.map((target) => (
+                  <button
+                    key={target.id}
+                    className="inv-send-btn"
+                    onClick={() => onSendTo(target.id)}
+                    title={`Send to ${target.name}`}
+                  >
+                    <span className="inv-send-btn__arrow">&rarr;</span>
+                    {target.name || <em>Unnamed</em>}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <button className="inv-remove-btn" onClick={onRemove}>
             ✕ Remove Item
           </button>
@@ -267,7 +290,7 @@ function InventoryRow({ item, isEditing, onToggleEdit, onUpdate, onRemove }: Row
 
 // ── InventorySection ──────────────────────────────────────────────────────────
 
-export function InventorySection({ ch, updateSelected }: Props) {
+export function InventorySection({ ch, characters, updateSelected, onTransfer }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
 
@@ -313,6 +336,10 @@ export function InventorySection({ ch, updateSelected }: Props) {
     }));
   }
 
+  const otherCharacters = characters
+    .filter((c) => c.id !== ch.id)
+    .map((c) => ({ id: c.id, name: c.name }));
+
   const itemsValue = totalInventoryValue(ch.inventory);
   const goldHeld = ch.gold.gp;
 
@@ -352,6 +379,11 @@ export function InventorySection({ ch, updateSelected }: Props) {
               onToggleEdit={() => toggleEdit(item.id)}
               onUpdate={(patch) => updateItem(item.id, patch)}
               onRemove={() => removeItem(item.id)}
+              otherCharacters={otherCharacters}
+              onSendTo={(targetId) => {
+                onTransfer(ch.id, targetId, item.id);
+                if (editingId === item.id) setEditingId(null);
+              }}
             />
           ))}
         </div>

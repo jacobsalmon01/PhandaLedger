@@ -360,6 +360,27 @@ export function useStore() {
     }));
   }, []);
 
+  const transferItem = useCallback((fromCharId: string, toCharId: string, itemId: string) => {
+    setState((prev) => {
+      const fromChar = prev.characters.find((c) => c.id === fromCharId);
+      if (!fromChar) return prev;
+      const item = fromChar.inventory.find((i) => i.id === itemId);
+      if (!item) return prev;
+      return {
+        ...prev,
+        characters: prev.characters.map((c) => {
+          if (c.id === fromCharId) {
+            return { ...c, inventory: c.inventory.filter((i) => i.id !== itemId) };
+          }
+          if (c.id === toCharId) {
+            return { ...c, inventory: [...c.inventory, { ...item, id: uuid(), equipped: false }] };
+          }
+          return c;
+        }),
+      };
+    });
+  }, []);
+
   return {
     characters: snap.characters,
     selectedId: snap.selectedId,
@@ -369,6 +390,7 @@ export function useStore() {
     removeCharacter,
     selectCharacter,
     updateSelected,
+    transferItem,
     shortRest,
     longRest,
     shortRestAll,

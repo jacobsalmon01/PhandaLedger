@@ -23,7 +23,7 @@ const TABS: { id: Tab; label: string }[] = [
 ];
 
 export function CharacterSheet() {
-  const { selected, updateSelected } = useStore();
+  const { selected, characters, updateSelected, transferItem } = useStore();
   const [activeTab, setActiveTab] = useState<Tab>('stats');
 
   const resurrect = useCallback(() => {
@@ -115,7 +115,12 @@ export function CharacterSheet() {
             </>
           )}
           {activeTab === 'inventory' && (
-            <InventorySection ch={selected} updateSelected={updateSelected} />
+            <InventorySection
+              ch={selected}
+              characters={characters}
+              updateSelected={updateSelected}
+              onTransfer={transferItem}
+            />
           )}
         </div>
       </div>

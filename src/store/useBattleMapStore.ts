@@ -1,5 +1,5 @@
 import { useSyncExternalStore, useCallback } from 'react';
-import type { MapToken, MapTemplate } from '../types/battlemap';
+import type { MapToken, MapTemplate, AmbientLightLevel, MapLightSource } from '../types/battlemap';
 import { uuid } from '../utils/uuid';
 import {
   isPlayerMode,
@@ -34,6 +34,11 @@ interface BattleMapState {
   fogEnabled: boolean;
   fogRevealed: string[];  // Set of "col,row" keys for revealed cells
   pendingMove: PendingMove | null;
+  lightingEnabled: boolean;
+  ambientLightDefault: AmbientLightLevel;
+  ambientLightCells: string[];   // "col,row:level" format
+  lightSources: MapLightSource[];
+  lightMaskCells: string[];      // "col,row" keys where light sources are blocked
 }
 
 const DEFAULTS: BattleMapState = {
@@ -48,6 +53,11 @@ const DEFAULTS: BattleMapState = {
   fogEnabled: false,
   fogRevealed: [],
   pendingMove: null,
+  lightingEnabled: false,
+  ambientLightDefault: 'bright' as AmbientLightLevel,
+  ambientLightCells: [],
+  lightSources: [],
+  lightMaskCells: [],
 };
 
 let state: BattleMapState = { ...DEFAULTS };
@@ -56,8 +66,8 @@ const listeners = new Set<() => void>();
 function emit() { listeners.forEach((l) => l()); }
 
 function metaOnly() {
-  const { tokens, templates, gridCellSize, gridOffsetX, gridOffsetY, gridVisible, gridColor, fogEnabled, fogRevealed, pendingMove } = state;
-  return { tokens, templates, gridCellSize, gridOffsetX, gridOffsetY, gridVisible, gridColor, fogEnabled, fogRevealed, pendingMove };
+  const { tokens, templates, gridCellSize, gridOffsetX, gridOffsetY, gridVisible, gridColor, fogEnabled, fogRevealed, pendingMove, lightingEnabled, ambientLightDefault, ambientLightCells, lightSources, lightMaskCells } = state;
+  return { tokens, templates, gridCellSize, gridOffsetX, gridOffsetY, gridVisible, gridColor, fogEnabled, fogRevealed, pendingMove, lightingEnabled, ambientLightDefault, ambientLightCells, lightSources, lightMaskCells };
 }
 
 /** Same as metaOnly but without transient fields — used for localStorage persistence. */
@@ -175,7 +185,7 @@ function _broadcastMeta() {
 }
 
 function _setMapImage(dataUrl: string) {
-  state = { ...state, mapImage: dataUrl, fogEnabled: false, fogRevealed: [] };
+  state = { ...state, mapImage: dataUrl, fogEnabled: false, fogRevealed: [], lightingEnabled: false, ambientLightDefault: 'bright' as AmbientLightLevel, ambientLightCells: [], lightSources: [], lightMaskCells: [] };
   persist();
   if (!isPlayerMode) {
     saveImage(dataUrl);
@@ -207,7 +217,14 @@ function _updateToken(id: string, updates: Partial<Omit<MapToken, 'id'>>) {
 }
 
 function _removeToken(id: string) {
-  state = { ...state, tokens: state.tokens.filter((t) => t.id !== id) };
+  const removed = state.tokens.find((t) => t.id === id);
+  const lightSources = state.lightSources.map((ls) => {
+    if (ls.attachedTokenId === id && removed) {
+      return { ...ls, col: removed.col, row: removed.row, attachedTokenId: undefined };
+    }
+    return ls;
+  });
+  state = { ...state, tokens: state.tokens.filter((t) => t.id !== id), lightSources };
   persist();
   if (!isPlayerMode) _broadcastMeta();
   emit();
@@ -269,6 +286,99 @@ function _coverFog(cells: string[]) {
   emit();
 }
 
+// ── Lighting mutations ──────────────────────────────────────────────────────
+
+function _setLightingEnabled(enabled: boolean) {
+  if (isPlayerMode) return;
+  state = { ...state, lightingEnabled: enabled };
+  persist();
+  _broadcastMeta();
+  emit();
+}
+
+function _setAmbientLightDefault(level: AmbientLightLevel) {
+  if (isPlayerMode) return;
+  state = { ...state, ambientLightDefault: level };
+  persist();
+  _broadcastMeta();
+  emit();
+}
+
+function _paintAmbientLight(cells: string[], level: AmbientLightLevel) {
+  if (isPlayerMode) return;
+  const map = new Map<string, string>();
+  for (const entry of state.ambientLightCells) {
+    const [key, val] = entry.split(':');
+    map.set(key, val);
+  }
+  for (const c of cells) map.set(c, level);
+  state = { ...state, ambientLightCells: [...map].map(([k, v]) => `${k}:${v}`) };
+  persist();
+  _broadcastMeta();
+  emit();
+}
+
+function _clearAmbientLight(cells: string[]) {
+  if (isPlayerMode) return;
+  const toRemove = new Set(cells);
+  state = { ...state, ambientLightCells: state.ambientLightCells.filter((entry) => !toRemove.has(entry.split(':')[0])) };
+  persist();
+  _broadcastMeta();
+  emit();
+}
+
+function _addLightSource(source: Omit<MapLightSource, 'id'>) {
+  if (isPlayerMode) return;
+  state = { ...state, lightSources: [...state.lightSources, { ...source, id: uuid() }] };
+  persist();
+  _broadcastMeta();
+  emit();
+}
+
+function _moveLightSource(id: string, col: number, row: number) {
+  if (isPlayerMode) return;
+  state = { ...state, lightSources: state.lightSources.map((ls) => ls.id === id ? { ...ls, col, row } : ls) };
+  persist();
+  _broadcastMeta();
+  emit();
+}
+
+function _updateLightSource(id: string, updates: Partial<Omit<MapLightSource, 'id'>>) {
+  if (isPlayerMode) return;
+  state = { ...state, lightSources: state.lightSources.map((ls) => ls.id === id ? { ...ls, ...updates } : ls) };
+  persist();
+  _broadcastMeta();
+  emit();
+}
+
+function _removeLightSource(id: string) {
+  if (isPlayerMode) return;
+  state = { ...state, lightSources: state.lightSources.filter((ls) => ls.id !== id) };
+  persist();
+  _broadcastMeta();
+  emit();
+}
+
+function _maskLight(cells: string[]) {
+  if (isPlayerMode) return;
+  const set = new Set(state.lightMaskCells);
+  for (const c of cells) set.add(c);
+  state = { ...state, lightMaskCells: [...set] };
+  persist();
+  _broadcastMeta();
+  emit();
+}
+
+function _unmaskLight(cells: string[]) {
+  if (isPlayerMode) return;
+  const set = new Set(state.lightMaskCells);
+  for (const c of cells) set.delete(c);
+  state = { ...state, lightMaskCells: [...set] };
+  persist();
+  _broadcastMeta();
+  emit();
+}
+
 function _setPendingMove(move: PendingMove | null) {
   if (isPlayerMode) return;
   state = { ...state, pendingMove: move };
@@ -319,6 +429,11 @@ export function useBattleMapStore() {
     fogEnabled: snap.fogEnabled,
     fogRevealed: snap.fogRevealed,
     pendingMove: snap.pendingMove,
+    lightingEnabled: snap.lightingEnabled,
+    ambientLightDefault: snap.ambientLightDefault,
+    ambientLightCells: snap.ambientLightCells,
+    lightSources: snap.lightSources,
+    lightMaskCells: snap.lightMaskCells,
     setMapImage:      useCallback((url: string) => _setMapImage(url), []),
     addToken:         useCallback((t: Omit<MapToken, 'id'>) => _addToken(t), []),
     updateToken:      useCallback((id: string, u: Partial<Omit<MapToken, 'id'>>) => _updateToken(id, u), []),
@@ -333,5 +448,15 @@ export function useBattleMapStore() {
     revealFog:        useCallback((cells: string[]) => _revealFog(cells), []),
     coverFog:         useCallback((cells: string[]) => _coverFog(cells), []),
     setPendingMove:   useCallback((move: PendingMove | null) => _setPendingMove(move), []),
+    setLightingEnabled:  useCallback((enabled: boolean) => _setLightingEnabled(enabled), []),
+    setAmbientLightDefault: useCallback((level: AmbientLightLevel) => _setAmbientLightDefault(level), []),
+    paintAmbientLight:   useCallback((cells: string[], level: AmbientLightLevel) => _paintAmbientLight(cells, level), []),
+    clearAmbientLight:   useCallback((cells: string[]) => _clearAmbientLight(cells), []),
+    addLightSource:      useCallback((s: Omit<MapLightSource, 'id'>) => _addLightSource(s), []),
+    moveLightSource:     useCallback((id: string, col: number, row: number) => _moveLightSource(id, col, row), []),
+    updateLightSource:   useCallback((id: string, u: Partial<Omit<MapLightSource, 'id'>>) => _updateLightSource(id, u), []),
+    removeLightSource:   useCallback((id: string) => _removeLightSource(id), []),
+    maskLight:           useCallback((cells: string[]) => _maskLight(cells), []),
+    unmaskLight:         useCallback((cells: string[]) => _unmaskLight(cells), []),
   };
 }

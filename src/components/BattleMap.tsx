@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useBattleMapStore } from '../store/useBattleMapStore';
 import { useStore } from '../store/useStore';
 import { isPlayerMode } from '../store/wsClient';
-import type { MapToken, MapTemplate } from '../types/battlemap';
+import type { MapToken, MapTemplate, MapLightSource, AmbientLightLevel } from '../types/battlemap';
 import type { Character } from '../types/character';
 
 
@@ -453,6 +453,200 @@ function TemplateShape({
   );
 }
 
+// ── Light source presets ─────────────────────────────────────────────────────
+
+const LIGHT_PRESETS = [
+  { label: 'Torch',    bright: 20, dim: 20 },
+  { label: 'Lantern',  bright: 30, dim: 30 },
+  { label: 'Candle',   bright: 5,  dim: 5  },
+  { label: 'Daylight', bright: 60, dim: 60 },
+];
+
+// ── Lighting panel (unified dropdown) ────────────────────────────────────────
+
+function LightingPanel({
+  tokens,
+  lightingEnabled,
+  ambientLightDefault,
+  lightBrushType,
+  lightBrushSize,
+  lightMaskMode,
+  onSetLightingEnabled,
+  onSetAmbientLightDefault,
+  onSetBrushType,
+  onSetBrushSize,
+  onSetMaskMode,
+  onAddLightSource,
+  style,
+}: {
+  tokens: MapToken[];
+  lightingEnabled: boolean;
+  ambientLightDefault: AmbientLightLevel;
+  lightBrushType: 'bright' | 'dim' | 'dark' | 'erase';
+  lightBrushSize: number;
+  lightMaskMode: boolean;
+  onSetLightingEnabled: (v: boolean) => void;
+  onSetAmbientLightDefault: (v: AmbientLightLevel) => void;
+  onSetBrushType: (v: 'bright' | 'dim' | 'dark' | 'erase') => void;
+  onSetBrushSize: (v: number) => void;
+  onSetMaskMode: (v: boolean) => void;
+  onAddLightSource: (opts: { label: string; brightRadius: number; dimRadius: number; attachedTokenId?: string }) => void;
+  style?: React.CSSProperties;
+}) {
+  const [srcLabel, setSrcLabel] = useState('Torch');
+  const [srcBright, setSrcBright] = useState(20);
+  const [srcDim, setSrcDim] = useState(20);
+  const [attachTo, setAttachTo] = useState('');
+
+  const AMBIENT_LEVELS: { value: AmbientLightLevel; label: string; icon: string }[] = [
+    { value: 'bright', label: 'Bright', icon: '\u2600' },
+    { value: 'dim',    label: 'Dim',    icon: '\u263D' },
+    { value: 'dark',   label: 'Dark',   icon: '\u2B24' },
+  ];
+
+  const BRUSH_TYPES: { value: typeof lightBrushType; label: string; desc: string }[] = [
+    { value: 'bright', label: 'Bright', desc: 'Full light' },
+    { value: 'dim',    label: 'Dim',    desc: 'Half light' },
+    { value: 'dark',   label: 'Dark',   desc: 'Darkness' },
+    { value: 'erase',  label: 'Erase',  desc: 'Reset to default' },
+  ];
+
+  return (
+    <div className="bm-add-menu bm-light-panel" style={style} onClick={(e) => e.stopPropagation()}>
+      {/* ── Enable ── */}
+      <div className="bm-add-menu__section">
+        <label className="bm-light-panel__enable">
+          <input type="checkbox" checked={lightingEnabled} onChange={(e) => onSetLightingEnabled(e.target.checked)} />
+          <span className="bm-light-panel__enable-label">Enable Lighting</span>
+        </label>
+      </div>
+
+      {/* ── Ambient Default ── */}
+      <div className="bm-add-menu__section">
+        <div className="bm-add-menu__heading">Map Default</div>
+        <div className="bm-light-panel__ambient-row">
+          {AMBIENT_LEVELS.map((lvl) => (
+            <button
+              key={lvl.value}
+              className={`bm-light-panel__ambient-btn${ambientLightDefault === lvl.value ? ' bm-light-panel__ambient-btn--active' : ''}`}
+              onClick={() => onSetAmbientLightDefault(lvl.value)}
+            >
+              <span className="bm-light-panel__ambient-icon">{lvl.icon}</span>
+              <span>{lvl.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Paint Brush ── */}
+      <div className="bm-add-menu__section">
+        <div className="bm-add-menu__heading">Paint Brush</div>
+        <div className="bm-light-panel__brush-grid">
+          {BRUSH_TYPES.map((b) => (
+            <button
+              key={b.value}
+              className={`bm-light-panel__brush-btn${lightBrushType === b.value && !lightMaskMode ? ' bm-light-panel__brush-btn--active' : ''}`}
+              onClick={() => { onSetBrushType(b.value); onSetMaskMode(false); }}
+            >
+              <span className="bm-light-panel__brush-name">{b.label}</span>
+              <span className="bm-light-panel__brush-desc">{b.desc}</span>
+            </button>
+          ))}
+        </div>
+        <div className="bm-light-panel__brush-options">
+          <button
+            className={`bm-light-panel__mask-btn${lightMaskMode ? ' bm-light-panel__mask-btn--active' : ''}`}
+            onClick={() => onSetMaskMode(!lightMaskMode)}
+            title="Paint walls that block light sources. Shift+click to remove."
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="2" width="10" height="10" rx="1" stroke="currentColor" strokeWidth="1.3"/><path d="M2 5h10M5 2v10" stroke="currentColor" strokeWidth="1" opacity="0.5"/></svg>
+            <span>Wall Mask</span>
+          </button>
+          <div className="bm-light-panel__size">
+            <span>Size</span>
+            <input
+              type="number"
+              min={1}
+              max={50}
+              step={1}
+              value={lightBrushSize}
+              onChange={(e) => {
+                const v = parseInt(e.target.value, 10);
+                if (!isNaN(v) && v >= 1 && v <= 50) onSetBrushSize(v);
+              }}
+              onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+              className="bm-add-menu__ft-input"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Place Light Source ── */}
+      <div className="bm-add-menu__section">
+        <div className="bm-add-menu__heading">Place Light Source</div>
+        <div className="bm-light-panel__presets">
+          {LIGHT_PRESETS.map((p) => (
+            <button
+              key={p.label}
+              className={`bm-light-panel__preset${srcLabel === p.label && srcBright === p.bright && srcDim === p.dim ? ' bm-light-panel__preset--active' : ''}`}
+              onClick={() => { setSrcLabel(p.label); setSrcBright(p.bright); setSrcDim(p.dim); }}
+            >
+              <span className="bm-light-panel__preset-icon">{'\uD83D\uDD25'}</span>
+              <span className="bm-light-panel__preset-name">{p.label}</span>
+              <span className="bm-light-panel__preset-radii">{p.bright}/{p.dim} ft</span>
+            </button>
+          ))}
+        </div>
+        <div className="bm-light-panel__custom">
+          <input
+            className="bm-add-menu__input"
+            placeholder="Label..."
+            value={srcLabel}
+            onChange={(e) => setSrcLabel(e.target.value)}
+            maxLength={12}
+          />
+          <div className="bm-light-panel__radii">
+            <label>
+              <span>Bright</span>
+              <input type="number" min={0} max={120} step={5} value={srcBright} onChange={(e) => setSrcBright(parseInt(e.target.value, 10) || 0)} className="bm-add-menu__ft-input" />
+              <span className="bm-light-panel__unit">ft</span>
+            </label>
+            <label>
+              <span>Dim</span>
+              <input type="number" min={0} max={120} step={5} value={srcDim} onChange={(e) => setSrcDim(parseInt(e.target.value, 10) || 0)} className="bm-add-menu__ft-input" />
+              <span className="bm-light-panel__unit">ft</span>
+            </label>
+          </div>
+          {tokens.length > 0 && (
+            <div className="bm-light-panel__attach">
+              <label>Attach to token</label>
+              <select value={attachTo} onChange={(e) => setAttachTo(e.target.value)} className="bm-add-menu__select">
+                <option value="">None</option>
+                {tokens.map((t) => (
+                  <option key={t.id} value={t.id}>{t.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+      </div>
+      <button
+        className="bm-add-menu__place-btn bm-add-menu__place-btn--amber"
+        onClick={() => {
+          onAddLightSource({
+            label: srcLabel || 'Light',
+            brightRadius: srcBright,
+            dimRadius: srcDim,
+            attachedTokenId: attachTo || undefined,
+          });
+        }}
+      >
+        Place Light Source
+      </button>
+    </div>
+  );
+}
+
 // ── BattleMap component ───────────────────────────────────────────────────────
 
 export function BattleMap() {
@@ -460,10 +654,15 @@ export function BattleMap() {
     mapImage, tokens, templates,
     gridCellSize, gridOffsetX, gridOffsetY, gridVisible, gridColor,
     fogEnabled, fogRevealed, pendingMove,
+    lightingEnabled, ambientLightDefault, ambientLightCells, lightSources, lightMaskCells,
     setMapImage, addToken, moveToken, removeToken,
     addTemplate, updateTemplate, removeTemplate,
     updateGridConfig, clearMap,
     setFogEnabled, revealFog, coverFog, setPendingMove,
+    setLightingEnabled, setAmbientLightDefault,
+    paintAmbientLight, clearAmbientLight,
+    addLightSource, moveLightSource, removeLightSource,
+    maskLight, unmaskLight,
   } = useBattleMapStore();
   const { characters } = useStore();
 
@@ -494,6 +693,21 @@ export function BattleMap() {
   const [fogMode, setFogMode] = useState(false);
   const [fogBrushSize, setFogBrushSize] = useState(1);
   const [fogBrushPreview, setFogBrushPreview] = useState<string[]>([]);
+
+  // ── Lighting state ──
+  const [lightMode, setLightMode] = useState(false);
+  const [lightBrushSize, setLightBrushSize] = useState(1);
+  const [lightBrushType, setLightBrushType] = useState<'bright' | 'dim' | 'dark' | 'erase'>('bright');
+  const [lightBrushPreview, setLightBrushPreview] = useState<string[]>([]);
+  const [lightMaskMode, setLightMaskMode] = useState(false);
+  const [showLightPanel, setShowLightPanel] = useState(false);
+  const [lightPanelAnchor, setLightPanelAnchor] = useState<{ top: number; left: number } | null>(null);
+  const [selectedLightSourceId, setSelectedLightSourceId] = useState<string | null>(null);
+  const [dragLightSourceId, setDragLightSourceId] = useState<string | null>(null);
+  const [dragLightPos, setDragLightPos] = useState({ x: 0, y: 0 });
+  const lightCanvasRef = useRef<HTMLCanvasElement>(null);
+  const lightPreviewCanvasRef = useRef<HTMLCanvasElement>(null);
+  const lightPanelWrapRef = useRef<HTMLDivElement>(null);
 
   // ── Battle mode (movement-limited dragging for PC tokens) ──
   const [battleMode, setBattleMode] = useState(false);
@@ -535,11 +749,13 @@ export function BattleMap() {
 
   // ── Interaction ref ──
   const interactionRef = useRef<{
-    type: 'none' | 'drag' | 'pan' | 'measure' | 'pinch' | 'template-drag' | 'template-rotate' | 'fog' | 'ghost-drag';
+    type: 'none' | 'drag' | 'pan' | 'measure' | 'pinch' | 'template-drag' | 'template-rotate' | 'fog' | 'ghost-drag' | 'light-paint' | 'light-mask' | 'light-drag';
     tokenId: string | null;
     templateId: string | null;
     fogStrokeAction: 'reveal' | 'cover';
     fogStrokeCells: Set<string>;
+    lightStrokeCells: Set<string>;
+    lightSourceId: string | null;
     startPointerX: number;
     startPointerY: number;
     startTokenX: number;
@@ -555,6 +771,7 @@ export function BattleMap() {
   }>({
     type: 'none', tokenId: null, templateId: null,
     fogStrokeAction: 'reveal' as const, fogStrokeCells: new Set<string>(),
+    lightStrokeCells: new Set<string>(), lightSourceId: null as string | null,
     startPointerX: 0, startPointerY: 0,
     startTokenX: 0, startTokenY: 0,
     startPanX: 0, startPanY: 0,
@@ -588,6 +805,14 @@ export function BattleMap() {
       }
     }
     return cells;
+  }
+
+  function getLightPos(ls: MapLightSource) {
+    if (ls.attachedTokenId) {
+      const t = tokens.find((tk) => tk.id === ls.attachedTokenId);
+      if (t) return { col: t.col, row: t.row };
+    }
+    return { col: ls.col, row: ls.row };
   }
 
   function templateOriginWorld(t: MapTemplate) {
@@ -791,6 +1016,140 @@ export function BattleMap() {
       ctx.strokeRect(x + 0.5, y + 0.5, gridCellSize - 1, gridCellSize - 1);
     }
   }, [fogMode, fogBrushPreview, imgSize, gridCellSize, gridOffsetX, gridOffsetY]);
+
+  // ── Light canvas rendering ──
+
+  useEffect(() => {
+    const canvas = lightCanvasRef.current;
+    if (!canvas || !imgSize.w || !imgSize.h) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    if (canvas.width !== imgSize.w) canvas.width = imgSize.w;
+    if (canvas.height !== imgSize.h) canvas.height = imgSize.h;
+    ctx.clearRect(0, 0, imgSize.w, imgSize.h);
+
+    if (!lightingEnabled) return;
+
+    // Build ambient override map
+    const ambientMap = new Map<string, AmbientLightLevel>();
+    for (const entry of ambientLightCells) {
+      const colonIdx = entry.lastIndexOf(':');
+      if (colonIdx > 0) {
+        ambientMap.set(entry.substring(0, colonIdx), entry.substring(colonIdx + 1) as AmbientLightLevel);
+      }
+    }
+
+    // Build mask set
+    const maskSet = new Set(lightMaskCells);
+
+    // Build light source contributions
+    const lightMap = new Map<string, 'bright' | 'dim'>();
+    for (const ls of lightSources) {
+      const pos = getLightPos(ls);
+      const brightCells = Math.ceil(ls.brightRadius / 5);
+      const dimCells = Math.ceil((ls.brightRadius + ls.dimRadius) / 5);
+      for (let dc = -dimCells; dc <= dimCells; dc++) {
+        for (let dr = -dimCells; dr <= dimCells; dr++) {
+          const dist = Math.sqrt(dc * dc + dr * dr);
+          const cellKey = `${pos.col + dc},${pos.row + dr}`;
+          if (maskSet.has(cellKey)) continue;
+          if (dist <= brightCells + 0.5) {
+            lightMap.set(cellKey, 'bright');
+          } else if (dist <= dimCells + 0.5) {
+            const existing = lightMap.get(cellKey);
+            if (existing !== 'bright') lightMap.set(cellKey, 'dim');
+          }
+        }
+      }
+    }
+
+    // Determine map bounds
+    const cols = Math.ceil(imgSize.w / gridCellSize) + 1;
+    const rows = Math.ceil(imgSize.h / gridCellSize) + 1;
+    const startCol = Math.floor(-gridOffsetX / gridCellSize);
+    const startRow = Math.floor(-gridOffsetY / gridCellSize);
+
+    const LEVEL_ORDER = { bright: 2, dim: 1, dark: 0 };
+
+    const dimColor = isPlayerMode ? 'rgba(0, 0, 40, 0.35)' : 'rgba(0, 0, 40, 0.18)';
+    const darkColor = isPlayerMode ? 'rgba(0, 0, 20, 0.6)' : 'rgba(0, 0, 20, 0.3)';
+
+    for (let c = startCol; c < startCol + cols; c++) {
+      for (let r = startRow; r < startRow + rows; r++) {
+        const key = `${c},${r}`;
+        const ambient: AmbientLightLevel = ambientMap.get(key) || ambientLightDefault;
+        const lightContrib = lightMap.get(key);
+
+        // Final level = brightest of ambient and light source
+        let finalLevel: AmbientLightLevel = ambient;
+        if (lightContrib && LEVEL_ORDER[lightContrib] > LEVEL_ORDER[finalLevel]) {
+          finalLevel = lightContrib === 'bright' ? 'bright' : 'dim';
+        }
+
+        if (finalLevel === 'bright') continue;
+
+        ctx.fillStyle = finalLevel === 'dim' ? dimColor : darkColor;
+        ctx.fillRect(
+          gridOffsetX + c * gridCellSize,
+          gridOffsetY + r * gridCellSize,
+          gridCellSize,
+          gridCellSize,
+        );
+      }
+    }
+    // DM-only: draw hatching on masked cells so the DM can see where walls are
+    if (!isPlayerMode && lightMode && maskSet.size > 0) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255, 80, 80, 0.35)';
+      ctx.lineWidth = 1;
+      for (const key of maskSet) {
+        const sep = key.indexOf(',');
+        const mc = parseInt(key.substring(0, sep), 10);
+        const mr = parseInt(key.substring(sep + 1), 10);
+        const x = gridOffsetX + mc * gridCellSize;
+        const y = gridOffsetY + mr * gridCellSize;
+        // Diagonal hatching
+        ctx.beginPath();
+        const step = Math.max(6, gridCellSize / 5);
+        for (let d = -gridCellSize; d < gridCellSize * 2; d += step) {
+          ctx.moveTo(x + d, y);
+          ctx.lineTo(x + d + gridCellSize, y + gridCellSize);
+        }
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }, [lightingEnabled, lightMode, ambientLightDefault, ambientLightCells, lightSources, lightMaskCells, tokens, imgSize, gridCellSize, gridOffsetX, gridOffsetY]);
+
+  // ── Light brush preview canvas ──
+
+  useEffect(() => {
+    const canvas = lightPreviewCanvasRef.current;
+    if (!canvas || !imgSize.w || !imgSize.h || isPlayerMode) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    if (canvas.width !== imgSize.w) canvas.width = imgSize.w;
+    if (canvas.height !== imgSize.h) canvas.height = imgSize.h;
+    ctx.clearRect(0, 0, imgSize.w, imgSize.h);
+
+    if (!lightMode || lightBrushPreview.length === 0) return;
+
+    const isMask = lightMaskMode;
+    ctx.fillStyle = isMask ? 'rgba(255, 80, 80, 0.25)' : 'rgba(255, 200, 80, 0.25)';
+    ctx.strokeStyle = isMask ? 'rgba(255, 80, 80, 0.6)' : 'rgba(255, 200, 80, 0.6)';
+    ctx.lineWidth = 1;
+    for (const key of lightBrushPreview) {
+      const sep = key.indexOf(',');
+      const col = parseInt(key.substring(0, sep), 10);
+      const row = parseInt(key.substring(sep + 1), 10);
+      const x = gridOffsetX + col * gridCellSize;
+      const y = gridOffsetY + row * gridCellSize;
+      ctx.fillRect(x, y, gridCellSize, gridCellSize);
+      ctx.strokeRect(x + 0.5, y + 0.5, gridCellSize - 1, gridCellSize - 1);
+    }
+  }, [lightMode, lightMaskMode, lightBrushPreview, imgSize, gridCellSize, gridOffsetX, gridOffsetY]);
 
   // ── Measure canvas rendering ──
 
@@ -1177,6 +1536,27 @@ export function BattleMap() {
       return;
     }
 
+    if (lightMode && !isPlayerMode) {
+      const cell = screenToCell(e.clientX, e.clientY);
+      const brushCells = getCellsInBrush(cell.col, cell.row, lightBrushSize);
+      const iType = lightMaskMode ? 'light-mask' as const : 'light-paint' as const;
+      interactionRef.current = {
+        ...interactionRef.current,
+        type: iType,
+        tokenId: null,
+        templateId: null,
+        lightStrokeCells: new Set(brushCells),
+      };
+      if (lightMaskMode) {
+        if (e.shiftKey) unmaskLight(brushCells);
+        else maskLight(brushCells);
+      } else {
+        if (lightBrushType === 'erase') clearAmbientLight(brushCells);
+        else paintAmbientLight(brushCells, lightBrushType);
+      }
+      return;
+    }
+
     if (fogMode && !isPlayerMode) {
       const cell = screenToCell(e.clientX, e.clientY);
       const action = e.shiftKey ? 'cover' : 'reveal';
@@ -1337,6 +1717,28 @@ export function BattleMap() {
         else coverFog(newCells);
       }
 
+    } else if (ix.type === 'light-paint' || ix.type === 'light-mask') {
+      const cell = screenToCell(e.clientX, e.clientY);
+      const brushCells = getCellsInBrush(cell.col, cell.row, lightBrushSize);
+      const newCells = brushCells.filter((c) => !ix.lightStrokeCells.has(c));
+      if (newCells.length > 0) {
+        for (const c of newCells) ix.lightStrokeCells.add(c);
+        if (ix.type === 'light-mask') {
+          if (e.shiftKey) unmaskLight(newCells);
+          else maskLight(newCells);
+        } else {
+          if (lightBrushType === 'erase') clearAmbientLight(newCells);
+          else paintAmbientLight(newCells, lightBrushType);
+        }
+      }
+
+    } else if (ix.type === 'light-drag') {
+      const dx = (e.clientX - ix.startPointerX) / zoomRef.current;
+      const dy = (e.clientY - ix.startPointerY) / zoomRef.current;
+      ix.currentDragX = ix.startTokenX + dx;
+      ix.currentDragY = ix.startTokenY + dy;
+      setDragLightPos({ x: ix.currentDragX, y: ix.currentDragY });
+
     } else if (ix.type === 'pan') {
       const newPanX = ix.startPanX + (e.clientX - ix.startPointerX);
       const newPanY = ix.startPanY + (e.clientY - ix.startPointerY);
@@ -1348,6 +1750,12 @@ export function BattleMap() {
     if (fogMode && !isPlayerMode) {
       const cell = screenToCell(e.clientX, e.clientY);
       setFogBrushPreview(getCellsInBrush(cell.col, cell.row, fogBrushSize));
+    }
+
+    // Update light brush preview on hover
+    if (lightMode && !isPlayerMode) {
+      const cell = screenToCell(e.clientX, e.clientY);
+      setLightBrushPreview(getCellsInBrush(cell.col, cell.row, lightBrushSize));
     }
   }
 
@@ -1414,11 +1822,17 @@ export function BattleMap() {
       setRotationPreview(null);
     } else if (ix.type === 'fog') {
       ix.fogStrokeCells = new Set();
+    } else if (ix.type === 'light-paint' || ix.type === 'light-mask') {
+      ix.lightStrokeCells = new Set();
+    } else if (ix.type === 'light-drag' && ix.lightSourceId) {
+      const { col, row } = snapToGrid(ix.currentDragX, ix.currentDragY);
+      moveLightSource(ix.lightSourceId, col, row);
+      setDragLightSourceId(null);
     } else if (ix.type === 'pan') {
       setIsPanning(false);
     }
 
-    ix.type = 'none'; ix.tokenId = null; ix.templateId = null;
+    ix.type = 'none'; ix.tokenId = null; ix.templateId = null; ix.lightSourceId = null;
   }
 
   function handlePointerCancel(e: React.PointerEvent) {
@@ -1428,6 +1842,8 @@ export function BattleMap() {
     if (ix.type === 'pinch' && activeTouchesRef.current.size < 2) pinchStartRef.current = null;
     if (ix.type === 'drag' || ix.type === 'ghost-drag') setDragTokenId(null);
     if (ix.type === 'fog') ix.fogStrokeCells = new Set();
+    if (ix.type === 'light-paint' || ix.type === 'light-mask') ix.lightStrokeCells = new Set();
+    if (ix.type === 'light-drag') setDragLightSourceId(null);
     if (ix.type === 'pan') setIsPanning(false);
     if (ix.type === 'template-drag') {
       dragTemplateCellRef.current = null;
@@ -1487,6 +1903,55 @@ export function BattleMap() {
     setShowAoeMenu(false);
   }
 
+  // ── Light source handlers ──
+
+  function handleAddLightSource(opts: { label: string; brightRadius: number; dimRadius: number; attachedTokenId?: string }) {
+    const center = viewportCenter();
+    addLightSource({
+      label: opts.label,
+      col: center.col,
+      row: center.row,
+      brightRadius: opts.brightRadius,
+      dimRadius: opts.dimRadius,
+      attachedTokenId: opts.attachedTokenId,
+    });
+  }
+
+  function handleLightSourcePointerDown(e: React.PointerEvent, ls: MapLightSource) {
+    e.stopPropagation();
+    e.preventDefault();
+    if (isPlayerMode) return;
+
+    const pos = getLightPos(ls);
+    const worldX = gridOffsetX + pos.col * gridCellSize;
+    const worldY = gridOffsetY + pos.row * gridCellSize;
+
+    interactionRef.current = {
+      ...interactionRef.current,
+      type: 'light-drag',
+      tokenId: null,
+      templateId: null,
+      lightSourceId: ls.id,
+      startPointerX: e.clientX,
+      startPointerY: e.clientY,
+      startTokenX: worldX,
+      startTokenY: worldY,
+      currentDragX: worldX,
+      currentDragY: worldY,
+    };
+
+    setDragLightSourceId(ls.id);
+    setDragLightPos({ x: worldX, y: worldY });
+    setSelectedLightSourceId(ls.id);
+    setSelectedTokenId(null);
+    setSelectedTemplateId(null);
+    setShowAddMenu(false);
+    setShowAoeMenu(false);
+    setShowLightPanel(false);
+
+    viewportRef.current?.setPointerCapture(e.pointerId);
+  }
+
   // ── Keyboard: Delete / Escape ──
 
   useEffect(() => {
@@ -1496,14 +1961,17 @@ export function BattleMap() {
       if (e.key === 'Escape') {
         if (activePcMove) { handleCancelMove(); return; }
         if (fogMode) { setFogMode(false); setFogBrushPreview([]); }
+        if (lightMode) { setLightMode(false); setLightBrushPreview([]); }
         setMeasureMode(false);
         setMeasureStart(null);
         setMeasureEnd(null);
+        setSelectedLightSourceId(null);
         return;
       }
       if (isPlayerMode) return;
       if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (selectedTokenId) { removeToken(selectedTokenId); setSelectedTokenId(null); }
+        if (selectedLightSourceId) { removeLightSource(selectedLightSourceId); setSelectedLightSourceId(null); }
+        else if (selectedTokenId) { removeToken(selectedTokenId); setSelectedTokenId(null); }
         else if (selectedTemplateId) { removeTemplate(selectedTemplateId); setSelectedTemplateId(null); }
       }
     }
@@ -1521,6 +1989,7 @@ export function BattleMap() {
     setSelectedTemplateId(null); setDragTemplateId(null);
     setDragTemplateCell(null); setRotationPreview(null);
     setFogMode(false); setFogBrushPreview([]);
+    setLightMode(false); setLightBrushPreview([]); setSelectedLightSourceId(null);
     setActivePcMove(null); setPendingMove(null); setBattleMode(false);
     dragTemplateCellRef.current = null;
     setZoom(1); zoomRef.current = 1;
@@ -1636,7 +2105,7 @@ export function BattleMap() {
                 setMeasureMode(next);
                 setMeasureStart(null);
                 setMeasureEnd(null);
-                if (next) { setFogMode(false); setFogBrushPreview([]); }
+                if (next) { setFogMode(false); setFogBrushPreview([]); setLightMode(false); setLightBrushPreview([]); }
               }}
               title="Measure distance (5 ft/square)"
             >
@@ -1649,7 +2118,7 @@ export function BattleMap() {
                 const next = !fogMode;
                 setFogMode(next);
                 if (!next) setFogBrushPreview([]);
-                if (next) { setMeasureMode(false); setMeasureStart(null); setMeasureEnd(null); }
+                if (next) { setMeasureMode(false); setMeasureStart(null); setMeasureEnd(null); setLightMode(false); setLightBrushPreview([]); }
               }}
               title="Fog of war — click to reveal, shift+click to cover"
             >
@@ -1709,6 +2178,46 @@ export function BattleMap() {
                 </button>
               </div>
             )}
+
+            <div ref={lightPanelWrapRef}>
+              <button
+                className={`bm-toolbar__icon-btn${lightMode ? ' bm-toolbar__icon-btn--active bm-toolbar__icon-btn--amber' : ''}`}
+                onClick={() => {
+                  const next = !lightMode;
+                  setLightMode(next);
+                  if (!next) { setLightBrushPreview([]); setShowLightPanel(false); }
+                  if (next) {
+                    setFogMode(false); setFogBrushPreview([]); setMeasureMode(false); setMeasureStart(null); setMeasureEnd(null);
+                    if (lightPanelWrapRef.current) {
+                      const rect = lightPanelWrapRef.current.getBoundingClientRect();
+                      setLightPanelAnchor({ top: rect.bottom + 6, left: Math.max(8, rect.left) });
+                    }
+                    setShowLightPanel(true);
+                  }
+                }}
+                title="Lighting — paint ambient light levels and place light sources"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="6" r="4" stroke="currentColor" strokeWidth="1.5"/><path d="M6 10v2a2 2 0 004 0v-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M5 3L4 1.5M11 3l1-1.5M8 2V0.5M3 6H1.5M14.5 6H13" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.6"/></svg>
+              </button>
+              {showLightPanel && lightPanelAnchor && createPortal(
+                <LightingPanel
+                  tokens={tokens}
+                  lightingEnabled={lightingEnabled}
+                  ambientLightDefault={ambientLightDefault}
+                  lightBrushType={lightBrushType}
+                  lightBrushSize={lightBrushSize}
+                  lightMaskMode={lightMaskMode}
+                  onSetLightingEnabled={setLightingEnabled}
+                  onSetAmbientLightDefault={setAmbientLightDefault}
+                  onSetBrushType={(v) => { setLightBrushType(v); }}
+                  onSetBrushSize={setLightBrushSize}
+                  onSetMaskMode={setLightMaskMode}
+                  onAddLightSource={handleAddLightSource}
+                  style={{ position: 'fixed', top: lightPanelAnchor.top, left: lightPanelAnchor.left, right: 'auto', marginTop: 0, zIndex: 1100 }}
+                />,
+                document.body
+              )}
+            </div>
           </div>
 
           {/* ── Center: battle mode toggle + active move ── */}
@@ -1820,13 +2329,14 @@ export function BattleMap() {
               )}
             </div>
 
-            {(selectedTokenId || selectedTemplateId) && (
+            {(selectedTokenId || selectedTemplateId || selectedLightSourceId) && (
               <>
                 <span className="bm-toolbar__div" />
                 <button
                   className="bm-toolbar__icon-btn bm-toolbar__icon-btn--danger"
                   onClick={() => {
-                    if (selectedTokenId) { removeToken(selectedTokenId); setSelectedTokenId(null); }
+                    if (selectedLightSourceId) { removeLightSource(selectedLightSourceId); setSelectedLightSourceId(null); }
+                    else if (selectedTokenId) { removeToken(selectedTokenId); setSelectedTokenId(null); }
                     else if (selectedTemplateId) { removeTemplate(selectedTemplateId); setSelectedTemplateId(null); }
                   }}
                   title="Remove selected"
@@ -1902,6 +2412,7 @@ export function BattleMap() {
           dragTokenId && 'bm-viewport--dragging',
           measureMode && 'bm-viewport--measuring',
           fogMode && 'bm-viewport--fog',
+          lightMode && 'bm-viewport--light',
         ].filter(Boolean).join(' ')}
         onPointerDown={handleViewportPointerDown}
         onPointerMove={handlePointerMove}
@@ -1926,6 +2437,13 @@ export function BattleMap() {
             style={{ width: imgSize.w, height: imgSize.h }}
           />
 
+          {/* Lighting overlay — between grid and fog */}
+          <canvas
+            ref={lightCanvasRef}
+            className="bm-light-canvas"
+            style={{ width: imgSize.w, height: imgSize.h }}
+          />
+
           {/* Fog of war — DM sees at 50% opacity here, players get z-index:200 via CSS */}
           <canvas
             ref={fogCanvasRef}
@@ -1938,6 +2456,15 @@ export function BattleMap() {
             <canvas
               ref={fogPreviewCanvasRef}
               className="bm-fog-preview-canvas"
+              style={{ width: imgSize.w, height: imgSize.h }}
+            />
+          )}
+
+          {/* Light brush preview (DM only) */}
+          {!isPlayerMode && lightMode && (
+            <canvas
+              ref={lightPreviewCanvasRef}
+              className="bm-light-preview-canvas"
               style={{ width: imgSize.w, height: imgSize.h }}
             />
           )}
@@ -2014,6 +2541,38 @@ export function BattleMap() {
               </div>
             );
           })()}
+
+          {/* Light source icons */}
+          {lightSources.map((ls) => {
+            const pos = getLightPos(ls);
+            const isDragging = dragLightSourceId === ls.id;
+            const isSelected = selectedLightSourceId === ls.id;
+            const worldX = isDragging ? dragLightPos.x : gridOffsetX + pos.col * gridCellSize;
+            const worldY = isDragging ? dragLightPos.y : gridOffsetY + pos.row * gridCellSize;
+            const iconSize = gridCellSize * 0.6;
+            const offset = (gridCellSize - iconSize) / 2;
+            return (
+              <div
+                key={ls.id}
+                className={[
+                  'bm-light-source',
+                  isSelected && 'bm-light-source--selected',
+                  isDragging && 'bm-light-source--dragging',
+                ].filter(Boolean).join(' ')}
+                style={{
+                  left: worldX + offset,
+                  top: worldY + offset,
+                  width: iconSize,
+                  height: iconSize,
+                  fontSize: Math.max(10, iconSize * 0.55),
+                }}
+                onPointerDown={(e) => handleLightSourcePointerDown(e, ls)}
+                title={`${ls.label} (${ls.brightRadius}/${ls.dimRadius} ft)`}
+              >
+                {'\uD83D\uDD25'}
+              </div>
+            );
+          })}
 
           {tokens.map((token) => {
             const isDragging = dragTokenId === token.id;

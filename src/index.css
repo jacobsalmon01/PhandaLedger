@@ -10147,6 +10147,337 @@ input[type="number"] { -moz-appearance: textfield; }
   pointer-events: none;
 }
 
+/* ── Lighting ── */
+
+.bm-light-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.bm-light-preview-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.bm-light-source {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: grab;
+  user-select: none;
+  z-index: 1;
+  filter: drop-shadow(0 0 4px rgba(255, 180, 60, 0.7));
+  transition: filter 0.15s;
+}
+
+.bm-light-source--selected {
+  filter: drop-shadow(0 0 8px rgba(255, 200, 80, 0.9));
+  outline: 2px solid rgba(255, 200, 80, 0.8);
+  outline-offset: 1px;
+  border-radius: 50%;
+}
+
+.bm-light-source--dragging {
+  cursor: grabbing;
+  opacity: 0.8;
+}
+
+.player-mode .bm-light-source {
+  pointer-events: none;
+  cursor: default;
+}
+
+.bm-viewport--light {
+  cursor: crosshair;
+}
+
+.bm-viewport--light .bm-token {
+  pointer-events: none;
+}
+
+.bm-viewport--light .bm-template {
+  pointer-events: none;
+}
+
+/* Light sources stay clickable in light mode so DM can select + delete them */
+
+.bm-toolbar__icon-btn--amber {
+  color: #ffc040;
+}
+
+/* ── Lighting panel (dropdown) ── */
+
+.bm-light-panel {
+  width: 260px;
+  max-height: min(580px, calc(100vh - 80px));
+}
+
+.bm-light-panel__enable {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0 6px;
+  cursor: pointer;
+}
+
+.bm-light-panel__enable input[type="checkbox"] {
+  accent-color: #ffc040;
+}
+
+.bm-light-panel__enable-label {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #d4c9a8;
+  letter-spacing: 0.04em;
+}
+
+.bm-light-panel__ambient-row {
+  display: flex;
+  gap: 4px;
+  padding-bottom: 6px;
+}
+
+.bm-light-panel__ambient-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  color: #a89b7e;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.bm-light-panel__ambient-btn:hover {
+  background: rgba(255, 200, 80, 0.1);
+}
+
+.bm-light-panel__ambient-btn--active {
+  background: rgba(255, 200, 80, 0.18);
+  border-color: rgba(255, 200, 80, 0.45);
+  color: #ffd040;
+}
+
+.bm-light-panel__ambient-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.bm-light-panel__brush-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding-bottom: 6px;
+}
+
+.bm-light-panel__brush-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 5px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.bm-light-panel__brush-btn:hover {
+  background: rgba(255, 200, 80, 0.08);
+}
+
+.bm-light-panel__brush-btn--active {
+  background: rgba(255, 200, 80, 0.15);
+  border-color: rgba(255, 200, 80, 0.4);
+}
+
+.bm-light-panel__brush-btn--active .bm-light-panel__brush-name {
+  color: #ffd040;
+}
+
+.bm-light-panel__brush-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #d4c9a8;
+  line-height: 1.2;
+}
+
+.bm-light-panel__brush-desc {
+  font-size: 9px;
+  color: #8a7e62;
+  line-height: 1.2;
+}
+
+.bm-light-panel__brush-options {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 6px;
+}
+
+.bm-light-panel__mask-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  color: #a89b7e;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.bm-light-panel__mask-btn:hover {
+  background: rgba(200, 80, 80, 0.1);
+}
+
+.bm-light-panel__mask-btn--active {
+  background: rgba(200, 80, 80, 0.18);
+  border-color: rgba(255, 80, 80, 0.4);
+  color: #ff9080;
+}
+
+.bm-light-panel__size {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+  color: #8a7e62;
+}
+
+.bm-light-panel__size .bm-add-menu__ft-input {
+  width: 40px;
+}
+
+.bm-light-panel__presets {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding-bottom: 6px;
+}
+
+.bm-light-panel__preset {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.bm-light-panel__preset:hover {
+  background: rgba(255, 180, 60, 0.1);
+}
+
+.bm-light-panel__preset--active {
+  background: rgba(255, 180, 60, 0.15);
+  border-color: rgba(255, 180, 60, 0.4);
+}
+
+.bm-light-panel__preset-icon {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.bm-light-panel__preset-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #d4c9a8;
+}
+
+.bm-light-panel__preset--active .bm-light-panel__preset-name {
+  color: #ffd040;
+}
+
+.bm-light-panel__preset-radii {
+  font-size: 9px;
+  color: #8a7e62;
+  margin-left: auto;
+}
+
+.bm-light-panel__custom {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 4px;
+}
+
+.bm-light-panel__radii {
+  display: flex;
+  gap: 10px;
+}
+
+.bm-light-panel__radii label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #a89b7e;
+  font-weight: 500;
+}
+
+.bm-light-panel__unit {
+  font-size: 10px;
+  color: #6e6450;
+}
+
+.bm-light-panel__attach {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bm-light-panel__attach label {
+  font-size: 11px;
+  color: #a89b7e;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.bm-add-menu__select {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  color: #d4c9a8;
+  padding: 3px 6px;
+  font-size: 11px;
+  font-family: inherit;
+}
+
+.bm-add-menu__place-btn--amber {
+  background: linear-gradient(180deg, rgba(255, 200, 80, 0.2), rgba(180, 120, 40, 0.2));
+  border-color: rgba(255, 180, 60, 0.35);
+  color: #ffd040;
+}
+
+.bm-add-menu__place-btn--amber:hover {
+  background: linear-gradient(180deg, rgba(255, 200, 80, 0.3), rgba(180, 120, 40, 0.3));
+  border-color: rgba(255, 180, 60, 0.5);
+}
+
 /* ── Tokens ── */
 
 .bm-token {

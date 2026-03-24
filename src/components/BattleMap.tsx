@@ -908,18 +908,12 @@ export function BattleMap() {
     if (pm.destCol !== pm.originCol || pm.destRow !== pm.originRow) {
       const dx = pm.destCol - pm.originCol;
       const dy = pm.destRow - pm.originRow;
-      const distFt = Math.round(Math.sqrt(dx * dx + dy * dy) * 5);
-      const remaining = pm.speedFt - distFt;
-      const ratio = distFt / pm.speedFt;
+      const ratio = Math.sqrt(dx * dx + dy * dy) * 5 / pm.speedFt;
 
       // Color based on movement usage
       const pathColor = ratio > 1 ? 'rgba(220, 80, 80, 0.8)'
         : ratio > 0.75 ? 'rgba(220, 180, 60, 0.8)'
         : 'rgba(80, 220, 120, 0.8)';
-
-      const pathColorSoft = ratio > 1 ? 'rgba(220, 80, 80, 0.5)'
-        : ratio > 0.75 ? 'rgba(220, 180, 60, 0.5)'
-        : 'rgba(80, 220, 120, 0.5)';
 
       ctx.beginPath();
       ctx.moveTo(originX, originY);
@@ -943,49 +937,6 @@ export function BattleMap() {
       ctx.arc(destX, destY, Math.max(6, gridCellSize * 0.12), 0, Math.PI * 2);
       ctx.stroke();
 
-      // ── Prominent distance label near destination ──
-      const fontSize = Math.max(16, gridCellSize * 0.32);
-      const usedLabel = `${distFt} ft`;
-      const remainLabel = remaining >= 0 ? `${remaining} ft left` : `${-remaining} ft over`;
-
-      ctx.font = `bold ${fontSize}px Cinzel, Georgia, serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-
-      // Position label near the destination, offset below
-      const lx = destX;
-      const ly = destY + gridCellSize * 0.9;
-
-      // Measure both lines for the pill
-      const m1 = ctx.measureText(usedLabel);
-      const smallFontSize = fontSize * 0.65;
-      ctx.font = `${smallFontSize}px Cinzel, Georgia, serif`;
-      const m2 = ctx.measureText(remainLabel);
-      const maxW = Math.max(m1.width, m2.width);
-      const pad = fontSize * 0.45;
-
-      // Draw pill background
-      const pillW = maxW + pad * 2;
-      const pillH = fontSize + smallFontSize + pad * 1.8;
-      const pillX = lx - pillW / 2;
-      const pillY = ly - fontSize * 0.55 - pad * 0.5;
-      ctx.fillStyle = 'rgba(10, 8, 6, 0.9)';
-      ctx.beginPath();
-      ctx.roundRect(pillX, pillY, pillW, pillH, 6);
-      ctx.fill();
-      ctx.strokeStyle = pathColorSoft;
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      // Draw used distance (large)
-      ctx.font = `bold ${fontSize}px Cinzel, Georgia, serif`;
-      ctx.fillStyle = '#fff';
-      ctx.fillText(usedLabel, lx, ly);
-
-      // Draw remaining (small, color-coded)
-      ctx.font = `${smallFontSize}px Cinzel, Georgia, serif`;
-      ctx.fillStyle = pathColor;
-      ctx.fillText(remainLabel, lx, ly + fontSize * 0.75);
     }
 
     ctx.restore();
@@ -1727,34 +1678,6 @@ export function BattleMap() {
               </svg>
               <span>{battleMode ? 'Battle' : 'Free'}</span>
             </button>
-            {activePcMove && pendingMove && (
-              <div className="bm-toolbar__move-info">
-                <span className="bm-toolbar__move-name">{activePcMove.characterName}</span>
-                <span className="bm-toolbar__move-speed">
-                  {(() => {
-                    const dx = pendingMove.destCol - pendingMove.originCol;
-                    const dy = pendingMove.destRow - pendingMove.originRow;
-                    const used = Math.round(Math.sqrt(dx * dx + dy * dy) * 5);
-                    return `${used} / ${activePcMove.speedFt} ft`;
-                  })()}
-                </span>
-                <button
-                  className="bm-toolbar__move-confirm"
-                  onClick={handleConfirmMove}
-                  title="Confirm move"
-                  disabled={pendingMove.destCol === pendingMove.originCol && pendingMove.destRow === pendingMove.originRow}
-                >
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5L9.5 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                </button>
-                <button
-                  className="bm-toolbar__move-cancel"
-                  onClick={handleCancelMove}
-                  title="Cancel move (Esc)"
-                >
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
-                </button>
-              </div>
-            )}
           </div>
 
           {/* ── Right: view & danger ── */}
@@ -1994,24 +1917,66 @@ export function BattleMap() {
             const isDraggingGhost = dragTokenId === '__ghost__';
             const ghostX = isDraggingGhost ? dragPos.x : gridOffsetX + pendingMove.destCol * gridCellSize;
             const ghostY = isDraggingGhost ? dragPos.y : gridOffsetY + pendingMove.destRow * gridCellSize;
+            const dx = pendingMove.destCol - pendingMove.originCol;
+            const dy = pendingMove.destRow - pendingMove.originRow;
+            const usedFt = Math.round(Math.sqrt(dx * dx + dy * dy) * 5);
+            const totalFt = activePcMove?.speedFt ?? pendingMove.speedFt;
+            const hasMoved = pendingMove.destCol !== pendingMove.originCol || pendingMove.destRow !== pendingMove.originRow;
             return (
-              <div
-                className={[
-                  'bm-token',
-                  'bm-token--ghost',
-                  isDraggingGhost && 'bm-token--dragging',
-                ].filter(Boolean).join(' ')}
-                style={{
-                  left: ghostX, top: ghostY,
-                  width: ghostSize, height: ghostSize,
-                  backgroundColor: ghostToken.color,
-                }}
-                onPointerDown={!isPlayerMode ? handleGhostPointerDown : undefined}
-              >
-                <span className="bm-token__label" style={{ fontSize: Math.min(20, Math.max(9, ghostSize * 0.22)) }}>
-                  {ghostToken.label}
-                </span>
-              </div>
+              <>
+                <div
+                  className={[
+                    'bm-token',
+                    'bm-token--ghost',
+                    isDraggingGhost && 'bm-token--dragging',
+                  ].filter(Boolean).join(' ')}
+                  style={{
+                    left: ghostX, top: ghostY,
+                    width: ghostSize, height: ghostSize,
+                    backgroundColor: ghostToken.color,
+                  }}
+                  onPointerDown={!isPlayerMode ? handleGhostPointerDown : undefined}
+                >
+                  <span className="bm-token__label" style={{ fontSize: Math.min(20, Math.max(9, ghostSize * 0.22)) }}>
+                    {ghostToken.label}
+                  </span>
+                </div>
+                {/* Movement HUD anchored below ghost token */}
+                {!isDraggingGhost && (
+                  <div
+                    className="bm-move-hud"
+                    style={{
+                      left: ghostX + ghostSize / 2,
+                      top: ghostY + ghostSize + 6,
+                    }}
+                  >
+                    <div className={`bm-move-hud__usage ${usedFt > totalFt ? 'bm-move-hud__usage--over' : usedFt >= totalFt * 0.75 ? 'bm-move-hud__usage--warn' : ''}`}>
+                      <span className="bm-move-hud__used">{usedFt}</span>
+                      <span className="bm-move-hud__sep">/</span>
+                      <span className="bm-move-hud__total">{totalFt} ft</span>
+                    </div>
+                    {!isPlayerMode && (
+                      <div className="bm-move-hud__actions">
+                        <button
+                          className="bm-move-hud__btn bm-move-hud__btn--confirm"
+                          onPointerDown={(e) => { e.stopPropagation(); handleConfirmMove(); }}
+                          disabled={!hasMoved}
+                          title="Confirm move"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7l3 3L11 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </button>
+                        <button
+                          className="bm-move-hud__btn bm-move-hud__btn--cancel"
+                          onPointerDown={(e) => { e.stopPropagation(); handleCancelMove(); }}
+                          title="Cancel move (Esc)"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3.5 3.5l7 7M10.5 3.5l-7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
             );
           })()}
 

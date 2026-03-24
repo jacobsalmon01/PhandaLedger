@@ -1,10 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useBattleMapStore } from '../store/useBattleMapStore';
 import { useStore } from '../store/useStore';
 import { isPlayerMode } from '../store/wsClient';
 import type { MapToken, MapTemplate } from '../types/battlemap';
 import type { Character } from '../types/character';
+
 
 // ── Token color palette ──────────────────────────────────────────────────────
 
@@ -458,11 +459,11 @@ export function BattleMap() {
   const {
     mapImage, tokens, templates,
     gridCellSize, gridOffsetX, gridOffsetY, gridVisible, gridColor,
-    fogEnabled, fogRevealed,
+    fogEnabled, fogRevealed, pendingMove,
     setMapImage, addToken, moveToken, removeToken,
     addTemplate, updateTemplate, removeTemplate,
     updateGridConfig, clearMap,
-    setFogEnabled, revealFog, coverFog,
+    setFogEnabled, revealFog, coverFog, setPendingMove,
   } = useBattleMapStore();
   const { characters } = useStore();
 
@@ -494,6 +495,17 @@ export function BattleMap() {
   const [fogBrushSize, setFogBrushSize] = useState(1);
   const [fogBrushPreview, setFogBrushPreview] = useState<string[]>([]);
 
+  // ── Battle mode (movement-limited dragging for PC tokens) ──
+  const [battleMode, setBattleMode] = useState(false);
+  const [activePcMove, setActivePcMove] = useState<{
+    tokenId: string;
+    originCol: number;
+    originRow: number;
+    speedFt: number;
+    characterName: string;
+  } | null>(null);
+  const moveCanvasRef = useRef<HTMLCanvasElement>(null);
+
   // ── Confirm clear ──
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
@@ -523,7 +535,7 @@ export function BattleMap() {
 
   // ── Interaction ref ──
   const interactionRef = useRef<{
-    type: 'none' | 'drag' | 'pan' | 'measure' | 'pinch' | 'template-drag' | 'template-rotate' | 'fog';
+    type: 'none' | 'drag' | 'pan' | 'measure' | 'pinch' | 'template-drag' | 'template-rotate' | 'fog' | 'ghost-drag';
     tokenId: string | null;
     templateId: string | null;
     fogStrokeAction: 'reveal' | 'cover';
@@ -858,6 +870,127 @@ export function BattleMap() {
     ctx.restore();
   }, [measureStart, measureEnd, imgSize, gridCellSize, gridOffsetX, gridOffsetY]);
 
+  // ── Move mode canvas rendering (movement range + path line) ──
+
+  useEffect(() => {
+    const canvas = moveCanvasRef.current;
+    if (!canvas || !imgSize.w || !imgSize.h) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    if (canvas.width !== imgSize.w) canvas.width = imgSize.w;
+    if (canvas.height !== imgSize.h) canvas.height = imgSize.h;
+    ctx.clearRect(0, 0, imgSize.w, imgSize.h);
+
+    // Use local moveMode for DM, or pendingMove for players
+    const pm = pendingMove;
+    if (!pm) return;
+
+    const originX = gridOffsetX + (pm.originCol + 0.5) * gridCellSize;
+    const originY = gridOffsetY + (pm.originRow + 0.5) * gridCellSize;
+    const destX = gridOffsetX + (pm.destCol + 0.5) * gridCellSize;
+    const destY = gridOffsetY + (pm.destRow + 0.5) * gridCellSize;
+    const radiusPx = (pm.speedFt / 5) * gridCellSize;
+
+    // Draw movement range circle
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(originX, originY, radiusPx, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(80, 180, 255, 0.08)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(80, 180, 255, 0.45)';
+    ctx.lineWidth = Math.max(2, gridCellSize * 0.04);
+    ctx.setLineDash([Math.max(6, gridCellSize * 0.1), Math.max(3, gridCellSize * 0.05)]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draw path line from origin to dest
+    if (pm.destCol !== pm.originCol || pm.destRow !== pm.originRow) {
+      const dx = pm.destCol - pm.originCol;
+      const dy = pm.destRow - pm.originRow;
+      const distFt = Math.round(Math.sqrt(dx * dx + dy * dy) * 5);
+      const remaining = pm.speedFt - distFt;
+      const ratio = distFt / pm.speedFt;
+
+      // Color based on movement usage
+      const pathColor = ratio > 1 ? 'rgba(220, 80, 80, 0.8)'
+        : ratio > 0.75 ? 'rgba(220, 180, 60, 0.8)'
+        : 'rgba(80, 220, 120, 0.8)';
+
+      const pathColorSoft = ratio > 1 ? 'rgba(220, 80, 80, 0.5)'
+        : ratio > 0.75 ? 'rgba(220, 180, 60, 0.5)'
+        : 'rgba(80, 220, 120, 0.5)';
+
+      ctx.beginPath();
+      ctx.moveTo(originX, originY);
+      ctx.lineTo(destX, destY);
+      ctx.strokeStyle = pathColor;
+      ctx.lineWidth = Math.max(3, gridCellSize * 0.06);
+      ctx.setLineDash([Math.max(8, gridCellSize * 0.12), Math.max(4, gridCellSize * 0.06)]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Origin dot
+      ctx.fillStyle = pathColor;
+      ctx.beginPath();
+      ctx.arc(originX, originY, Math.max(5, gridCellSize * 0.1), 0, Math.PI * 2);
+      ctx.fill();
+
+      // Destination dot
+      ctx.strokeStyle = pathColor;
+      ctx.lineWidth = Math.max(2, gridCellSize * 0.04);
+      ctx.beginPath();
+      ctx.arc(destX, destY, Math.max(6, gridCellSize * 0.12), 0, Math.PI * 2);
+      ctx.stroke();
+
+      // ── Prominent distance label near destination ──
+      const fontSize = Math.max(16, gridCellSize * 0.32);
+      const usedLabel = `${distFt} ft`;
+      const remainLabel = remaining >= 0 ? `${remaining} ft left` : `${-remaining} ft over`;
+
+      ctx.font = `bold ${fontSize}px Cinzel, Georgia, serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Position label near the destination, offset below
+      const lx = destX;
+      const ly = destY + gridCellSize * 0.9;
+
+      // Measure both lines for the pill
+      const m1 = ctx.measureText(usedLabel);
+      const smallFontSize = fontSize * 0.65;
+      ctx.font = `${smallFontSize}px Cinzel, Georgia, serif`;
+      const m2 = ctx.measureText(remainLabel);
+      const maxW = Math.max(m1.width, m2.width);
+      const pad = fontSize * 0.45;
+
+      // Draw pill background
+      const pillW = maxW + pad * 2;
+      const pillH = fontSize + smallFontSize + pad * 1.8;
+      const pillX = lx - pillW / 2;
+      const pillY = ly - fontSize * 0.55 - pad * 0.5;
+      ctx.fillStyle = 'rgba(10, 8, 6, 0.9)';
+      ctx.beginPath();
+      ctx.roundRect(pillX, pillY, pillW, pillH, 6);
+      ctx.fill();
+      ctx.strokeStyle = pathColorSoft;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Draw used distance (large)
+      ctx.font = `bold ${fontSize}px Cinzel, Georgia, serif`;
+      ctx.fillStyle = '#fff';
+      ctx.fillText(usedLabel, lx, ly);
+
+      // Draw remaining (small, color-coded)
+      ctx.font = `${smallFontSize}px Cinzel, Georgia, serif`;
+      ctx.fillStyle = pathColor;
+      ctx.fillText(remainLabel, lx, ly + fontSize * 0.75);
+    }
+
+    ctx.restore();
+  }, [pendingMove, imgSize, gridCellSize, gridOffsetX, gridOffsetY]);
+
   // ── Zoom (non-passive wheel) ──
 
   useEffect(() => {
@@ -892,6 +1025,34 @@ export function BattleMap() {
     e.preventDefault();
     if (isPlayerMode) return;
 
+    // Cancel active move if clicking a different token
+    if (activePcMove && token.id !== activePcMove.tokenId) {
+      handleCancelMove();
+    }
+
+    // In battle mode, PC token drag auto-enters movement mode
+    if (battleMode && token.characterId && !activePcMove) {
+      const ch = characters.find((c) => c.id === token.characterId);
+      if (ch) {
+        const speedFt = ch.speed || 30;
+        setActivePcMove({
+          tokenId: token.id,
+          originCol: token.col,
+          originRow: token.row,
+          speedFt,
+          characterName: ch.name,
+        });
+        setPendingMove({
+          tokenId: token.id,
+          originCol: token.col,
+          originRow: token.row,
+          destCol: token.col,
+          destRow: token.row,
+          speedFt,
+        });
+      }
+    }
+
     const pos = tokenWorldPos(token);
     interactionRef.current = {
       ...interactionRef.current,
@@ -912,6 +1073,35 @@ export function BattleMap() {
     setSelectedTemplateId(null);
     setShowAddMenu(false);
     setShowAoeMenu(false);
+
+    viewportRef.current?.setPointerCapture(e.pointerId);
+  }
+
+  // ── Ghost token drag (adjust prospective position) ──
+
+  function handleGhostPointerDown(e: React.PointerEvent) {
+    e.stopPropagation();
+    e.preventDefault();
+    if (isPlayerMode || !pendingMove || !activePcMove) return;
+
+    const ghostWorldX = gridOffsetX + pendingMove.destCol * gridCellSize;
+    const ghostWorldY = gridOffsetY + pendingMove.destRow * gridCellSize;
+
+    interactionRef.current = {
+      ...interactionRef.current,
+      type: 'ghost-drag',
+      tokenId: pendingMove.tokenId,
+      templateId: null,
+      startPointerX: e.clientX,
+      startPointerY: e.clientY,
+      startTokenX: ghostWorldX,
+      startTokenY: ghostWorldY,
+      currentDragX: ghostWorldX,
+      currentDragY: ghostWorldY,
+    };
+
+    setDragTokenId('__ghost__');
+    setDragPos({ x: ghostWorldX, y: ghostWorldY });
 
     viewportRef.current?.setPointerCapture(e.pointerId);
   }
@@ -1030,6 +1220,7 @@ export function BattleMap() {
     setShowAddMenu(false);
     setShowAoeMenu(false);
     setShowGridPanel(false);
+    if (activePcMove) handleCancelMove();
   }
 
   // ── Pointer move ──
@@ -1068,12 +1259,55 @@ export function BattleMap() {
         setMeasureEnd(cell);
       }
 
+    } else if (ix.type === 'ghost-drag' && activePcMove && pendingMove) {
+      const dx = (e.clientX - ix.startPointerX) / zoomRef.current;
+      const dy = (e.clientY - ix.startPointerY) / zoomRef.current;
+      ix.currentDragX = ix.startTokenX + dx;
+      ix.currentDragY = ix.startTokenY + dy;
+      setDragPos({ x: ix.currentDragX, y: ix.currentDragY });
+
+      // Snap to grid and clamp to movement range
+      const { col, row } = snapToGrid(ix.currentDragX, ix.currentDragY);
+      const cdx = col - activePcMove.originCol;
+      const cdy = row - activePcMove.originRow;
+      const distFt = Math.sqrt(cdx * cdx + cdy * cdy) * 5;
+      const maxCells = activePcMove.speedFt / 5;
+      let destCol = col, destRow = row;
+      if (distFt > activePcMove.speedFt && (cdx !== 0 || cdy !== 0)) {
+        const dist = Math.sqrt(cdx * cdx + cdy * cdy);
+        const scale = maxCells / dist;
+        destCol = Math.round(activePcMove.originCol + cdx * scale);
+        destRow = Math.round(activePcMove.originRow + cdy * scale);
+      }
+      setPendingMove({
+        ...pendingMove,
+        destCol,
+        destRow,
+      });
+
     } else if (ix.type === 'drag') {
       const dx = (e.clientX - ix.startPointerX) / zoomRef.current;
       const dy = (e.clientY - ix.startPointerY) / zoomRef.current;
       ix.currentDragX = ix.startTokenX + dx;
       ix.currentDragY = ix.startTokenY + dy;
       setDragPos({ x: ix.currentDragX, y: ix.currentDragY });
+
+      // Live update pendingMove during battle mode drag
+      if (activePcMove && ix.tokenId === activePcMove.tokenId && pendingMove) {
+        const { col, row } = snapToGrid(ix.currentDragX, ix.currentDragY);
+        const cdx = col - activePcMove.originCol;
+        const cdy = row - activePcMove.originRow;
+        const distFt = Math.sqrt(cdx * cdx + cdy * cdy) * 5;
+        const maxCells = activePcMove.speedFt / 5;
+        let destCol = col, destRow = row;
+        if (distFt > activePcMove.speedFt && (cdx !== 0 || cdy !== 0)) {
+          const dist = Math.sqrt(cdx * cdx + cdy * cdy);
+          const scale = maxCells / dist;
+          destCol = Math.round(activePcMove.originCol + cdx * scale);
+          destRow = Math.round(activePcMove.originRow + cdy * scale);
+        }
+        setPendingMove({ ...pendingMove, destCol, destRow });
+      }
 
     } else if (ix.type === 'template-drag') {
       const dx = (e.clientX - ix.startPointerX) / zoomRef.current;
@@ -1132,12 +1366,41 @@ export function BattleMap() {
       return;
     }
 
-    if (ix.type === 'drag' && ix.tokenId) {
+    if (ix.type === 'ghost-drag') {
+      // Ghost drag finished — pendingMove.dest was already updated live during move
+      setDragTokenId(null);
+    } else if (ix.type === 'drag' && ix.tokenId) {
       const dragged = tokens.find((t) => t.id === ix.tokenId);
       const snapStep = dragged?.size === 0.5 ? 0.5 : 1;
       const { col, row } = snapToGrid(ix.currentDragX, ix.currentDragY, snapStep);
-      moveToken(ix.tokenId, col, row);
-      setDragTokenId(null);
+
+      if (activePcMove && ix.tokenId === activePcMove.tokenId) {
+        // Battle mode: clamp to movement range and update pendingMove destination
+        const dx = col - activePcMove.originCol;
+        const dy = row - activePcMove.originRow;
+        const distFt = Math.sqrt(dx * dx + dy * dy) * 5;
+        const maxCells = activePcMove.speedFt / 5;
+        let destCol = col, destRow = row;
+        if (distFt > activePcMove.speedFt && (dx !== 0 || dy !== 0)) {
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const scale = maxCells / dist;
+          destCol = Math.round(activePcMove.originCol + dx * scale);
+          destRow = Math.round(activePcMove.originRow + dy * scale);
+        }
+        setPendingMove({
+          tokenId: ix.tokenId,
+          originCol: activePcMove.originCol,
+          originRow: activePcMove.originRow,
+          destCol,
+          destRow,
+          speedFt: activePcMove.speedFt,
+        });
+        // Token stays at origin until confirmed
+        setDragTokenId(null);
+      } else {
+        moveToken(ix.tokenId, col, row);
+        setDragTokenId(null);
+      }
     } else if (ix.type === 'template-drag' && ix.templateId) {
       const cell = dragTemplateCellRef.current;
       if (cell) updateTemplate(ix.templateId, { col: cell.col, row: cell.row });
@@ -1163,7 +1426,7 @@ export function BattleMap() {
     viewportRef.current?.releasePointerCapture(e.pointerId);
     const ix = interactionRef.current;
     if (ix.type === 'pinch' && activeTouchesRef.current.size < 2) pinchStartRef.current = null;
-    if (ix.type === 'drag') setDragTokenId(null);
+    if (ix.type === 'drag' || ix.type === 'ghost-drag') setDragTokenId(null);
     if (ix.type === 'fog') ix.fogStrokeCells = new Set();
     if (ix.type === 'pan') setIsPanning(false);
     if (ix.type === 'template-drag') {
@@ -1196,6 +1459,23 @@ export function BattleMap() {
     });
   }
 
+
+
+  // ── Move mode handlers ──
+
+  function handleConfirmMove() {
+    if (!activePcMove || !pendingMove) return;
+    moveToken(pendingMove.tokenId, pendingMove.destCol, pendingMove.destRow);
+    setPendingMove(null);
+    setActivePcMove(null);
+  }
+
+  function handleCancelMove() {
+    if (!activePcMove) return;
+    setPendingMove(null);
+    setActivePcMove(null);
+  }
+
   // ── Template add handler ──
 
   function handleAddTemplate(opts: { type: MapTemplate['type']; size: number; color: string }) {
@@ -1214,6 +1494,7 @@ export function BattleMap() {
       const tag = document.activeElement?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
       if (e.key === 'Escape') {
+        if (activePcMove) { handleCancelMove(); return; }
         if (fogMode) { setFogMode(false); setFogBrushPreview([]); }
         setMeasureMode(false);
         setMeasureStart(null);
@@ -1228,7 +1509,7 @@ export function BattleMap() {
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedTokenId, selectedTemplateId, removeToken, removeTemplate]);
+  }, [selectedTokenId, selectedTemplateId, removeToken, removeTemplate, activePcMove]);
 
   // ── Clear map ──
 
@@ -1240,6 +1521,7 @@ export function BattleMap() {
     setSelectedTemplateId(null); setDragTemplateId(null);
     setDragTemplateCell(null); setRotationPreview(null);
     setFogMode(false); setFogBrushPreview([]);
+    setActivePcMove(null); setPendingMove(null); setBattleMode(false);
     dragTemplateCellRef.current = null;
     setZoom(1); zoomRef.current = 1;
     setPanX(0); panXRef.current = 0;
@@ -1424,6 +1706,52 @@ export function BattleMap() {
                   title="Cover all"
                 >
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1.5" y="1.5" width="9" height="9" rx="1" stroke="currentColor" strokeWidth="1.2"/><path d="M4 4l4 4M8 4l-4 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* ── Center: battle mode toggle + active move ── */}
+          <div className="bm-toolbar__group bm-toolbar__group--battle">
+            <button
+              className={`bm-toolbar__battle-toggle${battleMode ? ' bm-toolbar__battle-toggle--active' : ''}`}
+              onClick={() => {
+                const next = !battleMode;
+                setBattleMode(next);
+                if (!next && activePcMove) handleCancelMove();
+              }}
+              title={battleMode ? 'Battle mode ON — PC drags limited by speed' : 'Free mode — unrestricted movement'}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M7 1l1.5 3.5L13 5l-3 2.5L11 12 7 9.5 3 12l1-4.5L1 5l4.5-.5z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" fill={battleMode ? 'currentColor' : 'none'} fillOpacity="0.25"/>
+              </svg>
+              <span>{battleMode ? 'Battle' : 'Free'}</span>
+            </button>
+            {activePcMove && pendingMove && (
+              <div className="bm-toolbar__move-info">
+                <span className="bm-toolbar__move-name">{activePcMove.characterName}</span>
+                <span className="bm-toolbar__move-speed">
+                  {(() => {
+                    const dx = pendingMove.destCol - pendingMove.originCol;
+                    const dy = pendingMove.destRow - pendingMove.originRow;
+                    const used = Math.round(Math.sqrt(dx * dx + dy * dy) * 5);
+                    return `${used} / ${activePcMove.speedFt} ft`;
+                  })()}
+                </span>
+                <button
+                  className="bm-toolbar__move-confirm"
+                  onClick={handleConfirmMove}
+                  title="Confirm move"
+                  disabled={pendingMove.destCol === pendingMove.originCol && pendingMove.destRow === pendingMove.originRow}
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5L9.5 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+                <button
+                  className="bm-toolbar__move-cancel"
+                  onClick={handleCancelMove}
+                  title="Cancel move (Esc)"
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
                 </button>
               </div>
             )}
@@ -1651,6 +1979,41 @@ export function BattleMap() {
             className="bm-measure-canvas"
             style={{ width: imgSize.w, height: imgSize.h }}
           />
+
+          <canvas
+            ref={moveCanvasRef}
+            className="bm-measure-canvas"
+            style={{ width: imgSize.w, height: imgSize.h }}
+          />
+
+          {/* Ghost token at prospective move destination */}
+          {pendingMove && (pendingMove.destCol !== pendingMove.originCol || pendingMove.destRow !== pendingMove.originRow) && (() => {
+            const ghostToken = tokens.find((t) => t.id === pendingMove.tokenId);
+            if (!ghostToken) return null;
+            const ghostSize = ghostToken.size * gridCellSize;
+            const isDraggingGhost = dragTokenId === '__ghost__';
+            const ghostX = isDraggingGhost ? dragPos.x : gridOffsetX + pendingMove.destCol * gridCellSize;
+            const ghostY = isDraggingGhost ? dragPos.y : gridOffsetY + pendingMove.destRow * gridCellSize;
+            return (
+              <div
+                className={[
+                  'bm-token',
+                  'bm-token--ghost',
+                  isDraggingGhost && 'bm-token--dragging',
+                ].filter(Boolean).join(' ')}
+                style={{
+                  left: ghostX, top: ghostY,
+                  width: ghostSize, height: ghostSize,
+                  backgroundColor: ghostToken.color,
+                }}
+                onPointerDown={!isPlayerMode ? handleGhostPointerDown : undefined}
+              >
+                <span className="bm-token__label" style={{ fontSize: Math.min(20, Math.max(9, ghostSize * 0.22)) }}>
+                  {ghostToken.label}
+                </span>
+              </div>
+            );
+          })()}
 
           {tokens.map((token) => {
             const isDragging = dragTokenId === token.id;

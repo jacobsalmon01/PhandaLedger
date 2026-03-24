@@ -17,3 +17,15 @@ export interface MapTemplate {
   rotation: number; // degrees; 0 = pointing right
   color: string;
 }
+
+export type AmbientLightLevel = 'bright' | 'dim' | 'dark';
+
+export interface MapLightSource {
+  id: string;
+  label: string;
+  col: number;
+  row: number;
+  brightRadius: number;   // feet (e.g. 20)
+  dimRadius: number;       // additional dim feet beyond bright (e.g. 20)
+  attachedTokenId?: string;
+}

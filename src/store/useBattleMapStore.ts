@@ -13,6 +13,15 @@ import {
 
 const STORAGE_KEY = 'phandaLedger_battleMap';
 
+export interface PendingMove {
+  tokenId: string;
+  originCol: number;
+  originRow: number;
+  destCol: number;
+  destRow: number;
+  speedFt: number;
+}
+
 interface BattleMapState {
   mapImage: string | null;
   tokens: MapToken[];
@@ -24,6 +33,7 @@ interface BattleMapState {
   gridColor: string;
   fogEnabled: boolean;
   fogRevealed: string[];  // Set of "col,row" keys for revealed cells
+  pendingMove: PendingMove | null;
 }
 
 const DEFAULTS: BattleMapState = {
@@ -37,6 +47,7 @@ const DEFAULTS: BattleMapState = {
   gridColor: '#ffdc64',
   fogEnabled: false,
   fogRevealed: [],
+  pendingMove: null,
 };
 
 let state: BattleMapState = { ...DEFAULTS };
@@ -45,14 +56,20 @@ const listeners = new Set<() => void>();
 function emit() { listeners.forEach((l) => l()); }
 
 function metaOnly() {
-  const { tokens, templates, gridCellSize, gridOffsetX, gridOffsetY, gridVisible, gridColor, fogEnabled, fogRevealed } = state;
-  return { tokens, templates, gridCellSize, gridOffsetX, gridOffsetY, gridVisible, gridColor, fogEnabled, fogRevealed };
+  const { tokens, templates, gridCellSize, gridOffsetX, gridOffsetY, gridVisible, gridColor, fogEnabled, fogRevealed, pendingMove } = state;
+  return { tokens, templates, gridCellSize, gridOffsetX, gridOffsetY, gridVisible, gridColor, fogEnabled, fogRevealed, pendingMove };
+}
+
+/** Same as metaOnly but without transient fields — used for localStorage persistence. */
+function persistable() {
+  const { pendingMove: _, ...rest } = metaOnly();
+  return rest;
 }
 
 function persist() {
   if (isPlayerMode) return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(metaOnly()));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(persistable()));
   } catch { /* quota */ }
 }
 
@@ -252,6 +269,14 @@ function _coverFog(cells: string[]) {
   emit();
 }
 
+function _setPendingMove(move: PendingMove | null) {
+  if (isPlayerMode) return;
+  state = { ...state, pendingMove: move };
+  // Don't persist — pendingMove is transient. Just broadcast + emit.
+  _broadcastMeta();
+  emit();
+}
+
 function _clearMap() {
   state = { ...DEFAULTS };
   persist();
@@ -293,6 +318,7 @@ export function useBattleMapStore() {
     gridColor: snap.gridColor,
     fogEnabled: snap.fogEnabled,
     fogRevealed: snap.fogRevealed,
+    pendingMove: snap.pendingMove,
     setMapImage:      useCallback((url: string) => _setMapImage(url), []),
     addToken:         useCallback((t: Omit<MapToken, 'id'>) => _addToken(t), []),
     updateToken:      useCallback((id: string, u: Partial<Omit<MapToken, 'id'>>) => _updateToken(id, u), []),
@@ -306,5 +332,6 @@ export function useBattleMapStore() {
     setFogEnabled:    useCallback((enabled: boolean) => _setFogEnabled(enabled), []),
     revealFog:        useCallback((cells: string[]) => _revealFog(cells), []),
     coverFog:         useCallback((cells: string[]) => _coverFog(cells), []),
+    setPendingMove:   useCallback((move: PendingMove | null) => _setPendingMove(move), []),
   };
 }

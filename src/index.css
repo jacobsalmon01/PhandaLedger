@@ -10004,6 +10004,159 @@ input[type="number"] { -moz-appearance: textfield; }
   transition: width 0.25s ease;
 }
 
+/* ── Ghost token (pending move destination) ── */
+
+.bm-token--ghost {
+  opacity: 0.55;
+  z-index: 3;
+  animation: bm-ghost-pulse 1.5s ease-in-out infinite;
+  cursor: grab;
+  box-shadow:
+    0 0 0 2px rgba(80, 220, 120, 0.6),
+    0 0 16px rgba(80, 220, 120, 0.35),
+    0 0 32px rgba(80, 220, 120, 0.12);
+}
+
+.player-mode .bm-token--ghost {
+  pointer-events: none;
+  cursor: default;
+}
+
+.bm-token--ghost::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.2), transparent 55%);
+  pointer-events: none;
+}
+
+.bm-token--ghost.bm-token--dragging {
+  animation: none;
+  opacity: 0.75;
+  cursor: grabbing;
+}
+
+@keyframes bm-ghost-pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.7; }
+}
+
+/* ── Battle mode toggle ── */
+
+.bm-toolbar__battle-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border: 1px solid var(--border-inner);
+  border-radius: 4px;
+  background: rgba(30, 26, 22, 0.6);
+  color: var(--text-dim);
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.bm-toolbar__battle-toggle:hover {
+  border-color: var(--border-gold);
+  color: var(--text-body);
+}
+
+.bm-toolbar__battle-toggle--active {
+  background: rgba(200, 80, 40, 0.18);
+  border-color: rgba(220, 100, 50, 0.6);
+  color: #e8a060;
+  box-shadow:
+    0 0 8px rgba(220, 100, 50, 0.15),
+    inset 0 0 12px rgba(220, 100, 50, 0.06);
+}
+
+.bm-toolbar__battle-toggle--active:hover {
+  background: rgba(200, 80, 40, 0.25);
+  border-color: rgba(220, 100, 50, 0.8);
+}
+
+.bm-toolbar__battle-toggle svg {
+  flex-shrink: 0;
+}
+
+/* ── Active move info (confirm/cancel) ── */
+
+.bm-toolbar__move-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border: 1px solid rgba(80, 220, 120, 0.3);
+  border-radius: 4px;
+  background: rgba(80, 220, 120, 0.06);
+}
+
+.bm-toolbar__move-name {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: rgba(80, 220, 120, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.bm-toolbar__move-speed {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: rgba(200, 220, 200, 0.8);
+  white-space: nowrap;
+}
+
+.bm-toolbar__move-confirm,
+.bm-toolbar__move-cancel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.bm-toolbar__move-confirm {
+  color: #4a7a3a;
+}
+
+.bm-toolbar__move-confirm:hover:not(:disabled) {
+  background: rgba(80, 220, 120, 0.12);
+  border-color: rgba(80, 220, 120, 0.3);
+  color: #6adc5a;
+}
+
+.bm-toolbar__move-confirm:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.bm-toolbar__move-cancel {
+  color: #9b3a3a;
+}
+
+.bm-toolbar__move-cancel:hover {
+  background: rgba(220, 80, 80, 0.12);
+  border-color: rgba(220, 80, 80, 0.3);
+  color: #dc5a5a;
+}
+
+.bm-toolbar__group--battle {
+  gap: 6px;
+}
+
 /* ── Send to Initiative form ── */
 
 .bm-init-form {

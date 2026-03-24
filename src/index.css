@@ -2661,7 +2661,7 @@ body::after {
 
 .hd-badge__value {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   fill: var(--text-bright);
 }
@@ -3758,6 +3758,43 @@ body::after {
   flex-shrink: 0;
   line-height: 1.8;
   cursor: default;
+}
+
+/* ── From-item indicator ── */
+.spell-row--from-item {
+  border-left-color: rgba(148, 103, 189, 0.45);
+}
+
+.spell-item-btn {
+  background: none;
+  border: none;
+  font-size: 0.78rem;
+  color: rgba(148, 103, 189, 0.75);
+  padding: 0 3px;
+  flex-shrink: 0;
+  line-height: 1.8;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.spell-item-btn:hover {
+  color: rgba(148, 103, 189, 1);
+}
+
+.spell-item-btn--empty {
+  color: rgba(155, 44, 44, 0.6);
+}
+
+.spell-item-btn--empty:hover {
+  color: rgba(155, 44, 44, 0.9);
+}
+
+.spell-row--charges-empty {
+  opacity: 0.45;
+}
+
+.spell-row--charges-empty:hover {
+  opacity: 0.7;
 }
 
 /* ── Cantrip always-prepared dot ── */
@@ -8765,6 +8802,9 @@ input[type="number"] { -moz-appearance: textfield; }
 /* Hide dice roller entirely */
 .player-mode .dice-roller { display: none; }
 
+/* Hide initiative tracker */
+.player-mode .init-tracker { display: none; }
+
 /* Hide rest buttons */
 .player-mode .rests-section { display: none; }
 
@@ -8813,6 +8853,14 @@ input[type="number"] { -moz-appearance: textfield; }
 .player-mode .cond-add-btn,
 .player-mode .cond-badge__tick {
   display: none;
+}
+
+/* Allow players to view spell descriptions, item details, and resource descriptions */
+.player-mode .main button.spell-desc-btn,
+.player-mode .main button.inv-row__name-btn,
+.player-mode .main button.res-desc-btn {
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 /* Keep character-switching in the sidebar fully interactive */

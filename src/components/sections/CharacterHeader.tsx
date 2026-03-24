@@ -304,7 +304,7 @@ export function CharacterHeader({ ch, updateSelected }: Props) {
               {/* "HD" label */}
               <text x="29" y="20" textAnchor="middle" dominantBaseline="middle" className="hd-badge__label">HD</text>
               {/* Die type value */}
-              <text x="29" y="42" textAnchor="middle" dominantBaseline="middle" className="hd-badge__value">{ch.hitDice.type}</text>
+              <text x="29" y="42" textAnchor="middle" dominantBaseline="middle" className="hd-badge__value">{ch.level}{ch.hitDice.type}</text>
             </svg>
           </div>
         </div>

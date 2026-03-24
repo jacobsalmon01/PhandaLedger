@@ -27,7 +27,7 @@ function blankSpell(): Omit<PreparedSpell, 'id'> {
   return {
     name: '', level: 1, concentration: false,
     duration: '', durationRounds: 0, castingTime: '1 action',
-    notes: '', description: '', prepared: true, alwaysPrepared: false, active: false, roundsRemaining: 0,
+    notes: '', description: '', prepared: true, alwaysPrepared: false, fromItem: false, itemChargesEmpty: false, active: false, roundsRemaining: 0,
   };
 }
 
@@ -145,6 +145,14 @@ function SpellForm({ form, patch, onSave, onCancel }: FormProps) {
           />
           Always Prepared
         </label>
+        <label className="spell-form__toggle" title="Provided by a magic item — doesn't count against preparation limit">
+          <input
+            type="checkbox"
+            checked={form.fromItem}
+            onChange={(e) => patch('fromItem', e.target.checked)}
+          />
+          From Item
+        </label>
       </div>
 
       <div className="spell-form__row spell-form__row--actions">
@@ -184,6 +192,8 @@ export function SpellsSection({ ch, updateSelected }: Props) {
       description: entry.description,
       prepared: true,
       alwaysPrepared,
+      fromItem: false,
+      itemChargesEmpty: false,
       active: false,
       roundsRemaining: 0,
     };
@@ -239,13 +249,14 @@ export function SpellsSection({ ch, updateSelected }: Props) {
   function unprepareAll() {
     updateSelected((c) => ({
       ...c, spells: c.spells.map((s) =>
-        s.alwaysPrepared ? s : { ...s, prepared: false, active: false, roundsRemaining: 0 }
+        s.alwaysPrepared || s.fromItem ? s : { ...s, prepared: false, active: false, roundsRemaining: 0 }
       ),
     }));
   }
 
   function cast(spell: PreparedSpell) {
-    if (!spell.prepared && spell.level > 0) return;
+    if (spell.itemChargesEmpty) return;
+    if (!spell.prepared && !spell.fromItem && spell.level > 0) return;
     updateSelected((c) => {
       // Build fresh slot array
       const slots = Array.from({ length: 9 }, (_, i) =>
@@ -266,8 +277,8 @@ export function SpellsSection({ ch, updateSelected }: Props) {
           : s
       );
 
-      // Deduct slot for leveled spells
-      if (spell.level > 0) {
+      // Deduct slot for leveled spells (item spells don't use slots)
+      if (spell.level > 0 && !spell.fromItem) {
         const idx = spell.level - 1;
         if (slots[idx].used < slots[idx].max) {
           slots[idx].used += 1;
@@ -340,7 +351,7 @@ export function SpellsSection({ ch, updateSelected }: Props) {
     } else {
       return null;
     }
-    const prepared = ch.spells.filter((sp) => sp.level > 0 && sp.prepared && !sp.alwaysPrepared).length;
+    const prepared = ch.spells.filter((sp) => sp.level > 0 && sp.prepared && !sp.alwaysPrepared && !sp.fromItem).length;
     return { prepared, max, formula };
   })();
 
@@ -456,8 +467,8 @@ export function SpellsSection({ ch, updateSelected }: Props) {
 
               {spells.map((spell) => {
                 const isEditing = editId === spell.id;
-                const isPrepared = spell.level === 0 || spell.alwaysPrepared || spell.prepared;
-                const canCast = hasSlot(ch, spell.level) && isPrepared;
+                const isPrepared = spell.level === 0 || spell.alwaysPrepared || spell.fromItem || spell.prepared;
+                const canCast = isPrepared && !spell.itemChargesEmpty && (spell.fromItem || hasSlot(ch, spell.level));
                 const expired = spell.active && spell.durationRounds > 0 && spell.roundsRemaining === 0;
                 const isConc = spell.active && spell.concentration;
 
@@ -467,6 +478,8 @@ export function SpellsSection({ ch, updateSelected }: Props) {
                     className={[
                       'spell-row',
                       spell.alwaysPrepared ? 'spell-row--always-prepared' : '',
+                      spell.fromItem ? 'spell-row--from-item' : '',
+                      spell.itemChargesEmpty ? 'spell-row--charges-empty' : '',
                       !isPrepared ? 'spell-row--unprepared' : '',
                       spell.active && !isConc ? 'spell-row--active' : '',
                       isConc ? 'spell-row--concentrating' : '',
@@ -478,10 +491,24 @@ export function SpellsSection({ ch, updateSelected }: Props) {
                         {/* ── Top line: prepared · cast · name · badges · rounds · actions ── */}
                         <div className="spell-row__top">
                           {spell.level === 0 && <span className="spell-cantrip-dot">◆</span>}
-                          {spell.level > 0 && spell.alwaysPrepared && (
+                          {spell.level > 0 && spell.alwaysPrepared && !spell.fromItem && (
                             <span className="spell-always-dot" title="Always prepared — granted by class or subclass">◈</span>
                           )}
-                          {spell.level > 0 && !spell.alwaysPrepared && (
+                          {spell.fromItem && (
+                            <button
+                              className={`spell-item-btn${spell.itemChargesEmpty ? ' spell-item-btn--empty' : ''}`}
+                              title={spell.itemChargesEmpty ? 'Item out of charges — click to restore' : 'From item — click to mark out of charges'}
+                              onClick={() => updateSelected((c) => ({
+                                ...c,
+                                spells: c.spells.map((s) =>
+                                  s.id === spell.id ? { ...s, itemChargesEmpty: !s.itemChargesEmpty, active: !s.itemChargesEmpty ? false : s.active, roundsRemaining: !s.itemChargesEmpty ? 0 : s.roundsRemaining } : s
+                                ),
+                              }))}
+                            >
+                              {spell.itemChargesEmpty ? '⊘' : '⊕'}
+                            </button>
+                          )}
+                          {spell.level > 0 && !spell.alwaysPrepared && !spell.fromItem && (
                             <button
                               className={`spell-prepared-btn${isPrepared ? ' spell-prepared-btn--on' : ''}`}
                               title={isPrepared ? 'Prepared — click to unprepare' : 'Unprepared — click to prepare'}
@@ -494,13 +521,17 @@ export function SpellsSection({ ch, updateSelected }: Props) {
                           <button
                             className={`spell-cast-btn${spell.active ? ' spell-cast-btn--active' : ''}${!canCast && !spell.active ? ' spell-cast-btn--locked' : ''}`}
                             title={
-                              !isPrepared
-                                ? 'Not prepared'
-                                : spell.active
-                                  ? 'Recast (expends another slot)'
-                                  : canCast
-                                    ? level === 0 ? 'Cast cantrip' : `Cast — uses 1 ${ORDINALS[level]} slot`
-                                    : 'No slots remaining'
+                              spell.itemChargesEmpty
+                                ? 'Item out of charges'
+                                : !isPrepared
+                                  ? 'Not prepared'
+                                  : spell.active
+                                    ? 'Recast (expends another slot)'
+                                    : canCast
+                                      ? spell.fromItem
+                                        ? `Cast from item${level === 0 ? '' : ' (no slot used)'}`
+                                        : level === 0 ? 'Cast cantrip' : `Cast — uses 1 ${ORDINALS[level]} slot`
+                                      : 'No slots remaining'
                             }
                             disabled={!spell.active && !canCast}
                             onClick={() => cast(spell)}

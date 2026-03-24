@@ -88,6 +88,8 @@ export interface PreparedSpell {
   description: string;     // full spell description (HTML); populated from compendium
   prepared: boolean;       // prepared for the day — only prepared spells can be cast
   alwaysPrepared: boolean; // granted by class/subclass — always prepared, doesn't count against limit
+  fromItem: boolean;       // provided by a magic item — doesn't count against prepared limit
+  itemChargesEmpty: boolean; // item is out of charges — spell cannot be cast
   // runtime tracking — persisted so a refresh mid-session keeps state
   active: boolean;
   roundsRemaining: number;

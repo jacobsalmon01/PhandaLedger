@@ -52,7 +52,7 @@ function migrateState(parsed: AppState): AppState {
       const raw = s as unknown as Record<string, unknown>;
       return {
         concentration: false, duration: '', durationRounds: 0,
-        castingTime: '1 action', notes: '', description: '', prepared: true, alwaysPrepared: false, active: false, roundsRemaining: 0,
+        castingTime: '1 action', notes: '', description: '', prepared: true, alwaysPrepared: false, fromItem: false, itemChargesEmpty: false, active: false, roundsRemaining: 0,
         ...raw,
       } as unknown as typeof s;
     });

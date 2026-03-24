@@ -256,6 +256,33 @@ export function CharacterHeader({ ch, updateSelected }: Props) {
             );
           })()}
 
+          {/* ── Speed Badge (horizontal hexagon) ── */}
+          <div className="spd-badge" title={`Movement Speed: ${ch.speed} ft`}>
+            <svg className="spd-badge__svg" viewBox="0 0 72 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M 10,1 L 62,1 L 71,24 L 62,47 L 10,47 L 1,24 Z"
+                fill="var(--bg-deep)"
+                stroke="var(--border-gold-dim)"
+                strokeWidth="1.5"
+              />
+              <path
+                d="M 14,5 L 58,5 L 66,24 L 58,43 L 14,43 L 6,24 Z"
+                fill="none"
+                stroke="var(--border-inner)"
+                strokeWidth="0.75"
+                opacity="0.55"
+              />
+              <text x="36" y="14" textAnchor="middle" dominantBaseline="middle" className="spd-badge__label">SPD</text>
+            </svg>
+            <NumericInput
+              className="spd-badge__value"
+              value={ch.speed}
+              fallback={30}
+              min={0}
+              onCommit={(v) => updateSelected((c) => ({ ...c, speed: Math.max(0, v) }))}
+            />
+          </div>
+
           {/* ── Hit Dice Badge ── */}
           <div className="hd-badge" title={`Hit Dice: ${ch.level}${ch.hitDice.type} (${ch.class || 'unknown class'})`}>
             <svg className="hd-badge__svg" viewBox="0 0 58 64" fill="none" xmlns="http://www.w3.org/2000/svg">

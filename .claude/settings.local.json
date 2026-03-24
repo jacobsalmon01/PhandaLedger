@@ -26,7 +26,8 @@
       "Bash(nix --version)",
       "Bash(find /Users/jake/Development/PhandaLedger/server -type f -name *.js -o -name *.ts)",
       "Bash(npx eslint:*)",
-      "Bash(npx vitest:*)"
+      "Bash(npx vitest:*)",
+      "Bash(wc -l /Users/jake/Development/PhandaLedger/src/**/*.tsx)"
     ]
   }
 }

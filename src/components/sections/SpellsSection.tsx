@@ -27,7 +27,7 @@ function blankSpell(): Omit<PreparedSpell, 'id'> {
   return {
     name: '', level: 1, concentration: false,
     duration: '', durationRounds: 0, castingTime: '1 action',
-    notes: '', prepared: true, alwaysPrepared: false, active: false, roundsRemaining: 0,
+    notes: '', description: '', prepared: true, alwaysPrepared: false, active: false, roundsRemaining: 0,
   };
 }
 
@@ -169,6 +169,7 @@ export function SpellsSection({ ch, updateSelected }: Props) {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<Omit<PreparedSpell, 'id'>>(blankSpell());
   const [showCompendium, setShowCompendium] = useState(false);
+  const [expandedDescId, setExpandedDescId] = useState<string | null>(null);
 
   function addFromCompendium(entry: SpellEntry, alwaysPrepared: boolean) {
     const spell: PreparedSpell = {
@@ -180,6 +181,7 @@ export function SpellsSection({ ch, updateSelected }: Props) {
       durationRounds: 0,
       castingTime: entry.castingTime,
       notes: '',
+      description: entry.description,
       prepared: true,
       alwaysPrepared,
       active: false,
@@ -507,6 +509,17 @@ export function SpellsSection({ ch, updateSelected }: Props) {
                           </button>
 
                           <span className="spell-row__name">{spell.name || 'Unnamed'}</span>
+                          {spell.description && (
+                            <button
+                              className={`spell-desc-btn${expandedDescId === spell.id ? ' spell-desc-btn--open' : ''}`}
+                              title={expandedDescId === spell.id ? 'Hide description' : 'Show description'}
+                              aria-expanded={expandedDescId === spell.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExpandedDescId(expandedDescId === spell.id ? null : spell.id);
+                              }}
+                            >ⓘ</button>
+                          )}
 
                           {spell.concentration && (
                             <span className={`spell-conc-badge${spell.active ? ' spell-conc-badge--active' : ''}`}>
@@ -570,6 +583,16 @@ export function SpellsSection({ ch, updateSelected }: Props) {
                                 <span className="spell-meta__notes">{spell.notes}</span>
                               </>
                             )}
+                          </div>
+                        )}
+
+                        {/* ── Inline description panel ── */}
+                        {spell.description && expandedDescId === spell.id && (
+                          <div className="spell-desc-panel">
+                            <div
+                              className="spell-desc-panel__body"
+                              dangerouslySetInnerHTML={{ __html: spell.description.replace(/<br\s*\/?>/gi, '<br/>') }}
+                            />
                           </div>
                         )}
                       </>

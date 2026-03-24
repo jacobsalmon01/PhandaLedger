@@ -85,6 +85,7 @@ export interface PreparedSpell {
   durationRounds: number;  // 0 = not round-trackable
   castingTime: string;     // "1 action", "Bonus action", etc.
   notes: string;           // quick reference: save DC, damage, etc.
+  description: string;     // full spell description (HTML); populated from compendium
   prepared: boolean;       // prepared for the day — only prepared spells can be cast
   alwaysPrepared: boolean; // granted by class/subclass — always prepared, doesn't count against limit
   // runtime tracking — persisted so a refresh mid-session keeps state
@@ -99,6 +100,7 @@ export type RechargeOn = 'short' | 'long' | 'manual';
 export interface TrackedResource {
   id: string;
   name: string;
+  description: string;
   max: number;
   used: number;
   recharge: RechargeOn;

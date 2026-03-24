@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { Character, TrackedResource, RechargeOn } from '../../types/character';
 import { uuid } from '../../utils/uuid';
 
@@ -15,12 +16,14 @@ const RECHARGE_TITLES: Record<RechargeOn, string> = {
 };
 
 export function ResourcesSection({ ch, updateSelected }: Props) {
+  const [expandedDescId, setExpandedDescId] = useState<string | null>(null);
+
   function addResource() {
     updateSelected((c) => ({
       ...c,
       resources: [
         ...c.resources,
-        { id: uuid(), name: '', max: 1, used: 0, recharge: 'long' as RechargeOn },
+        { id: uuid(), name: '', description: '', max: 1, used: 0, recharge: 'long' as RechargeOn },
       ],
     }));
   }
@@ -54,15 +57,22 @@ export function ResourcesSection({ ch, updateSelected }: Props) {
         {ch.resources.map((res) => {
           const available = res.max - res.used;
           return (
-            <div key={res.id} className="res-row">
-              <input
-                className="res-row__name"
-                value={res.name}
-                placeholder="Ability name…"
-                spellCheck={false}
-                onChange={(e) => updateResource(res.id, (r) => ({ ...r, name: e.target.value }))}
-              />
-              <div className="res-row__track">
+            <div key={res.id} className="res-row-wrap">
+              <div className="res-row">
+                <input
+                  className="res-row__name"
+                  value={res.name}
+                  placeholder="Ability name…"
+                  spellCheck={false}
+                  onChange={(e) => updateResource(res.id, (r) => ({ ...r, name: e.target.value }))}
+                />
+                <button
+                  className={`spell-desc-btn res-desc-btn${expandedDescId === res.id ? ' spell-desc-btn--open' : ''}`}
+                  title={expandedDescId === res.id ? 'Hide description' : 'Add/view description'}
+                  aria-expanded={expandedDescId === res.id}
+                  onClick={() => setExpandedDescId(expandedDescId === res.id ? null : res.id)}
+                >ⓘ</button>
+                <div className="res-row__track">
                 <div className="res-row__pips">
                   {Array.from({ length: res.max }, (_, pipIdx) => {
                     const isFilled = pipIdx < available;
@@ -128,6 +138,18 @@ export function ResourcesSection({ ch, updateSelected }: Props) {
                   onClick={() => removeResource(res.id)}
                 >&times;</button>
               </div>
+              </div>
+              {expandedDescId === res.id && (
+                <div className="res-desc-panel">
+                  <textarea
+                    className="res-desc-panel__input"
+                    value={res.description}
+                    placeholder="Describe this ability — effects, rules, range, etc."
+                    rows={2}
+                    onChange={(e) => updateResource(res.id, (r) => ({ ...r, description: e.target.value }))}
+                  />
+                </div>
+              )}
             </div>
           );
         })}

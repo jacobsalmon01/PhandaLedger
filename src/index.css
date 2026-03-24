@@ -2584,6 +2584,56 @@ body::after {
   fill: var(--text-bright);
 }
 
+/* ── Speed Badge (horizontal hexagon) ── */
+.spd-badge {
+  flex-shrink: 0;
+  position: relative;
+  filter: drop-shadow(0 2px 6px rgba(200, 164, 78, 0.12));
+  transition: filter 0.2s;
+}
+
+.spd-badge:hover {
+  filter: drop-shadow(0 3px 10px rgba(200, 164, 78, 0.30));
+}
+
+.spd-badge__svg {
+  width: 66px;
+  height: 44px;
+  display: block;
+}
+
+.spd-badge__label {
+  font-family: var(--font-display);
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  fill: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.spd-badge__value {
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-bright);
+  background: transparent;
+  border: none !important;
+  outline: none;
+  text-align: center;
+  width: 44px;
+  padding: 0;
+  line-height: 1;
+}
+
+.spd-badge__value:focus {
+  color: var(--text-gold);
+  border: none !important;
+}
+
 /* ── Hit Dice Badge (octagon die) ── */
 .hd-badge {
   flex-shrink: 0;
@@ -3634,6 +3684,7 @@ body::after {
 
 /* ── Spell rows ── */
 .spell-row {
+  position: relative;
   border: 1px solid transparent;
   border-left: 3px solid transparent;
   background: var(--bg-surface);
@@ -3788,6 +3839,58 @@ body::after {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ── Spell description info button ── */
+.spell-desc-btn {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--border-gold-dim);
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  font-size: 0.7rem;
+  line-height: 18px;
+  text-align: center;
+  color: var(--border-gold-dim);
+  opacity: 0.7;
+  cursor: pointer;
+  transition: opacity 0.15s, color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.spell-desc-btn:hover {
+  opacity: 1;
+  color: var(--text-gold);
+  border-color: var(--text-gold);
+}
+
+.spell-desc-btn--open {
+  opacity: 1;
+  color: var(--bg-panel);
+  background: var(--text-gold);
+  border-color: var(--text-gold);
+}
+
+/* ── Inline description panel ── */
+@keyframes spellDescReveal {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.spell-desc-panel {
+  padding: 8px 12px 10px 28px;
+  border-top: 1px solid var(--border-gold-dim);
+  background: rgba(10, 6, 2, 0.3);
+  animation: spellDescReveal 0.16s ease-out;
+}
+
+.spell-desc-panel__body {
+  font-family: var(--font-body);
+  font-size: 0.84rem;
+  color: var(--text-parchment);
+  line-height: 1.6;
+  opacity: 0.9;
 }
 
 .spell-row--active .spell-row__name,
@@ -5864,7 +5967,8 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .res-row {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto auto auto;
+  align-items: center;
   padding: 5px 0;
   border-bottom: 1px solid var(--border-inner);
 }
@@ -6051,6 +6155,54 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .res-row:hover .res-remove-btn { opacity: 0.7; }
 .res-remove-btn:hover { opacity: 1 !important; color: #d44; }
+
+/* ── Resource row wrapper (row + optional description) ── */
+.res-row-wrap {
+  border-bottom: 1px solid var(--border-inner);
+}
+
+.res-row-wrap:last-child {
+  border-bottom: none;
+}
+
+.res-row-wrap .res-row {
+  border-bottom: none;
+}
+
+/* Info button in resource row — sits in its own grid column after the name */
+.res-desc-btn {
+  margin-left: 2px;
+}
+
+/* ── Resource description expand panel ── */
+.res-desc-panel {
+  padding: 0 0 6px;
+  animation: spellDescReveal 0.16s ease-out;
+}
+
+.res-desc-panel__input {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 0.84rem;
+  color: var(--text-parchment);
+  background: rgba(10, 6, 2, 0.3);
+  border: 1px solid var(--border-inner);
+  border-radius: 2px;
+  padding: 6px 8px;
+  resize: vertical;
+  line-height: 1.5;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.res-desc-panel__input::placeholder {
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.res-desc-panel__input:focus {
+  border-color: var(--border-gold-dim);
+}
 
 .res-add-btn {
   font-family: var(--font-display);
@@ -7112,6 +7264,17 @@ input[type="number"] { -moz-appearance: textfield; }
     height: 46px;
   }
 
+  .spd-badge__svg {
+    width: 56px;
+    height: 38px;
+  }
+
+  .spd-badge__value {
+    font-size: 14px;
+    width: 38px;
+    bottom: 4px;
+  }
+
   .pp-badge__svg {
     width: 50px;
     height: 32px;
@@ -7754,6 +7917,21 @@ input[type="number"] { -moz-appearance: textfield; }
   .ac-shield-svg {
     width: 32px;
     height: 40px;
+  }
+
+  .spd-badge__svg {
+    width: 48px;
+    height: 32px;
+  }
+
+  .spd-badge__value {
+    font-size: 12px;
+    width: 34px;
+    bottom: 3px;
+  }
+
+  .spd-badge__label {
+    font-size: 6px;
   }
 
   .pp-badge__svg {

@@ -2022,6 +2022,33 @@ export function BattleMap() {
             const size = token.size * gridCellSize;
             const fontSize = Math.min(20, Math.max(9, size * 0.22));
 
+            // HP bar for PC tokens
+            let hpBar: React.ReactNode = null;
+            if (token.characterId) {
+              const ch = characters.find((c) => c.id === token.characterId);
+              if (ch && ch.hp.max > 0) {
+                const hpPct = Math.max(0, Math.min(1, ch.hp.current / ch.hp.max));
+                const tempPct = Math.min(1 - hpPct, ch.hp.temp / ch.hp.max);
+                const barColor = hpPct <= 0.25 ? '#c0392b'
+                  : hpPct <= 0.5 ? '#d4a017'
+                  : '#4a7a3a';
+                hpBar = (
+                  <div className="bm-token__hp">
+                    <div
+                      className="bm-token__hp-fill"
+                      style={{ width: `${Math.round(hpPct * 100)}%`, backgroundColor: barColor }}
+                    />
+                    {tempPct > 0 && (
+                      <div
+                        className="bm-token__hp-temp"
+                        style={{ width: `${Math.round(tempPct * 100)}%`, left: `${Math.round(hpPct * 100)}%` }}
+                      />
+                    )}
+                  </div>
+                );
+              }
+            }
+
             return (
               <div
                 key={token.id}
@@ -2040,6 +2067,7 @@ export function BattleMap() {
                 <span className="bm-token__label" style={{ fontSize }}>
                   {token.label}
                 </span>
+                {hpBar}
               </div>
             );
           })}

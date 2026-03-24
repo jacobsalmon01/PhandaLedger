@@ -10209,6 +10209,40 @@ input[type="number"] { -moz-appearance: textfield; }
   line-height: 1;
 }
 
+/* ── Token HP bar ── */
+
+.bm-token__hp {
+  position: absolute;
+  bottom: -6px;
+  left: 12%;
+  width: 76%;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 2px;
+  overflow: hidden;
+  z-index: 2;
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.bm-token__hp-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.bm-token__hp-temp {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: rgba(90, 160, 220, 0.7);
+  border-radius: 0 2px 2px 0;
+  transition: width 0.3s ease;
+}
+
 /* ── Ghost token (pending move destination) ── */
 
 .bm-token--ghost {

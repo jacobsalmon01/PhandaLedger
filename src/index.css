@@ -2634,6 +2634,56 @@ body::after {
   border: none !important;
 }
 
+/* ── Darkvision Badge ── */
+.dv-badge {
+  flex-shrink: 0;
+  position: relative;
+  filter: drop-shadow(0 2px 6px rgba(140, 120, 200, 0.12));
+  transition: filter 0.2s;
+}
+
+.dv-badge:hover {
+  filter: drop-shadow(0 3px 10px rgba(140, 120, 200, 0.30));
+}
+
+.dv-badge__svg {
+  width: 52px;
+  height: 44px;
+  display: block;
+}
+
+.dv-badge__label {
+  font-family: var(--font-display);
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  fill: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.dv-badge__value {
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-bright);
+  background: transparent;
+  border: none !important;
+  outline: none;
+  text-align: center;
+  width: 36px;
+  padding: 0;
+  line-height: 1;
+}
+
+.dv-badge__value:focus {
+  color: var(--text-gold);
+  border: none !important;
+}
+
 /* ── Hit Dice Badge (octagon die) ── */
 .hd-badge {
   flex-shrink: 0;
@@ -10173,20 +10223,19 @@ input[type="number"] { -moz-appearance: textfield; }
   cursor: grab;
   user-select: none;
   z-index: 1;
-  filter: drop-shadow(0 0 4px rgba(255, 180, 60, 0.7));
+  filter: drop-shadow(0 0 6px rgba(255, 160, 40, 0.8));
   transition: filter 0.15s;
 }
 
 .bm-light-source--selected {
-  filter: drop-shadow(0 0 8px rgba(255, 200, 80, 0.9));
-  outline: 2px solid rgba(255, 200, 80, 0.8);
-  outline-offset: 1px;
-  border-radius: 50%;
+  filter: drop-shadow(0 0 10px rgba(255, 200, 80, 1));
+  outline: 2px solid rgba(255, 200, 80, 0.85);
+  outline-offset: -2px;
 }
 
 .bm-light-source--dragging {
   cursor: grabbing;
-  opacity: 0.8;
+  opacity: 0.75;
 }
 
 .player-mode .bm-light-source {

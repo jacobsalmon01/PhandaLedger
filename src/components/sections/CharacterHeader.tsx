@@ -283,6 +283,33 @@ export function CharacterHeader({ ch, updateSelected }: Props) {
             />
           </div>
 
+          {/* ── Darkvision Badge ── */}
+          <div className="dv-badge" title={`Darkvision: ${ch.darkvision || 0} ft`}>
+            <svg className="dv-badge__svg" viewBox="0 0 56 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M 8,1 L 48,1 L 55,24 L 48,47 L 8,47 L 1,24 Z"
+                fill="var(--bg-deep)"
+                stroke="var(--border-gold-dim)"
+                strokeWidth="1.5"
+              />
+              <path
+                d="M 11,5 L 45,5 L 51,24 L 45,43 L 11,43 L 5,24 Z"
+                fill="none"
+                stroke="var(--border-inner)"
+                strokeWidth="0.75"
+                opacity="0.55"
+              />
+              <text x="28" y="14" textAnchor="middle" dominantBaseline="middle" className="dv-badge__label">DV</text>
+            </svg>
+            <NumericInput
+              className="dv-badge__value"
+              value={ch.darkvision || 0}
+              fallback={0}
+              min={0}
+              onCommit={(v) => updateSelected((c) => ({ ...c, darkvision: Math.max(0, v) }))}
+            />
+          </div>
+
           {/* ── Hit Dice Badge ── */}
           <div className="hd-badge" title={`Hit Dice: ${ch.level}${ch.hitDice.type} (${ch.class || 'unknown class'})`}>
             <svg className="hd-badge__svg" viewBox="0 0 58 64" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -142,6 +142,7 @@ export interface Character {
   shieldBonus: number;
   initiative: number;
   speed: number;
+  darkvision: number; // feet (0 = none, 60 = elf/dwarf, 120 = drow)
   hitDice: HitDice;
 
   saveProficiencies: string[];
@@ -186,6 +187,7 @@ export function createCharacter(name = ''): Character {
     shieldBonus: 2,
     initiative: 0,
     speed: 30,
+    darkvision: 0,
     hitDice: { type: 'd8', count: 1 },
 
     saveProficiencies: [],

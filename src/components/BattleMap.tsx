@@ -1031,6 +1031,20 @@ export function BattleMap() {
 
     if (!lightingEnabled) return;
 
+    // Opacity values — brutally obvious for players, reduced for DM
+    const DARK_ALPHA = isPlayerMode ? 0.88 : 0.55;
+    const DIM_ALPHA  = isPlayerMode ? 0.45 : 0.25;
+
+    // Step 1: Fill entire canvas with the ambient default darkness
+    const defaultAlpha = ambientLightDefault === 'dark' ? DARK_ALPHA
+      : ambientLightDefault === 'dim' ? DIM_ALPHA : 0;
+
+    if (defaultAlpha > 0) {
+      ctx.fillStyle = `rgba(0, 0, 0, ${defaultAlpha})`;
+      ctx.fillRect(0, 0, imgSize.w, imgSize.h);
+    }
+
+    // Step 2: Apply ambient cell overrides
     // Build ambient override map
     const ambientMap = new Map<string, AmbientLightLevel>();
     for (const entry of ambientLightCells) {
@@ -1040,68 +1054,151 @@ export function BattleMap() {
       }
     }
 
-    // Build mask set
-    const maskSet = new Set(lightMaskCells);
+    if (ambientMap.size > 0) {
+      for (const [key, level] of ambientMap) {
+        const sep = key.indexOf(',');
+        const c = parseInt(key.substring(0, sep), 10);
+        const r = parseInt(key.substring(sep + 1), 10);
+        const x = gridOffsetX + c * gridCellSize;
+        const y = gridOffsetY + r * gridCellSize;
+        const cellAlpha = level === 'dark' ? DARK_ALPHA : level === 'dim' ? DIM_ALPHA : 0;
 
-    // Build light source contributions
-    const lightMap = new Map<string, 'bright' | 'dim'>();
-    for (const ls of lightSources) {
-      const pos = getLightPos(ls);
-      const brightCells = Math.ceil(ls.brightRadius / 5);
-      const dimCells = Math.ceil((ls.brightRadius + ls.dimRadius) / 5);
-      for (let dc = -dimCells; dc <= dimCells; dc++) {
-        for (let dr = -dimCells; dr <= dimCells; dr++) {
-          const dist = Math.sqrt(dc * dc + dr * dr);
-          const cellKey = `${pos.col + dc},${pos.row + dr}`;
-          if (maskSet.has(cellKey)) continue;
-          if (dist <= brightCells + 0.5) {
-            lightMap.set(cellKey, 'bright');
-          } else if (dist <= dimCells + 0.5) {
-            const existing = lightMap.get(cellKey);
-            if (existing !== 'bright') lightMap.set(cellKey, 'dim');
+        if (cellAlpha !== defaultAlpha) {
+          // Erase cell, then re-fill at the override level
+          ctx.globalCompositeOperation = 'destination-out';
+          ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+          ctx.fillRect(x, y, gridCellSize, gridCellSize);
+          ctx.globalCompositeOperation = 'source-over';
+          if (cellAlpha > 0) {
+            ctx.fillStyle = `rgba(0, 0, 0, ${cellAlpha})`;
+            ctx.fillRect(x, y, gridCellSize, gridCellSize);
           }
         }
       }
     }
 
-    // Determine map bounds
-    const cols = Math.ceil(imgSize.w / gridCellSize) + 1;
-    const rows = Math.ceil(imgSize.h / gridCellSize) + 1;
-    const startCol = Math.floor(-gridOffsetX / gridCellSize);
-    const startRow = Math.floor(-gridOffsetY / gridCellSize);
+    // Build mask set
+    const maskSet = new Set(lightMaskCells);
 
-    const LEVEL_ORDER = { bright: 2, dim: 1, dark: 0 };
+    // Step 3: Carve smooth circular light from each light source using radial gradients
+    if (lightSources.length > 0) {
+      ctx.globalCompositeOperation = 'destination-out';
 
-    const dimColor = isPlayerMode ? 'rgba(0, 0, 40, 0.35)' : 'rgba(0, 0, 40, 0.18)';
-    const darkColor = isPlayerMode ? 'rgba(0, 0, 20, 0.6)' : 'rgba(0, 0, 20, 0.3)';
+      for (const ls of lightSources) {
+        const pos = getLightPos(ls);
+        // Center of the light source cell in pixel coords
+        const cx = gridOffsetX + (pos.col + 0.5) * gridCellSize;
+        const cy = gridOffsetY + (pos.row + 0.5) * gridCellSize;
+        const brightPx = (ls.brightRadius / 5) * gridCellSize;
+        const totalPx = ((ls.brightRadius + ls.dimRadius) / 5) * gridCellSize;
 
-    for (let c = startCol; c < startCol + cols; c++) {
-      for (let r = startRow; r < startRow + rows; r++) {
-        const key = `${c},${r}`;
-        const ambient: AmbientLightLevel = ambientMap.get(key) || ambientLightDefault;
-        const lightContrib = lightMap.get(key);
+        if (totalPx <= 0) continue;
 
-        // Final level = brightest of ambient and light source
-        let finalLevel: AmbientLightLevel = ambient;
-        if (lightContrib && LEVEL_ORDER[lightContrib] > LEVEL_ORDER[finalLevel]) {
-          finalLevel = lightContrib === 'bright' ? 'bright' : 'dim';
+        // Radial gradient: center is fully opaque (erases darkness completely),
+        // edge of bright radius starts tapering, dim radius edge is transparent (erases nothing)
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, totalPx);
+        grad.addColorStop(0, 'rgba(0, 0, 0, 1)');
+        // Hold full brightness through the bright radius
+        if (brightPx > 0 && brightPx < totalPx) {
+          grad.addColorStop(brightPx / totalPx, 'rgba(0, 0, 0, 1)');
+          // Dim zone fades from partial erase to nothing
+          // At the bright/dim boundary, erase enough to bring dark down to dim level
+          const dimErase = (DARK_ALPHA - DIM_ALPHA) / DARK_ALPHA;
+          grad.addColorStop(brightPx / totalPx + 0.001, `rgba(0, 0, 0, ${Math.max(0, dimErase).toFixed(2)})`);
         }
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
-        if (finalLevel === 'bright') continue;
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, totalPx, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
-        ctx.fillStyle = finalLevel === 'dim' ? dimColor : darkColor;
-        ctx.fillRect(
-          gridOffsetX + c * gridCellSize,
-          gridOffsetY + r * gridCellSize,
-          gridCellSize,
-          gridCellSize,
-        );
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    // Step 4: Re-stamp masked cells back to full darkness (light sources can't penetrate walls)
+    if (maskSet.size > 0) {
+      for (const key of maskSet) {
+        const sep = key.indexOf(',');
+        const mc = parseInt(key.substring(0, sep), 10);
+        const mr = parseInt(key.substring(sep + 1), 10);
+        const x = gridOffsetX + mc * gridCellSize;
+        const y = gridOffsetY + mr * gridCellSize;
+
+        // Erase whatever is there, then fill with dark
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+        ctx.fillRect(x, y, gridCellSize, gridCellSize);
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = `rgba(0, 0, 0, ${DARK_ALPHA})`;
+        ctx.fillRect(x, y, gridCellSize, gridCellSize);
       }
     }
+
+    // Step 5: Darkvision — if a PC token with darkvision is selected, lighten dark→dim in their radius
+    if (selectedTokenId) {
+      const selToken = tokens.find((t) => t.id === selectedTokenId);
+      if (selToken?.characterId) {
+        const ch = characters.find((c) => c.id === selToken.characterId);
+        const dv = ch?.darkvision || 0;
+        if (dv > 0) {
+          const cx = gridOffsetX + (selToken.col + 0.5) * gridCellSize;
+          const cy = gridOffsetY + (selToken.row + 0.5) * gridCellSize;
+          const dvPx = (dv / 5) * gridCellSize;
+
+          // Darkvision: erase darkness down to dim level (not to bright)
+          // Amount to erase = difference between dark and dim alpha
+          const dvErase = (DARK_ALPHA - DIM_ALPHA) / DARK_ALPHA;
+          ctx.globalCompositeOperation = 'destination-out';
+          const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, dvPx);
+          grad.addColorStop(0, `rgba(0, 0, 0, ${dvErase.toFixed(2)})`);
+          grad.addColorStop(0.85, `rgba(0, 0, 0, ${dvErase.toFixed(2)})`);
+          grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(cx, cy, dvPx, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalCompositeOperation = 'source-over';
+        }
+      }
+    }
+
+    // Step 6: Draw dashed boundary circles for each light source
+    ctx.save();
+    ctx.lineWidth = 1.5;
+    for (const ls of lightSources) {
+      const pos = getLightPos(ls);
+      const cx = gridOffsetX + (pos.col + 0.5) * gridCellSize;
+      const cy = gridOffsetY + (pos.row + 0.5) * gridCellSize;
+      const brightPx = (ls.brightRadius / 5) * gridCellSize;
+      const totalPx = ((ls.brightRadius + ls.dimRadius) / 5) * gridCellSize;
+
+      // Bright/dim boundary
+      if (brightPx > 0) {
+        ctx.strokeStyle = 'rgba(255, 220, 100, 0.45)';
+        ctx.setLineDash([6, 4]);
+        ctx.beginPath();
+        ctx.arc(cx, cy, brightPx, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Dim/dark boundary
+      if (totalPx > 0 && totalPx !== brightPx) {
+        ctx.strokeStyle = 'rgba(180, 180, 220, 0.35)';
+        ctx.setLineDash([4, 6]);
+        ctx.beginPath();
+        ctx.arc(cx, cy, totalPx, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+    ctx.setLineDash([]);
+    ctx.restore();
+
     // DM-only: draw hatching on masked cells so the DM can see where walls are
     if (!isPlayerMode && lightMode && maskSet.size > 0) {
       ctx.save();
-      ctx.strokeStyle = 'rgba(255, 80, 80, 0.35)';
+      ctx.strokeStyle = 'rgba(255, 80, 80, 0.4)';
       ctx.lineWidth = 1;
       for (const key of maskSet) {
         const sep = key.indexOf(',');
@@ -1109,7 +1206,6 @@ export function BattleMap() {
         const mr = parseInt(key.substring(sep + 1), 10);
         const x = gridOffsetX + mc * gridCellSize;
         const y = gridOffsetY + mr * gridCellSize;
-        // Diagonal hatching
         ctx.beginPath();
         const step = Math.max(6, gridCellSize / 5);
         for (let d = -gridCellSize; d < gridCellSize * 2; d += step) {
@@ -1120,7 +1216,7 @@ export function BattleMap() {
       }
       ctx.restore();
     }
-  }, [lightingEnabled, lightMode, ambientLightDefault, ambientLightCells, lightSources, lightMaskCells, tokens, imgSize, gridCellSize, gridOffsetX, gridOffsetY]);
+  }, [lightingEnabled, lightMode, ambientLightDefault, ambientLightCells, lightSources, lightMaskCells, tokens, characters, selectedTokenId, imgSize, gridCellSize, gridOffsetX, gridOffsetY]);
 
   // ── Light brush preview canvas ──
 
@@ -2549,8 +2645,6 @@ export function BattleMap() {
             const isSelected = selectedLightSourceId === ls.id;
             const worldX = isDragging ? dragLightPos.x : gridOffsetX + pos.col * gridCellSize;
             const worldY = isDragging ? dragLightPos.y : gridOffsetY + pos.row * gridCellSize;
-            const iconSize = gridCellSize * 0.6;
-            const offset = (gridCellSize - iconSize) / 2;
             return (
               <div
                 key={ls.id}
@@ -2560,11 +2654,11 @@ export function BattleMap() {
                   isDragging && 'bm-light-source--dragging',
                 ].filter(Boolean).join(' ')}
                 style={{
-                  left: worldX + offset,
-                  top: worldY + offset,
-                  width: iconSize,
-                  height: iconSize,
-                  fontSize: Math.max(10, iconSize * 0.55),
+                  left: worldX,
+                  top: worldY,
+                  width: gridCellSize,
+                  height: gridCellSize,
+                  fontSize: Math.max(14, gridCellSize * 0.45),
                 }}
                 onPointerDown={(e) => handleLightSourcePointerDown(e, ls)}
                 title={`${ls.label} (${ls.brightRadius}/${ls.dimRadius} ft)`}

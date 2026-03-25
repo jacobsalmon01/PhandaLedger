@@ -3,7 +3,7 @@ import { type Character, createCharacter } from '../types/character';
 import { type InitiativeEntry } from '../types/initiative';
 import { type PartyExport } from '../utils/importExport';
 import { uuid } from '../utils/uuid';
-import { isPlayerMode, broadcastState, onStateReceived } from './wsClient';
+import { isPlayerMode, broadcastState, onStateReceived, isDevPlayerMode } from './wsClient';
 import seedData from '../../our_party_setup_seed.json';
 
 const STORAGE_KEY = 'phandaLedger_state';
@@ -81,13 +81,16 @@ function hydrate() {
   } catch { /* corrupted data, start fresh */ }
 }
 
-// Initial load — players skip localStorage and wait for WS state instead
+// Initial load — players skip localStorage and wait for WS state instead.
+// Exception: dev player mode (?player=true) hydrates locally so we can preview the UI.
 if (!isPlayerMode) {
   hydrate();
   // Queue the hydrated state to be sent as soon as the WS connection opens.
   // This ensures players who connect after the DM's tab loads get the full
   // party immediately, without requiring the DM to make any edits first.
   broadcastState(state);
+} else if (isDevPlayerMode) {
+  hydrate();
 } else {
   // Register WS listener: incoming state from the server overwrites local state.
   // Migration is applied so schema changes are handled gracefully.

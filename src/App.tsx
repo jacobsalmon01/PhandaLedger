@@ -3,6 +3,7 @@ import { Sidebar } from './components/Sidebar';
 import { CharacterSheet } from './components/CharacterSheet';
 import { BattleMap } from './components/BattleMap';
 import { PlayerBanner } from './components/PlayerBanner';
+import { PlayerView } from './components/player/PlayerView';
 import { useStore } from './store/useStore';
 import { isPlayerMode } from './store/wsClient';
 import { parseShareHash } from './utils/shareUrl';
@@ -104,6 +105,10 @@ export default function App() {
     if (!incomingShare) return;
     replaceParty(incomingShare);
     setIncomingShare(null);
+  }
+
+  if (isPlayerMode) {
+    return <PlayerView />;
   }
 
   return (

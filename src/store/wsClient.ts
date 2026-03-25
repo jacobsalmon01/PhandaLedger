@@ -17,16 +17,22 @@
 
 export type WsRole = 'admin' | 'player';
 
-const _hasDmToken = new URLSearchParams(window.location.search).has('dm');
+const _params = new URLSearchParams(window.location.search);
+const _hasDmToken = _params.has('dm');
+const _forcePlayer = _params.has('player');
 
 export const role: WsRole =
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1' ||
-  _hasDmToken
-    ? 'admin'
-    : 'player';
+  _forcePlayer
+    ? 'player'
+    : window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      _hasDmToken
+      ? 'admin'
+      : 'player';
 
 export const isPlayerMode = role === 'player';
+/** True only when player mode is forced via ?player query param (dev convenience). */
+export const isDevPlayerMode = _forcePlayer;
 
 // ── Status ────────────────────────────────────────────────────────────────────
 

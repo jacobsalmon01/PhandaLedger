@@ -11308,17 +11308,28 @@ input[type="number"] { -moz-appearance: textfield; }
   }
 }
 
+
 /* ═══════════════════════════════════════════════
-   Player View — Hearthstone-Inspired Redesign
+   Player View — Hearthstone-Inspired Skeuomorphic
    ═══════════════════════════════════════════════ */
 
 .player-view {
+  /* ── Design Tokens ── */
+  --pv-wood-dark: #2a1f14;
+  --pv-wood-mid: #3d2b1a;
+  --pv-wood-light: #5a3f28;
+  --pv-wood-highlight: #6d4c30;
+  --pv-leather-dark: #2e2018;
+  --pv-leather-mid: #241a12;
+  --pv-parchment: #1e1812;
+  --pv-glow-arcane: rgba(80, 140, 220, 0.5);
+  --pv-glow-fire: rgba(200, 140, 50, 0.3);
+
   display: flex;
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
   min-height: 100dvh;
-  background: var(--bg-deep);
   padding: var(--gap-sm);
   padding-bottom: var(--gap-xl);
   gap: var(--gap-sm);
@@ -11327,9 +11338,34 @@ input[type="number"] { -moz-appearance: textfield; }
   position: relative;
   height: 100vh;
   height: 100dvh;
+
+  /* Dark wood table */
+  background:
+    repeating-linear-gradient(92deg,
+      transparent 0px, transparent 4px,
+      rgba(0,0,0,0.06) 4px, rgba(0,0,0,0.06) 5px),
+    repeating-linear-gradient(88deg,
+      transparent 0px, transparent 8px,
+      rgba(255,200,100,0.02) 8px, rgba(255,200,100,0.02) 9px),
+    linear-gradient(180deg, #2a1f14 0%, #1e160e 40%, #241a12 100%);
 }
 
-/* ── Connection Badge ── */
+/* ── Table Vignette ── */
+
+.pv-table-vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.55) 100%);
+  z-index: 0;
+}
+
+.player-view > *:not(.pv-table-vignette) {
+  position: relative;
+  z-index: 1;
+}
+
+/* ═══ Connection Badge — Wax Seal ═══ */
 
 .pv-connection {
   position: fixed;
@@ -11338,30 +11374,47 @@ input[type="number"] { -moz-appearance: textfield; }
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 12px;
+  padding: 6px 14px;
   border-radius: 20px;
-  background: rgba(14, 12, 10, 0.85);
-  border: 1px solid var(--border-inner);
-  backdrop-filter: blur(8px);
+  background:
+    radial-gradient(ellipse at 40% 30%, rgba(120,40,40,0.5), transparent 70%),
+    linear-gradient(145deg, #3a1515 0%, #2a0e0e 100%);
+  border: 2px solid #5a2020;
+  box-shadow:
+    inset 0 1px 3px rgba(255,100,100,0.08),
+    inset 0 -2px 4px rgba(0,0,0,0.5),
+    0 2px 8px rgba(0,0,0,0.5);
   z-index: 100;
   font-family: var(--font-display);
   font-size: 0.55rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-dim);
+  backdrop-filter: blur(8px);
 }
 
 .pv-connection__dot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: var(--text-dim);
-  transition: background 0.3s;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+.pv-connection--connected {
+  background:
+    radial-gradient(ellipse at 40% 30%, rgba(40,120,50,0.5), transparent 70%),
+    linear-gradient(145deg, #1a3a1a 0%, #0e2a0e 100%);
+  border-color: #2a5a2a;
+  box-shadow:
+    inset 0 1px 3px rgba(100,255,100,0.06),
+    inset 0 -2px 4px rgba(0,0,0,0.5),
+    0 2px 8px rgba(0,0,0,0.5);
 }
 
 .pv-connection--connected .pv-connection__dot {
   background: var(--hp-healthy);
-  box-shadow: 0 0 6px var(--hp-healthy);
+  box-shadow: 0 0 8px var(--hp-healthy);
 }
 
 .pv-connection--connected .pv-connection__label {
@@ -11372,21 +11425,50 @@ input[type="number"] { -moz-appearance: textfield; }
   background: var(--hp-wounded);
 }
 
-/* ── Party Strip ── */
+/* ═══ Party Strip — Leather Band with Metal Rivets ═══ */
 
 .pv-party-strip {
   display: flex;
   gap: var(--gap-sm);
-  padding: 6px var(--gap-sm);
+  padding: 8px var(--gap-md);
   overflow-x: auto;
   width: 100%;
   max-width: 600px;
   justify-content: center;
   scrollbar-width: none;
   flex-shrink: 0;
+  background:
+    linear-gradient(180deg, #2e2018 0%, #241a12 50%, #2a1e15 100%);
+  border: 2px solid #1a1208;
+  border-radius: 24px;
+  box-shadow:
+    inset 0 2px 4px rgba(255,200,100,0.04),
+    inset 0 -2px 6px rgba(0,0,0,0.5),
+    0 3px 10px rgba(0,0,0,0.4);
+  position: relative;
 }
 
 .pv-party-strip::-webkit-scrollbar { display: none; }
+
+/* Metal rivets at ends */
+.pv-party-strip::before,
+.pv-party-strip::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #c8a43e 0%, #8a6d3b 50%, #5a4020 100%);
+  box-shadow:
+    inset 0 -1px 2px rgba(0,0,0,0.5),
+    0 1px 2px rgba(0,0,0,0.4);
+  flex-shrink: 0;
+  z-index: 2;
+}
+.pv-party-strip::before { left: 8px; }
+.pv-party-strip::after { right: 8px; }
 
 .pv-party-pip {
   position: relative;
@@ -11420,6 +11502,10 @@ input[type="number"] { -moz-appearance: textfield; }
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1.5px solid #8a6d3b;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.4),
+    inset 0 1px 3px rgba(0,0,0,0.3);
 }
 
 .pv-party-pip__portrait img {
@@ -11436,14 +11522,18 @@ input[type="number"] { -moz-appearance: textfield; }
 }
 
 .pv-party-pip--active .pv-party-pip__portrait {
-  box-shadow: 0 0 0 1.5px var(--border-gold);
+  border-color: #d4b44e;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.4),
+    0 0 8px rgba(212,180,78,0.4),
+    inset 0 1px 3px rgba(0,0,0,0.3);
 }
 
 .pv-party-pip--dead .pv-party-pip__initial {
   color: var(--accent-red);
 }
 
-/* ── Hero Card ── */
+/* ═══ Hero Card — Ornate Wood Frame ═══ */
 
 .pv-hero {
   display: flex;
@@ -11453,15 +11543,29 @@ input[type="number"] { -moz-appearance: textfield; }
   width: 100%;
   max-width: 420px;
   padding: var(--gap-lg) var(--gap-md);
-  background: var(--bg-panel);
-  border: 1px solid var(--border-inner);
-  border-radius: 12px;
-  box-shadow:
-    inset 0 0 0 1px rgba(200, 164, 78, 0.08),
-    0 4px 24px rgba(0, 0, 0, 0.5),
-    0 0 0 1px var(--border-inner);
   position: relative;
   animation: pv-fade-in 0.4s ease-out;
+
+  /* Wood-grain background */
+  background:
+    repeating-linear-gradient(92deg,
+      transparent 0px, transparent 3px,
+      rgba(0,0,0,0.05) 3px, rgba(0,0,0,0.05) 4px),
+    repeating-linear-gradient(88deg,
+      transparent 0px, transparent 7px,
+      rgba(255,200,100,0.02) 7px, rgba(255,200,100,0.02) 8px),
+    linear-gradient(180deg, #3d2b1a 0%, #2a1f14 50%, #33241a 100%);
+
+  /* Beveled border */
+  border: 3px solid;
+  border-color: #6d4c30 #2a1f14 #2a1f14 #6d4c30;
+  border-radius: 12px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,200,100,0.08),
+    inset 0 -1px 0 rgba(0,0,0,0.3),
+    0 4px 12px rgba(0,0,0,0.5),
+    0 8px 24px rgba(0,0,0,0.3),
+    0 0 0 1px rgba(0,0,0,0.5);
 }
 
 @keyframes pv-fade-in {
@@ -11469,30 +11573,37 @@ input[type="number"] { -moz-appearance: textfield; }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Subtle corner accents */
+/* Corner rivets */
 .pv-hero::before,
 .pv-hero::after {
-  content: '\25c6';
+  content: '';
   position: absolute;
-  font-size: 8px;
-  color: var(--border-gold-dim);
-  opacity: 0.6;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #c8a43e 0%, #8a6d3b 50%, #5a4020 100%);
+  box-shadow:
+    inset 0 -1px 2px rgba(0,0,0,0.5),
+    0 1px 3px rgba(0,0,0,0.5);
+  z-index: 2;
 }
-.pv-hero::before { top: 6px; left: 10px; }
-.pv-hero::after { top: 6px; right: 10px; }
+.pv-hero::before { top: 8px; left: 8px; }
+.pv-hero::after { top: 8px; right: 8px; }
 
-/* ── Portrait Frame ── */
+/* ── Portrait — Heavy Gilded Frame ── */
 
 .pv-hero__portrait-frame {
   position: relative;
   width: 160px;
   height: 160px;
   border-radius: 50%;
-  padding: 4px;
-  background: linear-gradient(135deg, var(--border-gold) 0%, var(--border-gold-dim) 50%, var(--border-gold) 100%);
+  padding: 5px;
+  background: linear-gradient(145deg, #d4b44e 0%, #a88930 40%, #c8a43e 60%, #e0c860 100%);
   box-shadow:
-    0 0 20px rgba(200, 164, 78, 0.15),
-    0 4px 12px rgba(0, 0, 0, 0.4);
+    0 0 0 3px #5a4020,
+    0 0 0 5px rgba(200,164,78,0.2),
+    0 0 20px rgba(200,164,78,0.2),
+    0 4px 16px rgba(0,0,0,0.5);
 }
 
 .pv-hero__portrait {
@@ -11504,6 +11615,7 @@ input[type="number"] { -moz-appearance: textfield; }
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 2px solid #5a4020;
 }
 
 .pv-hero__portrait img {
@@ -11521,10 +11633,10 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .pv-hero__portrait-vignette {
   position: absolute;
-  inset: 4px;
+  inset: 5px;
   border-radius: 50%;
   pointer-events: none;
-  background: radial-gradient(transparent 55%, rgba(14, 12, 10, 0.35));
+  background: radial-gradient(transparent 50%, rgba(14,12,10,0.4));
 }
 
 /* ── Identity ── */
@@ -11539,8 +11651,9 @@ input[type="number"] { -moz-appearance: textfield; }
   color: var(--text-gold);
   letter-spacing: 0.04em;
   text-shadow:
-    0 1px 0 rgba(0, 0, 0, 0.8),
-    0 0 20px rgba(212, 180, 90, 0.15);
+    0 2px 0 rgba(0,0,0,0.9),
+    0 -1px 0 rgba(255,200,100,0.1),
+    0 0 20px rgba(212,180,90,0.15);
   margin: 0;
   font-weight: 700;
 }
@@ -11552,9 +11665,10 @@ input[type="number"] { -moz-appearance: textfield; }
   letter-spacing: 0.12em;
   text-transform: uppercase;
   margin-top: 4px;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.8);
 }
 
-/* ── HP Orb ── */
+/* ── HP Orb — Glass Crystal in Metal Cradle ── */
 
 .pv-hero__hp-orb {
   margin: var(--gap-xs) 0;
@@ -11565,13 +11679,30 @@ input[type="number"] { -moz-appearance: textfield; }
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: #141210;
-  border: 2px solid var(--border-frame);
+  background: #0e0c08;
+  border: 3px solid;
+  border-color: #8a6d3b #5a4020 #5a4020 #8a6d3b;
   overflow: hidden;
   box-shadow:
-    inset 0 4px 12px rgba(0, 0, 0, 0.7),
-    0 0 16px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(200, 164, 78, 0.1);
+    inset 0 4px 16px rgba(0,0,0,0.8),
+    inset 0 -2px 8px rgba(0,0,0,0.5),
+    0 0 0 1px rgba(0,0,0,0.6),
+    0 0 12px rgba(0,0,0,0.5),
+    0 4px 8px rgba(0,0,0,0.4);
+}
+
+/* Glass reflection highlight */
+.pv-hp-orb::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 15%;
+  width: 40%;
+  height: 20%;
+  background: radial-gradient(ellipse, rgba(255,255,255,0.12) 0%, transparent 70%);
+  border-radius: 50%;
+  z-index: 3;
+  pointer-events: none;
 }
 
 .pv-hp-orb__fill {
@@ -11590,7 +11721,7 @@ input[type="number"] { -moz-appearance: textfield; }
   left: 10%;
   right: 10%;
   height: 3px;
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255,255,255,0.25);
   border-radius: 50%;
   filter: blur(1.5px);
 }
@@ -11603,8 +11734,8 @@ input[type="number"] { -moz-appearance: textfield; }
   justify-content: center;
   gap: 1px;
   font-family: var(--font-mono);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-  z-index: 1;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+  z-index: 2;
 }
 
 .pv-hp-orb__current {
@@ -11632,8 +11763,8 @@ input[type="number"] { -moz-appearance: textfield; }
   font-family: var(--font-mono);
   font-size: 0.55rem;
   color: var(--hp-temp);
-  text-shadow: 0 0 6px rgba(58, 122, 155, 0.5);
-  z-index: 2;
+  text-shadow: 0 0 6px rgba(58,122,155,0.5);
+  z-index: 3;
   white-space: nowrap;
 }
 
@@ -11655,7 +11786,7 @@ input[type="number"] { -moz-appearance: textfield; }
 }
 
 .pv-badge svg {
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
 }
 
 .pv-badge--ac svg { width: 40px; height: 48px; }
@@ -11678,7 +11809,7 @@ input[type="number"] { -moz-appearance: textfield; }
   font-weight: 700;
 }
 
-/* ── Conditions Strip ── */
+/* ── Conditions — Wax Seal Stamps ── */
 
 .pv-hero__conditions {
   display: flex;
@@ -11691,40 +11822,62 @@ input[type="number"] { -moz-appearance: textfield; }
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 8px;
-  border-radius: 12px;
+  padding: 4px 10px;
+  border-radius: 14px;
   font-family: var(--font-display);
   font-size: 0.55rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  border: 1px solid;
+  border: 1.5px solid;
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,0.05),
+    inset 0 -2px 4px rgba(0,0,0,0.4),
+    0 2px 4px rgba(0,0,0,0.3);
 }
 
 .pv-condition--danger {
-  border-color: var(--accent-red-dim);
-  background: rgba(155, 44, 44, 0.12);
+  border-color: #6a2222;
+  background:
+    radial-gradient(ellipse at 40% 30%, rgba(200,60,60,0.25), transparent 70%),
+    linear-gradient(145deg, #3a1515 0%, #2a0e0e 100%);
   color: #d46a6a;
-  text-shadow: 0 0 8px rgba(155, 44, 44, 0.4);
+  text-shadow: 0 1px 0 rgba(0,0,0,0.8), 0 0 8px rgba(155,44,44,0.4);
   animation: pv-pulse-danger 2s ease-in-out infinite;
 }
 
 @keyframes pv-pulse-danger {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(155, 44, 44, 0); }
-  50%      { box-shadow: 0 0 8px 0 rgba(155, 44, 44, 0.2); }
+  0%, 100% {
+    box-shadow:
+      inset 0 1px 2px rgba(255,255,255,0.05),
+      inset 0 -2px 4px rgba(0,0,0,0.4),
+      0 2px 4px rgba(0,0,0,0.3),
+      0 0 0 0 rgba(155,44,44,0);
+  }
+  50% {
+    box-shadow:
+      inset 0 1px 2px rgba(255,255,255,0.05),
+      inset 0 -2px 4px rgba(0,0,0,0.4),
+      0 2px 4px rgba(0,0,0,0.3),
+      0 0 10px 0 rgba(155,44,44,0.25);
+  }
 }
 
 .pv-condition--caution {
-  border-color: rgba(200, 164, 78, 0.3);
-  background: rgba(200, 164, 78, 0.08);
+  border-color: rgba(200,164,78,0.35);
+  background:
+    radial-gradient(ellipse at 40% 30%, rgba(200,164,78,0.15), transparent 70%),
+    linear-gradient(145deg, #2a2010 0%, #1a1508 100%);
   color: var(--hp-wounded);
-  text-shadow: 0 0 8px rgba(200, 164, 78, 0.3);
+  text-shadow: 0 1px 0 rgba(0,0,0,0.8), 0 0 8px rgba(200,164,78,0.3);
 }
 
 .pv-condition--arcane {
-  border-color: rgba(58, 122, 155, 0.3);
-  background: rgba(58, 122, 155, 0.08);
+  border-color: rgba(58,122,155,0.35);
+  background:
+    radial-gradient(ellipse at 40% 30%, rgba(58,122,155,0.15), transparent 70%),
+    linear-gradient(145deg, #0e1a25 0%, #081420 100%);
   color: #74a7d0;
-  text-shadow: 0 0 8px rgba(58, 122, 155, 0.3);
+  text-shadow: 0 1px 0 rgba(0,0,0,0.8), 0 0 8px rgba(58,122,155,0.3);
 }
 
 .pv-condition__icon {
@@ -11737,25 +11890,36 @@ input[type="number"] { -moz-appearance: textfield; }
   opacity: 0.7;
 }
 
-/* ── Concentration Indicator ── */
+/* ── Concentration — Pulsing Arcane Glow ── */
 
 .pv-hero__concentration {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 12px;
-  border-radius: 8px;
-  background: rgba(58, 122, 155, 0.1);
-  border: 1px solid rgba(58, 122, 155, 0.25);
+  padding: 5px 14px;
+  border-radius: 10px;
+  background:
+    radial-gradient(ellipse at 40% 30%, rgba(80,140,220,0.1), transparent 70%),
+    linear-gradient(145deg, #0e1a2a 0%, #081420 100%);
+  border: 1.5px solid rgba(80,140,220,0.3);
   font-family: var(--font-body);
   font-size: 0.75rem;
   color: #74a7d0;
+  box-shadow:
+    inset 0 1px 3px rgba(80,140,220,0.05),
+    0 0 8px rgba(80,140,220,0.1);
 }
 
 .pv-concentration__icon {
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   color: #74a7d0;
-  text-shadow: 0 0 6px rgba(58, 122, 155, 0.5);
+  text-shadow: 0 0 8px rgba(80,140,220,0.6);
+  animation: pv-conc-pulse 2s ease-in-out infinite;
+}
+
+@keyframes pv-conc-pulse {
+  0%, 100% { text-shadow: 0 0 8px rgba(80,140,220,0.4); }
+  50%      { text-shadow: 0 0 16px rgba(80,140,220,0.8), 0 0 4px rgba(80,140,220,0.6); }
 }
 
 .pv-concentration__rounds {
@@ -11764,7 +11928,7 @@ input[type="number"] { -moz-appearance: textfield; }
   opacity: 0.7;
 }
 
-/* ── Death Overlay ── */
+/* ═══ Death Overlay ═══ */
 
 .pv-death-overlay {
   display: flex;
@@ -11775,18 +11939,25 @@ input[type="number"] { -moz-appearance: textfield; }
   flex: 1;
   text-align: center;
   padding: var(--gap-xl);
+  background: radial-gradient(ellipse at center, rgba(80,20,20,0.15) 0%, transparent 60%);
 }
 
 .pv-death__skull {
   font-size: 4rem;
-  filter: drop-shadow(0 0 20px rgba(155, 44, 44, 0.4));
+  filter: drop-shadow(0 0 20px rgba(155,44,44,0.5));
+  animation: pv-skull-pulse 3s ease-in-out infinite;
+}
+
+@keyframes pv-skull-pulse {
+  0%, 100% { filter: drop-shadow(0 0 20px rgba(155,44,44,0.3)); }
+  50%      { filter: drop-shadow(0 0 30px rgba(155,44,44,0.6)) drop-shadow(0 0 10px rgba(155,44,44,0.4)); }
 }
 
 .pv-death__name {
   font-family: var(--font-display);
   font-size: 1.5rem;
   color: var(--text-gold);
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.8);
+  text-shadow: 0 2px 0 rgba(0,0,0,0.9);
 }
 
 .pv-death__tagline {
@@ -11796,7 +11967,7 @@ input[type="number"] { -moz-appearance: textfield; }
   font-style: italic;
 }
 
-/* ── Empty State ── */
+/* ═══ Empty State ═══ */
 
 .pv-empty {
   display: flex;
@@ -11813,6 +11984,13 @@ input[type="number"] { -moz-appearance: textfield; }
   font-size: 2.5rem;
   color: var(--border-gold-dim);
   opacity: 0.5;
+  text-shadow: 0 0 20px rgba(200,140,50,0.3);
+  animation: pv-torch-glow 3s ease-in-out infinite;
+}
+
+@keyframes pv-torch-glow {
+  0%, 100% { text-shadow: 0 0 15px rgba(200,140,50,0.2); }
+  50%      { text-shadow: 0 0 25px rgba(200,140,50,0.4), 0 0 10px rgba(200,140,50,0.2); }
 }
 
 .pv-empty__title {
@@ -11820,6 +11998,7 @@ input[type="number"] { -moz-appearance: textfield; }
   font-size: 1.1rem;
   color: var(--text-gold);
   letter-spacing: 0.04em;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.8);
 }
 
 .pv-empty__text {
@@ -11829,7 +12008,7 @@ input[type="number"] { -moz-appearance: textfield; }
   max-width: 280px;
 }
 
-/* ── Card Deck ── */
+/* ═══ Card Deck — Framed Parchment Book ═══ */
 
 .pv-deck {
   width: 100%;
@@ -11840,13 +12019,45 @@ input[type="number"] { -moz-appearance: textfield; }
   animation: pv-fade-in 0.4s ease-out 0.1s both;
 }
 
+/* Frame wrapper with corner rivets */
+.pv-deck__frame {
+  border: 3px solid;
+  border-color: #6d4c30 #2a1f14 #2a1f14 #6d4c30;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    0 4px 12px rgba(0,0,0,0.5),
+    0 8px 24px rgba(0,0,0,0.3),
+    0 0 0 1px rgba(0,0,0,0.5);
+  position: relative;
+}
+
+.pv-deck__frame::before,
+.pv-deck__frame::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #c8a43e 0%, #8a6d3b 50%, #5a4020 100%);
+  box-shadow:
+    inset 0 -1px 2px rgba(0,0,0,0.5),
+    0 1px 2px rgba(0,0,0,0.4);
+  z-index: 3;
+}
+.pv-deck__frame::before { top: 6px; left: 6px; }
+.pv-deck__frame::after { top: 6px; right: 6px; }
+
+/* Wood-grain tab bar */
 .pv-deck__tabs {
   display: flex;
-  background: var(--bg-panel);
-  border: 1px solid var(--border-inner);
-  border-bottom: none;
-  border-radius: 10px 10px 0 0;
-  overflow: hidden;
+  background:
+    repeating-linear-gradient(92deg,
+      transparent 0px, transparent 3px,
+      rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px),
+    linear-gradient(180deg, #3d2b1a 0%, #33241a 100%);
+  border-bottom: 2px solid #1a1208;
+  overflow: visible;
 }
 
 .pv-deck__tab {
@@ -11855,25 +12066,46 @@ input[type="number"] { -moz-appearance: textfield; }
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 8px 4px 6px;
+  padding: 10px 4px 8px;
   background: none;
   border: none;
   cursor: pointer;
   color: var(--text-dim);
   transition: background 0.2s, color 0.2s;
-  border-right: 1px solid var(--border-inner);
+  border-right: 1px solid rgba(0,0,0,0.3);
+  position: relative;
 }
 
 .pv-deck__tab:last-child { border-right: none; }
 
 .pv-deck__tab:hover {
-  background: var(--bg-hover);
+  background: rgba(255,200,100,0.04);
 }
 
 .pv-deck__tab--active {
-  background: var(--bg-surface);
+  background:
+    repeating-linear-gradient(92deg,
+      transparent 0px, transparent 3px,
+      rgba(0,0,0,0.03) 3px, rgba(0,0,0,0.03) 4px),
+    linear-gradient(180deg, #5a3f28 0%, #4a3420 100%);
   color: var(--text-gold);
-  box-shadow: inset 0 -2px 0 var(--border-gold);
+  box-shadow:
+    inset 0 -3px 0 #c8a43e,
+    inset 0 1px 0 rgba(255,200,100,0.08);
+}
+
+/* Gold notch on active tab */
+.pv-deck__tab--active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 3px;
+  background: #c8a43e;
+  border-radius: 2px 2px 0 0;
+  box-shadow: 0 0 6px rgba(200,164,78,0.3);
 }
 
 .pv-deck__tab-icon {
@@ -11887,14 +12119,16 @@ input[type="number"] { -moz-appearance: textfield; }
   text-transform: uppercase;
 }
 
+/* Recessed parchment content panel */
 .pv-deck__content {
-  background: var(--bg-panel);
-  border: 1px solid var(--border-inner);
-  border-top: none;
-  border-radius: 0 0 10px 10px;
+  background:
+    linear-gradient(180deg, #1a1510 0%, #1e1812 20%, #1a1510 100%);
   padding: var(--gap-md);
   min-height: 200px;
   animation: pv-card-in 0.3s ease-out;
+  box-shadow:
+    inset 0 3px 8px rgba(0,0,0,0.5),
+    inset 0 -1px 3px rgba(255,200,100,0.02);
 }
 
 @keyframes pv-card-in {
@@ -11902,8 +12136,7 @@ input[type="number"] { -moz-appearance: textfield; }
   to   { opacity: 1; }
 }
 
-
-/* ── Shared Card Styles ── */
+/* ═══ Shared Card Styles ═══ */
 
 .pv-card {
   display: flex;
@@ -11914,7 +12147,7 @@ input[type="number"] { -moz-appearance: textfield; }
 .pv-card + .pv-card {
   margin-top: var(--gap-md);
   padding-top: var(--gap-md);
-  border-top: 1px solid var(--border-inner);
+  border-top: 1px solid rgba(90,64,32,0.3);
 }
 
 .pv-card__title {
@@ -11924,8 +12157,8 @@ input[type="number"] { -moz-appearance: textfield; }
   letter-spacing: 0.15em;
   text-transform: uppercase;
   text-shadow:
-    0 1px 0 rgba(0, 0, 0, 0.8),
-    0 -1px 0 rgba(200, 164, 78, 0.15);
+    0 2px 0 rgba(0,0,0,0.9),
+    0 -1px 0 rgba(255,200,100,0.1);
   margin: 0;
 }
 
@@ -11938,7 +12171,7 @@ input[type="number"] { -moz-appearance: textfield; }
   padding: var(--gap-lg) 0;
 }
 
-/* ── Combat Card ── */
+/* ═══ Combat Card — Metal Nameplates ═══ */
 
 .pv-combat__list {
   display: flex;
@@ -11948,9 +12181,17 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .pv-weapon {
   padding: var(--gap-xs) var(--gap-sm);
-  border: 1px solid var(--border-inner);
   border-radius: 8px;
-  background: var(--bg-surface);
+  background:
+    repeating-linear-gradient(92deg,
+      transparent 0px, transparent 3px,
+      rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px),
+    linear-gradient(180deg, #2e2218 0%, #241c12 100%);
+  border: 1.5px solid #3d2b1a;
+  box-shadow:
+    inset 0 1px 0 rgba(255,200,100,0.04),
+    inset 0 -1px 3px rgba(0,0,0,0.3),
+    0 2px 4px rgba(0,0,0,0.3);
 }
 
 .pv-weapon__name {
@@ -11958,6 +12199,7 @@ input[type="number"] { -moz-appearance: textfield; }
   font-size: 0.75rem;
   color: var(--text-bright);
   letter-spacing: 0.04em;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.8), 0 -1px 0 rgba(255,200,100,0.05);
 }
 
 .pv-weapon__magic {
@@ -11985,6 +12227,7 @@ input[type="number"] { -moz-appearance: textfield; }
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-bright);
+  text-shadow: 0 1px 0 rgba(0,0,0,0.8);
 }
 
 .pv-weapon__stat--sneak .pv-weapon__stat-value {
@@ -12002,7 +12245,7 @@ input[type="number"] { -moz-appearance: textfield; }
 .pv-weapon__stat-divider {
   width: 1px;
   height: 28px;
-  background: var(--border-inner);
+  background: linear-gradient(180deg, transparent, #5a4020 50%, transparent);
 }
 
 .pv-weapon__tags {
@@ -12018,12 +12261,16 @@ input[type="number"] { -moz-appearance: textfield; }
   color: var(--text-dim);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 1px 6px;
-  border: 1px solid var(--border-inner);
+  padding: 2px 8px;
+  background: linear-gradient(180deg, #2e2018 0%, #241a12 100%);
+  border: 1px solid #3d2b1a;
   border-radius: 4px;
+  box-shadow:
+    inset 0 1px 2px rgba(0,0,0,0.3),
+    0 1px 2px rgba(0,0,0,0.2);
 }
 
-/* ── Abilities Card ── */
+/* ═══ Abilities Card — Stone Tiles ═══ */
 
 .pv-abilities__grid {
   display: grid;
@@ -12036,9 +12283,14 @@ input[type="number"] { -moz-appearance: textfield; }
   flex-direction: column;
   align-items: center;
   padding: var(--gap-xs) 4px;
-  border: 1px solid var(--border-inner);
   border-radius: 8px;
-  background: var(--bg-surface);
+  background: linear-gradient(180deg, #2a2520 0%, #201c18 50%, #252018 100%);
+  border: 1.5px solid;
+  border-color: #3a3228 #1a1610 #1a1610 #3a3228;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.04),
+    inset 0 -1px 2px rgba(0,0,0,0.3),
+    0 2px 4px rgba(0,0,0,0.3);
 }
 
 .pv-ability__header {
@@ -12066,6 +12318,10 @@ input[type="number"] { -moz-appearance: textfield; }
   font-weight: 700;
   color: var(--text-bright);
   line-height: 1.2;
+  /* Carved in stone */
+  text-shadow:
+    0 2px 0 rgba(0,0,0,0.9),
+    0 -1px 0 rgba(255,255,255,0.06);
 }
 
 .pv-ability__save {
@@ -12073,17 +12329,19 @@ input[type="number"] { -moz-appearance: textfield; }
   font-size: 0.55rem;
   color: var(--text-dim);
   margin-top: 2px;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.6);
 }
 
 .pv-ability__save--prof {
   color: var(--text-gold);
+  text-shadow: 0 1px 0 rgba(0,0,0,0.6), 0 0 6px rgba(200,164,78,0.2);
 }
 
 .pv-ability__skills {
   width: 100%;
   margin-top: 4px;
   padding-top: 4px;
-  border-top: 1px solid var(--border-inner);
+  border-top: 1px solid rgba(90,64,32,0.25);
 }
 
 .pv-skill {
@@ -12123,7 +12381,7 @@ input[type="number"] { -moz-appearance: textfield; }
   font-size: 0.55rem;
 }
 
-/* ── Spells Card ── */
+/* ═══ Spells Card — Crystal Gems ═══ */
 
 .pv-spells__banner {
   display: flex;
@@ -12143,6 +12401,7 @@ input[type="number"] { -moz-appearance: textfield; }
   font-size: 1rem;
   font-weight: 700;
   color: var(--text-bright);
+  text-shadow: 0 1px 0 rgba(0,0,0,0.8);
 }
 
 .pv-spells__stat-label {
@@ -12153,7 +12412,7 @@ input[type="number"] { -moz-appearance: textfield; }
   text-transform: uppercase;
 }
 
-/* Spell slot gems */
+/* Spell slot gems — Crystal style */
 
 .pv-slots {
   display: flex;
@@ -12178,21 +12437,43 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .pv-slots__gems {
   display: flex;
-  gap: 3px;
+  gap: 4px;
 }
 
 .pv-slot-gem {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: var(--bg-deep);
-  border: 1px solid var(--border-inner);
+  background: #0e0c08;
+  border: 1.5px solid #3d2b1a;
+  box-shadow:
+    inset 0 1px 3px rgba(0,0,0,0.6),
+    0 1px 2px rgba(0,0,0,0.3);
 }
 
 .pv-slot-gem--available {
-  background: radial-gradient(ellipse at 35% 35%, #8ac4e8, #3a7a9b 60%, #1a4a6b);
-  border-color: #5090b0;
-  box-shadow: 0 0 4px rgba(58, 122, 155, 0.4);
+  background: radial-gradient(ellipse at 30% 30%, #a0d0f0, #3a7a9b 50%, #1a4a6b 80%);
+  border-color: #5a90b0;
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,0.15),
+    0 0 6px rgba(58,122,155,0.5),
+    0 0 2px rgba(58,122,155,0.3);
+  animation: pv-gem-glow 2.5s ease-in-out infinite;
+}
+
+@keyframes pv-gem-glow {
+  0%, 100% {
+    box-shadow:
+      inset 0 1px 2px rgba(255,255,255,0.15),
+      0 0 4px rgba(58,122,155,0.3),
+      0 0 2px rgba(58,122,155,0.2);
+  }
+  50% {
+    box-shadow:
+      inset 0 1px 2px rgba(255,255,255,0.15),
+      0 0 8px rgba(58,122,155,0.6),
+      0 0 3px rgba(58,122,155,0.4);
+  }
 }
 
 /* Spell list */
@@ -12216,7 +12497,7 @@ input[type="number"] { -moz-appearance: textfield; }
   letter-spacing: 0.12em;
   text-transform: uppercase;
   padding: 4px 0 2px;
-  border-bottom: 1px solid var(--border-inner);
+  border-bottom: 1px solid rgba(90,64,32,0.3);
   margin-bottom: 2px;
 }
 
@@ -12242,7 +12523,7 @@ input[type="number"] { -moz-appearance: textfield; }
 }
 
 .pv-spell-row__name:hover {
-  background: var(--bg-hover);
+  background: rgba(200,164,78,0.06);
 }
 
 .pv-spell-row__active {
@@ -12254,7 +12535,7 @@ input[type="number"] { -moz-appearance: textfield; }
   font-family: var(--font-mono);
   font-size: 0.5rem;
   color: #74a7d0;
-  border: 1px solid rgba(58, 122, 155, 0.3);
+  border: 1px solid rgba(58,122,155,0.3);
   border-radius: 3px;
   padding: 0 3px;
   line-height: 1.3;
@@ -12266,36 +12547,46 @@ input[type="number"] { -moz-appearance: textfield; }
   color: var(--text-dim);
   padding: 4px 8px 8px;
   line-height: 1.5;
-  border-left: 2px solid var(--border-inner);
+  border-left: 2px solid rgba(200,164,78,0.3);
   margin-left: 8px;
+  background: linear-gradient(90deg, rgba(200,164,78,0.03) 0%, transparent 40%);
 }
 
 .pv-spell-row__desc p { margin: 4px 0; }
 .pv-spell-row__desc strong { color: var(--text-parchment); }
 
-/* ── Inventory Card ── */
+/* ═══ Inventory Card — Leather Pouch ═══ */
 
 .pv-gold {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
   align-items: center;
-  padding: var(--gap-xs) 0;
+  padding: var(--gap-xs) var(--gap-sm);
+  background: linear-gradient(180deg, #2e2018 0%, #241a12 100%);
+  border-radius: 8px;
+  border: 1px solid #3d2b1a;
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,0.4),
+    inset 0 -1px 2px rgba(255,200,100,0.03);
 }
 
 .pv-gold__coin {
   font-family: var(--font-mono);
   font-size: 0.7rem;
-  padding: 2px 6px;
+  padding: 2px 8px;
   border-radius: 4px;
-  border: 1px solid var(--border-inner);
+  border: 1px solid;
+  box-shadow:
+    inset 0 1px 2px rgba(0,0,0,0.2),
+    0 1px 2px rgba(0,0,0,0.2);
 }
 
-.pv-gold__coin--pp { color: #b8c4d0; }
-.pv-gold__coin--gp { color: var(--text-gold); border-color: var(--border-gold-dim); }
-.pv-gold__coin--ep { color: #a0a0a0; }
-.pv-gold__coin--sp { color: #c0c0c0; }
-.pv-gold__coin--cp { color: #b87333; }
+.pv-gold__coin--pp { color: #b8c4d0; border-color: #4a5060; background: rgba(184,196,208,0.06); }
+.pv-gold__coin--gp { color: var(--text-gold); border-color: var(--border-gold-dim); background: rgba(200,164,78,0.08); }
+.pv-gold__coin--ep { color: #a0a0a0; border-color: #4a4a4a; background: rgba(160,160,160,0.06); }
+.pv-gold__coin--sp { color: #c0c0c0; border-color: #505050; background: rgba(192,192,192,0.06); }
+.pv-gold__coin--cp { color: #b87333; border-color: #6a4020; background: rgba(184,115,51,0.06); }
 
 .pv-gold__total {
   font-family: var(--font-mono);
@@ -12330,7 +12621,8 @@ input[type="number"] { -moz-appearance: textfield; }
 }
 
 .pv-inv-item--equipped {
-  background: rgba(200, 164, 78, 0.06);
+  background: linear-gradient(90deg, rgba(200,164,78,0.08) 0%, transparent 60%);
+  border-left: 2px solid rgba(200,164,78,0.4);
 }
 
 .pv-inv-item__icon {
@@ -12354,7 +12646,7 @@ input[type="number"] { -moz-appearance: textfield; }
   color: var(--text-dim);
 }
 
-/* ── Resources Card ── */
+/* ═══ Resources Card — Wooden Counting Board ═══ */
 
 .pv-resources__list {
   display: flex;
@@ -12364,9 +12656,18 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .pv-resource {
   padding: var(--gap-xs) var(--gap-sm);
-  border: 1px solid var(--border-inner);
   border-radius: 8px;
-  background: var(--bg-surface);
+  background:
+    repeating-linear-gradient(92deg,
+      transparent 0px, transparent 3px,
+      rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px),
+    linear-gradient(180deg, #2e2218 0%, #241c12 100%);
+  border: 1.5px solid;
+  border-color: #3d2b1a #2a1f14 #2a1f14 #3d2b1a;
+  box-shadow:
+    inset 0 1px 0 rgba(255,200,100,0.04),
+    inset 0 -1px 3px rgba(0,0,0,0.3),
+    0 2px 4px rgba(0,0,0,0.3);
 }
 
 .pv-resource__header {
@@ -12380,6 +12681,7 @@ input[type="number"] { -moz-appearance: textfield; }
   font-size: 0.65rem;
   color: var(--text-bright);
   letter-spacing: 0.04em;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.6);
 }
 
 .pv-resource__recharge {
@@ -12392,22 +12694,28 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .pv-resource__pips {
   display: flex;
-  gap: 4px;
+  gap: 5px;
   margin-top: 4px;
 }
 
 .pv-resource__pip {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: var(--bg-deep);
-  border: 1px solid var(--border-inner);
+  background: #0e0c08;
+  border: 1.5px solid #3d2b1a;
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,0.6),
+    0 1px 2px rgba(0,0,0,0.3);
 }
 
 .pv-resource__pip--available {
-  background: radial-gradient(ellipse at 35% 35%, #a8d090, #4a7a3a 60%, #2a4a2a);
+  background: radial-gradient(ellipse at 30% 30%, #c0e8a0, #4a7a3a 50%, #2a4a2a 80%);
   border-color: #5a9a4a;
-  box-shadow: 0 0 4px rgba(74, 122, 58, 0.4);
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,0.12),
+    0 0 6px rgba(74,122,58,0.5),
+    0 0 2px rgba(74,122,58,0.3);
 }
 
 .pv-resource__count {
@@ -12417,7 +12725,7 @@ input[type="number"] { -moz-appearance: textfield; }
   margin-top: 2px;
 }
 
-/* ── Responsive: Player View ── */
+/* ═══ Responsive: Player View ═══ */
 
 @media (min-width: 480px) {
   .pv-hero__portrait-frame {
@@ -12445,12 +12753,24 @@ input[type="number"] { -moz-appearance: textfield; }
   .pv-abilities__grid {
     gap: var(--gap-sm);
   }
+
+  .pv-hero::before,
+  .pv-hero::after {
+    width: 14px;
+    height: 14px;
+  }
 }
 
 @media (min-width: 768px) {
   .pv-hero__portrait-frame {
     width: 200px;
     height: 200px;
+    padding: 6px;
+    box-shadow:
+      0 0 0 4px #5a4020,
+      0 0 0 6px rgba(200,164,78,0.15),
+      0 0 25px rgba(200,164,78,0.2),
+      0 6px 20px rgba(0,0,0,0.5);
   }
 
   .pv-hero {
@@ -12488,6 +12808,7 @@ input[type="number"] { -moz-appearance: textfield; }
   .pv-hero {
     max-width: 380px;
     flex-shrink: 0;
+    border-width: 2px;
   }
 
   .pv-hero__portrait-frame {
@@ -12499,6 +12820,12 @@ input[type="number"] { -moz-appearance: textfield; }
     font-size: 1.5rem;
   }
 
+  .pv-hero::before,
+  .pv-hero::after {
+    width: 10px;
+    height: 10px;
+  }
+
   .pv-deck {
     flex: 1;
     min-width: 320px;
@@ -12508,13 +12835,17 @@ input[type="number"] { -moz-appearance: textfield; }
     overflow-y: auto;
   }
 
+  .pv-deck__frame {
+    border-width: 2px;
+  }
+
   .pv-connection {
     top: var(--gap-xs);
     right: var(--gap-xs);
   }
 }
 
-/* ── Large desktop: scale up ── */
+/* ── Large desktop ── */
 
 @media (min-width: 1200px) {
   .player-view {
@@ -12571,5 +12902,27 @@ input[type="number"] { -moz-appearance: textfield; }
 
   .pv-ability__mod {
     font-size: 1.5rem;
+  }
+
+  .pv-hero::before,
+  .pv-hero::after {
+    width: 14px;
+    height: 14px;
+  }
+
+  .pv-deck__frame::before,
+  .pv-deck__frame::after {
+    width: 12px;
+    height: 12px;
+  }
+
+  .pv-slot-gem {
+    width: 14px;
+    height: 14px;
+  }
+
+  .pv-resource__pip {
+    width: 16px;
+    height: 16px;
   }
 }

@@ -31,6 +31,7 @@ export function PlayerView() {
 
   return (
     <div className="player-view">
+      <div className="pv-table-vignette" />
       {/* ── Connection badge ── */}
       <div className={`pv-connection pv-connection--${wsStatus}`}>
         <span className="pv-connection__dot" />
@@ -64,29 +65,31 @@ export function PlayerView() {
 
               {/* ── Card Deck ── */}
               <div className="pv-deck">
-                <nav className="pv-deck__tabs">
-                  {CARD_TABS.map((tab) => (
-                    <button
-                      key={tab.id}
-                      className={`pv-deck__tab${activeCard === tab.id ? ' pv-deck__tab--active' : ''}`}
-                      onClick={() => setActiveCard(tab.id)}
-                    >
-                      <span className="pv-deck__tab-icon">{tab.icon}</span>
-                      <span className="pv-deck__tab-label">{tab.label}</span>
-                    </button>
-                  ))}
-                </nav>
+                <div className="pv-deck__frame">
+                  <nav className="pv-deck__tabs">
+                    {CARD_TABS.map((tab) => (
+                      <button
+                        key={tab.id}
+                        className={`pv-deck__tab${activeCard === tab.id ? ' pv-deck__tab--active' : ''}`}
+                        onClick={() => setActiveCard(tab.id)}
+                      >
+                        <span className="pv-deck__tab-icon">{tab.icon}</span>
+                        <span className="pv-deck__tab-label">{tab.label}</span>
+                      </button>
+                    ))}
+                  </nav>
 
-                <div className="pv-deck__content">
-                  {activeCard === 'combat' && <CombatCard ch={selected} />}
-                  {activeCard === 'abilities' && <AbilitiesCard ch={selected} />}
-                  {activeCard === 'spells' && <SpellsCard ch={selected} />}
-                  {activeCard === 'inventory' && (
-                    <>
-                      <InventoryCard ch={selected} />
-                      <ResourcesCard ch={selected} />
-                    </>
-                  )}
+                  <div className="pv-deck__content">
+                    {activeCard === 'combat' && <CombatCard ch={selected} />}
+                    {activeCard === 'abilities' && <AbilitiesCard ch={selected} />}
+                    {activeCard === 'spells' && <SpellsCard ch={selected} />}
+                    {activeCard === 'inventory' && (
+                      <>
+                        <InventoryCard ch={selected} />
+                        <ResourcesCard ch={selected} />
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </>

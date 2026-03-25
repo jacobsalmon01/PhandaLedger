@@ -10146,6 +10146,7 @@ input[type="number"] { -moz-appearance: textfield; }
   max-width: none;
   user-select: none;
   -webkit-user-drag: none;
+  -webkit-touch-callout: none;
 }
 
 .bm-grid-canvas {

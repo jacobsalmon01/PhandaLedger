@@ -27,7 +27,10 @@
       "Bash(find /Users/jake/Development/PhandaLedger/server -type f -name *.js -o -name *.ts)",
       "Bash(npx eslint:*)",
       "Bash(npx vitest:*)",
-      "Bash(wc -l /Users/jake/Development/PhandaLedger/src/**/*.tsx)"
+      "Bash(wc -l /Users/jake/Development/PhandaLedger/src/**/*.tsx)",
+      "Bash(grep -n \"isPlayerMode\" /Users/jake/Development/PhandaLedger/src/components/sections/*.tsx)",
+      "Bash(grep -v \"^--$\")",
+      "Bash(kill 95096)"
     ]
   }
 }

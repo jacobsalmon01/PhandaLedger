@@ -1,0 +1,1801 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   PLAYER VIEW — Skeuomorphic Fantasy Folio
+   All classes prefixed with pv- to avoid collision with index.css
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Design Tokens ──────────────────────────────────────────────────────── */
+:root {
+  /* Wood */
+  --pv-wood-light: #6b4226;
+  --pv-wood-mid: #4a2e15;
+  --pv-wood-dark: #3d2410;
+  --pv-wood-grain: rgba(0,0,0,0.06);
+
+  /* Leather */
+  --pv-leather-light: #4a3520;
+  --pv-leather-mid: #3a2618;
+  --pv-leather-dark: #2e1d10;
+  --pv-leather-edge: #1a0f08;
+
+  /* Parchment */
+  --pv-parchment: #f0e2c8;
+  --pv-parchment-light: #f7edd6;
+  --pv-parchment-dark: #e0ceaa;
+  --pv-parchment-stain: rgba(160,120,60,0.08);
+
+  /* Ink (text on parchment) */
+  --pv-ink: #2a1f0e;
+  --pv-ink-dim: #6b5030;
+  --pv-ink-heading: #3a2610;
+  --pv-ink-accent: #8b3a1a;
+  --pv-ink-faint: #9a8568;
+
+  /* Metal */
+  --pv-gold: #c8a44e;
+  --pv-gold-bright: #e8c850;
+  --pv-gold-dim: #8a7030;
+  --pv-gold-dark: #6a5020;
+  --pv-bronze: #a0783c;
+  --pv-iron: #7a7a7a;
+
+  /* Status */
+  --pv-hp-healthy: #4a8a2a;
+  --pv-hp-wounded: #b89020;
+  --pv-hp-critical: #9b2c2c;
+  --pv-hp-temp: #3a7a9b;
+
+  /* Condition tiers */
+  --pv-tier-danger: #8b2020;
+  --pv-tier-caution: #9a7520;
+  --pv-tier-arcane: #6a3a8a;
+
+  /* Typography */
+  --pv-font-display: 'Cinzel', serif;
+  --pv-font-body: 'Gentium Book Plus', serif;
+  --pv-font-mono: 'Source Code Pro', monospace;
+}
+
+/* ── Root Container — Wood Grain Table ──────────────────────────────────── */
+.pv-root {
+  width: 100vw;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Wood grain background */
+  background:
+    /* Fine grain lines */
+    repeating-linear-gradient(
+      85deg,
+      transparent, transparent 3px,
+      rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px
+    ),
+    /* Wider grain bands */
+    repeating-linear-gradient(
+      88deg,
+      transparent, transparent 18px,
+      rgba(0,0,0,0.03) 18px, rgba(0,0,0,0.03) 22px
+    ),
+    /* Knots */
+    radial-gradient(ellipse at 25% 40%, rgba(60,30,10,0.12) 0%, transparent 30%),
+    radial-gradient(ellipse at 75% 70%, rgba(60,30,10,0.08) 0%, transparent 25%),
+    /* Base wood color with warmth variation */
+    linear-gradient(180deg, #5c3a1e 0%, #4a2e15 30%, #3d2410 70%, #4a2e15 100%);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* ── Character Select — Ornate Portrait Medallions ─────────────────────── */
+.pv-char-select {
+  height: 78px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  /* Carved shelf detail */
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.2) 0%, transparent 40%, transparent 80%, rgba(0,0,0,0.15) 100%);
+  border-bottom: 2px solid rgba(0,0,0,0.3);
+  box-shadow: inset 0 -1px 0 rgba(200,164,78,0.1);
+}
+
+.pv-char-select::-webkit-scrollbar {
+  display: none;
+}
+
+.pv-medallion {
+  flex-shrink: 0;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.25s ease, filter 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pv-medallion--selected {
+  width: 56px;
+  height: 56px;
+  transform: translateY(-2px);
+}
+
+.pv-medallion__frame {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  /* Ornate metallic frame with multiple rings */
+  background:
+    radial-gradient(circle, transparent 60%, rgba(0,0,0,0.3) 100%),
+    linear-gradient(
+      145deg,
+      #8a6a30 0%, #c8a44e 15%, #e8c850 35%,
+      #f8e888 48%, #f0d88a 52%,
+      #e8c850 65%, #c8a44e 80%, #8a6a30 100%
+    );
+  padding: 3px;
+  box-shadow:
+    0 3px 8px rgba(0,0,0,0.6),
+    0 1px 2px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,248,200,0.5),
+    inset 0 -1px 0 rgba(0,0,0,0.3);
+}
+
+/* Ornamental ring detail */
+.pv-medallion__frame::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,240,180,0.2);
+  pointer-events: none;
+}
+
+.pv-medallion--selected .pv-medallion__frame {
+  padding: 3px;
+  box-shadow:
+    0 0 16px rgba(232,200,80,0.5),
+    0 0 6px rgba(200,164,78,0.8),
+    0 3px 8px rgba(0,0,0,0.6),
+    inset 0 1px 0 rgba(255,248,200,0.6),
+    inset 0 -1px 0 rgba(0,0,0,0.2);
+}
+
+.pv-medallion:not(.pv-medallion--selected) .pv-medallion__frame {
+  background:
+    radial-gradient(circle, transparent 60%, rgba(0,0,0,0.3) 100%),
+    linear-gradient(
+      145deg,
+      #5a4a2a 0%, #7a6a40 30%,
+      #8a7a50 48%, #7a6a40 52%,
+      #6a5a30 75%, #5a4a2a 100%
+    );
+  box-shadow:
+    0 2px 5px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,240,180,0.15);
+}
+
+.pv-medallion:not(.pv-medallion--selected):active {
+  transform: scale(0.95);
+}
+
+.pv-medallion__portrait {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  background: var(--pv-leather-mid);
+}
+
+.pv-medallion__initial {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse at 40% 35%, rgba(80,55,25,0.6), transparent 70%),
+    linear-gradient(160deg, #3a2618 0%, #2a1a0e 60%, #1a0f08 100%);
+  color: var(--pv-gold);
+  font-family: var(--pv-font-display);
+  font-size: 18px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+}
+
+.pv-medallion--dead .pv-medallion__portrait,
+.pv-medallion--dead .pv-medallion__initial {
+  filter: grayscale(100%) brightness(0.4);
+}
+
+.pv-medallion__skull {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #e0d0c0;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  pointer-events: none;
+}
+
+/* ── Folio Shell — Leather Bound Book ──────────────────────────────────── */
+.pv-folio {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin: 0 6px 6px;
+  position: relative;
+  overflow: hidden;
+  /* Rich layered leather texture */
+  background:
+    /* Noise grain for leather pores */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E"),
+    /* Worn highlights — edge catching light */
+    radial-gradient(ellipse at 10% 5%, rgba(200,160,80,0.1), transparent 40%),
+    radial-gradient(ellipse at 90% 95%, rgba(200,160,80,0.05), transparent 35%),
+    /* Deep crevice shadows */
+    radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.15), transparent 60%),
+    radial-gradient(ellipse at 50% 0%, rgba(0,0,0,0.1), transparent 50%),
+    /* Leather hide variation */
+    radial-gradient(ellipse at 30% 60%, rgba(70,45,20,0.25), transparent 50%),
+    radial-gradient(ellipse at 70% 30%, rgba(60,40,18,0.2), transparent 45%),
+    /* Base leather with warm grain */
+    linear-gradient(155deg, #4a3520 0%, #3a2618 25%, #2e1d10 50%, #3a2618 75%, #4a3520 100%);
+  border: 3px solid var(--pv-leather-edge);
+  border-radius: 10px;
+  box-shadow:
+    /* Heavy depth shadow */
+    0 12px 40px rgba(0,0,0,0.65),
+    0 4px 12px rgba(0,0,0,0.4),
+    0 1px 3px rgba(0,0,0,0.3),
+    /* Leather edge highlight (top) */
+    inset 0 1px 0 rgba(255,200,100,0.08),
+    /* Leather edge shadow (bottom) */
+    inset 0 -3px 10px rgba(0,0,0,0.45),
+    /* Inner edge warmth */
+    inset 1px 0 0 rgba(120,80,30,0.15),
+    inset -1px 0 0 rgba(120,80,30,0.15);
+}
+
+/* Stitching detail — hand-sewn thread look */
+.pv-folio::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 2px dashed rgba(200,160,80,0.15);
+  border-radius: 7px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Spine shadow — left edge depth */
+.pv-folio::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 14px;
+  background: linear-gradient(90deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.08) 40%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 10px 0 0 10px;
+}
+
+/* Metal corner brackets */
+.pv-folio__corner {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.pv-folio__corner::before,
+.pv-folio__corner::after {
+  content: '';
+  position: absolute;
+  background: linear-gradient(
+    145deg,
+    #b89838 0%, #d4b87a 30%, #f0d88a 50%, #d4b87a 70%, #b89838 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255,240,180,0.4),
+    0 1px 3px rgba(0,0,0,0.4);
+}
+
+.pv-folio__corner--tl { top: 0; left: 0; }
+.pv-folio__corner--tr { top: 0; right: 0; }
+.pv-folio__corner--bl { bottom: 0; left: 0; }
+.pv-folio__corner--br { bottom: 0; right: 0; }
+
+.pv-folio__corner--tl::before { top: 0; left: 0; width: 28px; height: 4px; border-radius: 0 0 3px 0; }
+.pv-folio__corner--tl::after  { top: 0; left: 0; width: 4px; height: 28px; border-radius: 0 0 3px 0; }
+.pv-folio__corner--tr::before { top: 0; right: 0; width: 28px; height: 4px; border-radius: 0 0 0 3px; }
+.pv-folio__corner--tr::after  { top: 0; right: 0; width: 4px; height: 28px; border-radius: 0 0 0 3px; }
+.pv-folio__corner--bl::before { bottom: 0; left: 0; width: 28px; height: 4px; border-radius: 0 3px 0 0; }
+.pv-folio__corner--bl::after  { bottom: 0; left: 0; width: 4px; height: 28px; border-radius: 0 3px 0 0; }
+.pv-folio__corner--br::before { bottom: 0; right: 0; width: 28px; height: 4px; border-radius: 3px 0 0 0; }
+.pv-folio__corner--br::after  { bottom: 0; right: 0; width: 4px; height: 28px; border-radius: 3px 0 0 0; }
+
+/* Rivet on each corner */
+.pv-folio__corner--tl .pv-folio__corner,
+.pv-folio__corner::before { z-index: 1; }
+
+/* Rivet dots */
+.pv-folio__rivet {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #f0d88a 0%, #c8a44e 40%, #8a6a30 100%);
+  border: 1px solid #6a5020;
+  box-shadow:
+    inset 0 1px 0 rgba(255,248,200,0.5),
+    0 1px 2px rgba(0,0,0,0.4);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.pv-folio__rivet--tl { top: 5px; left: 5px; }
+.pv-folio__rivet--tr { top: 5px; right: 5px; }
+.pv-folio__rivet--bl { bottom: 5px; left: 5px; }
+.pv-folio__rivet--br { bottom: 5px; right: 5px; }
+
+/* ── Folio Tabs — Leather Page Tabs ────────────────────────────────────── */
+.pv-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  padding: 0 12px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 3;
+}
+
+.pv-tab {
+  flex: 1;
+  max-width: 120px;
+  padding: 11px 6px 7px;
+  border: none;
+  cursor: pointer;
+  font-family: var(--pv-font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s ease;
+  border-radius: 7px 7px 0 0;
+  position: relative;
+
+  /* Inactive tab — sunken leather with wear */
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, rgba(80,55,30,0.5) 0%, rgba(45,30,15,0.85) 100%);
+  color: rgba(200,164,78,0.45);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,0.35),
+    inset 0 -1px 0 rgba(0,0,0,0.15),
+    0 -1px 0 rgba(0,0,0,0.2);
+  border-top: 1px solid rgba(100,70,30,0.2);
+  border-left: 1px solid rgba(100,70,30,0.1);
+  border-right: 1px solid rgba(100,70,30,0.1);
+}
+
+.pv-tab--active {
+  /* Active tab — raised parchment page, physically connected */
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, #f5ecd4 0%, #ead6b4 100%);
+  color: var(--pv-ink-heading);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+  box-shadow:
+    0 -3px 6px rgba(0,0,0,0.12),
+    -2px 0 4px rgba(0,0,0,0.06),
+    2px 0 4px rgba(0,0,0,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.4);
+  z-index: 1;
+  border-top: 1px solid rgba(200,164,78,0.25);
+  border-left: 1px solid rgba(200,164,78,0.15);
+  border-right: 1px solid rgba(200,164,78,0.15);
+}
+
+.pv-tab:not(.pv-tab--active):active {
+  background:
+    linear-gradient(180deg, rgba(90,65,35,0.6) 0%, rgba(55,38,18,0.9) 100%);
+  color: rgba(200,164,78,0.6);
+}
+
+/* ── Parchment Content Area ────────────────────────────────────────────── */
+.pv-parchment {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 14px 24px;
+  position: relative;
+
+  /* Rich aged parchment texture */
+  background:
+    /* Heavy aging stains — like coffee rings and foxing */
+    radial-gradient(ellipse at 75% 10%, rgba(170,130,60,0.1), transparent 40%),
+    radial-gradient(ellipse at 15% 70%, rgba(160,120,50,0.09), transparent 35%),
+    radial-gradient(ellipse at 85% 55%, rgba(150,110,40,0.07), transparent 28%),
+    radial-gradient(ellipse at 40% 90%, rgba(140,100,40,0.06), transparent 30%),
+    radial-gradient(ellipse at 60% 40%, rgba(180,140,70,0.04), transparent 45%),
+    /* Paper fiber noise */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"),
+    /* Base aged parchment with warm tone */
+    linear-gradient(175deg, #f5ecd4 0%, #f0e2c8 20%, #ead6b4 60%, #e2cab0 100%);
+  color: var(--pv-ink);
+  font-family: var(--pv-font-body);
+
+  /* Deep inner shadow from leather binding pressing against pages */
+  box-shadow:
+    inset 0 4px 12px rgba(0,0,0,0.15),
+    inset 0 -2px 8px rgba(0,0,0,0.06),
+    inset 4px 0 8px rgba(0,0,0,0.05),
+    inset -2px 0 6px rgba(0,0,0,0.03),
+    inset 0 0 0 1px rgba(180,140,80,0.12);
+}
+
+/* Scrollbar styling */
+.pv-parchment::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pv-parchment::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pv-parchment::-webkit-scrollbar-thumb {
+  background: rgba(100,70,30,0.3);
+  border-radius: 3px;
+}
+
+/* ── Section Headers — Embossed Brass Rule ──────────────────────────────── */
+.pv-section-title {
+  font-family: var(--pv-font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pv-ink-dim);
+  /* Embossed into parchment effect */
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.6),
+    0 -1px 0 rgba(0,0,0,0.08);
+  margin: 18px 0 10px;
+  padding-bottom: 6px;
+  /* Decorative brass rule */
+  border-bottom: none;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(180,140,60,0.25) 15%,
+    rgba(200,164,78,0.35) 50%,
+    rgba(180,140,60,0.25) 85%,
+    transparent 100%
+  );
+  background-size: 100% 1px;
+  background-position: bottom;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+/* Highlight line below brass rule */
+.pv-section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,0.35),
+    transparent
+  );
+}
+
+.pv-section-title:first-child {
+  margin-top: 0;
+}
+
+.pv-section-title__icon {
+  font-size: 0.85rem;
+  opacity: 0.5;
+  filter: drop-shadow(0 1px 0 rgba(255,255,255,0.5));
+}
+
+/* ── Decorative Divider — Ornamental Rule ──────────────────────────────── */
+.pv-divider {
+  height: 12px;
+  margin: 14px 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Main brass rule line */
+.pv-divider::before {
+  content: '';
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(180,140,60,0.3) 15%,
+    rgba(200,164,78,0.4) 50%,
+    rgba(180,140,60,0.3) 85%,
+    transparent 100%
+  );
+}
+
+/* Highlight line below */
+.pv-divider::after {
+  content: '';
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+  transform: translateY(1px);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,255,255,0.3) 20%,
+    rgba(255,255,255,0.4) 50%,
+    rgba(255,255,255,0.3) 80%,
+    transparent 100%
+  );
+}
+
+/* ── Character Header — Portrait & Identity ────────────────────────────── */
+.pv-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pv-portrait-frame {
+  width: 76px;
+  height: 76px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  position: relative;
+  /* Ornate gilded metal frame */
+  background:
+    /* Multi-stop gold gradient for realistic metal */
+    linear-gradient(
+      145deg,
+      #7a5a20 0%, #a08040 8%, #c8a44e 18%, #e0c060 28%,
+      #f0d88a 38%, #f8e898 48%, #f0d88a 52%,
+      #e0c060 62%, #c8a44e 72%, #a08040 85%, #7a5a20 100%
+    );
+  padding: 4px;
+  box-shadow:
+    /* Heavy drop shadow */
+    0 4px 12px rgba(0,0,0,0.5),
+    0 2px 4px rgba(0,0,0,0.3),
+    /* Highlight edge */
+    inset 0 1px 0 rgba(255,248,200,0.5),
+    /* Shadow edge */
+    inset 0 -1px 0 rgba(0,0,0,0.25);
+}
+
+/* Inner decorative border */
+.pv-portrait-frame::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border: 1px solid rgba(0,0,0,0.2);
+  border-radius: 5px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Outer decorative ring */
+.pv-portrait-frame::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border: 1px solid rgba(200,164,78,0.3);
+  border-radius: 7px;
+  pointer-events: none;
+}
+
+.pv-portrait-frame img {
+  width: 100%;
+  height: 100%;
+  border-radius: 3px;
+  object-fit: cover;
+  display: block;
+}
+
+.pv-portrait-frame__placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(100,70,30,0.3), transparent 70%),
+    linear-gradient(180deg, #3a2a1a 0%, #2a1a0e 100%);
+  color: var(--pv-gold);
+  font-family: var(--pv-font-display);
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.pv-identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.pv-name {
+  font-family: var(--pv-font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--pv-ink-heading);
+  /* Deep embossed text effect */
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.4),
+    0 -1px 0 rgba(0,0,0,0.1),
+    0 2px 3px rgba(0,0,0,0.06);
+  line-height: 1.2;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pv-tagline {
+  font-family: var(--pv-font-body);
+  font-size: 0.85rem;
+  color: var(--pv-ink-dim);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Status Badges — Embossed Metal Tokens ─────────────────────────────── */
+.pv-badges {
+  display: flex;
+  gap: 5px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.pv-badge {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 9px;
+  border-radius: 10px;
+  font-family: var(--pv-font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  /* Embossed metal token */
+  background:
+    radial-gradient(ellipse at 50% 20%, rgba(255,248,200,0.1), transparent 60%),
+    linear-gradient(180deg, rgba(220,180,100,0.14) 0%, rgba(180,140,60,0.08) 100%);
+  border: 1px solid rgba(180,140,60,0.28);
+  color: var(--pv-ink-heading);
+  box-shadow:
+    0 1px 3px rgba(0,0,0,0.1),
+    inset 0 1px 0 rgba(255,255,255,0.22),
+    inset 0 -1px 0 rgba(0,0,0,0.05);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.3);
+}
+
+.pv-badge__icon {
+  font-size: 0.68rem;
+  opacity: 0.6;
+}
+
+.pv-badge--ac {
+  /* Shield-like — more prominent gold */
+  background:
+    radial-gradient(ellipse at 50% 20%, rgba(255,248,200,0.18), transparent 55%),
+    linear-gradient(180deg, rgba(230,190,100,0.2) 0%, rgba(200,164,78,0.12) 100%);
+  border-color: rgba(200,164,78,0.4);
+  font-weight: 700;
+  box-shadow:
+    0 1px 4px rgba(0,0,0,0.12),
+    0 0 4px rgba(200,164,78,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.3),
+    inset 0 -1px 0 rgba(0,0,0,0.05);
+}
+
+/* ── HP Display — Fantasy Life Bar ─────────────────────────────────────── */
+.pv-hp {
+  margin: 12px 0;
+  position: relative;
+}
+
+.pv-hp__bar-wrap {
+  position: relative;
+  height: 36px;
+  border-radius: 18px;
+  overflow: hidden;
+  /* Metallic frame encasing the life gauge */
+  background:
+    /* Inner dark void */
+    linear-gradient(180deg, #1a120a 0%, #2a1a0e 40%, #1a120a 100%);
+  border: 3px solid transparent;
+  /* Multi-ring metal bezel */
+  outline: 1px solid rgba(200,164,78,0.2);
+  /* Fake metal border using box-shadow stack */
+  box-shadow:
+    /* Gold outer ring */
+    0 0 0 2px #8a6a30,
+    0 0 0 3px rgba(200,164,78,0.4),
+    /* Drop shadow */
+    0 3px 8px rgba(0,0,0,0.4),
+    0 1px 3px rgba(0,0,0,0.3),
+    /* Inner recess */
+    inset 0 3px 8px rgba(0,0,0,0.7),
+    inset 0 -1px 3px rgba(0,0,0,0.4),
+    inset 0 0 2px rgba(0,0,0,0.5);
+}
+
+.pv-hp__bar-inner {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  bottom: 2px;
+  border-radius: 12px;
+  transition: width 0.4s ease, background 0.4s ease;
+  min-width: 8px;
+}
+
+/* Glass reflection */
+.pv-hp__bar-inner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 4px;
+  right: 4px;
+  height: 40%;
+  border-radius: 8px 8px 50% 50%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.25) 0%, transparent 100%);
+}
+
+/* Inner glow */
+.pv-hp__bar-inner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  box-shadow: inset 0 0 8px rgba(255,255,255,0.15);
+}
+
+.pv-hp__bar-inner--healthy {
+  background: linear-gradient(180deg, #6aaa4a 0%, #4a8a2a 50%, #3a7a1a 100%);
+  box-shadow: 0 0 8px rgba(80,160,40,0.3);
+}
+
+.pv-hp__bar-inner--wounded {
+  background: linear-gradient(180deg, #d4a830 0%, #b89020 50%, #9a7810 100%);
+  box-shadow: 0 0 8px rgba(180,140,30,0.3);
+}
+
+.pv-hp__bar-inner--critical {
+  background: linear-gradient(180deg, #c83030 0%, #9b2c2c 50%, #7a1a1a 100%);
+  box-shadow: 0 0 8px rgba(180,40,40,0.4);
+  animation: pv-hp-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pv-hp-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
+}
+
+/* Temp HP shimmer overlay */
+.pv-hp__temp-overlay {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(58,122,155,0.5) 0%, rgba(58,122,155,0.3) 100%);
+  box-shadow: 0 0 8px rgba(58,122,155,0.4);
+  pointer-events: none;
+  transition: width 0.4s ease;
+}
+
+.pv-hp__temp-overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 4px;
+  right: 4px;
+  height: 40%;
+  border-radius: 8px 8px 50% 50%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+}
+
+.pv-hp__label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--pv-font-mono);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+  z-index: 1;
+  letter-spacing: 0.05em;
+}
+
+.pv-hp__label-temp {
+  font-size: 0.7rem;
+  color: #8dd4f0;
+  margin-left: 6px;
+  font-weight: 400;
+}
+
+.pv-hp__dead {
+  text-align: center;
+  padding: 8px 0;
+}
+
+.pv-hp__dead-skull {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 2px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.pv-hp__dead-text {
+  font-family: var(--pv-font-display);
+  font-size: 0.8rem;
+  color: var(--pv-tier-danger);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+/* ── Conditions — Wax Seal Tokens ──────────────────────────────────────── */
+.pv-conditions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.pv-condition-seal {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-family: var(--pv-font-display);
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  position: relative;
+  box-shadow:
+    0 2px 4px rgba(0,0,0,0.2),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+  animation: pv-seal-glow 3s ease-in-out infinite;
+}
+
+@keyframes pv-seal-glow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.08); }
+}
+
+.pv-condition-seal--danger {
+  background: linear-gradient(180deg, #b03030 0%, #8b2020 100%);
+  border: 1px solid #6a1515;
+  color: #f0d0d0;
+}
+
+.pv-condition-seal--caution {
+  background: linear-gradient(180deg, #b09030 0%, #9a7520 100%);
+  border: 1px solid #7a5a10;
+  color: #f0e8c0;
+}
+
+.pv-condition-seal--arcane {
+  background: linear-gradient(180deg, #8050a0 0%, #6a3a8a 100%);
+  border: 1px solid #502870;
+  color: #e0d0f0;
+}
+
+.pv-condition-seal__icon {
+  font-size: 0.75rem;
+}
+
+.pv-condition-seal__rounds {
+  font-family: var(--pv-font-mono);
+  font-size: 0.6rem;
+  opacity: 0.8;
+  margin-left: 2px;
+}
+
+.pv-exhaustion {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-family: var(--pv-font-display);
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, #6a4a2a 0%, #4a3018 100%);
+  border: 1px solid #3a2010;
+  color: #e0c890;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.pv-exhaustion__pips {
+  display: flex;
+  gap: 2px;
+}
+
+.pv-exhaustion__pip {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(200,164,78,0.2);
+  border: 1px solid rgba(200,164,78,0.3);
+}
+
+.pv-exhaustion__pip--filled {
+  background: #c83030;
+  border-color: #a02020;
+  box-shadow: 0 0 3px rgba(200,48,48,0.4);
+}
+
+/* ── Ability Medallions — Embossed Metal Coins ─────────────────────────── */
+.pv-abilities {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.pv-ability {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 4px 8px;
+  border-radius: 10px;
+  position: relative;
+
+  /* Raised metal plaque effect */
+  background:
+    /* Central sheen */
+    radial-gradient(ellipse at 50% 25%, rgba(255,248,200,0.15), transparent 55%),
+    /* Warm base */
+    linear-gradient(180deg, rgba(220,180,100,0.14) 0%, rgba(180,140,60,0.08) 50%, rgba(160,120,50,0.12) 100%);
+  border: 1px solid rgba(160,120,60,0.3);
+  box-shadow:
+    /* Raised from parchment */
+    0 2px 4px rgba(0,0,0,0.12),
+    0 1px 1px rgba(0,0,0,0.08),
+    /* Top edge highlight */
+    inset 0 1px 0 rgba(255,255,255,0.25),
+    /* Bottom edge shadow */
+    inset 0 -1px 0 rgba(0,0,0,0.06);
+}
+
+/* Decorative inner border ring */
+.pv-ability::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 7px;
+  border: 1px solid rgba(200,164,78,0.12);
+  pointer-events: none;
+}
+
+.pv-ability--save-prof {
+  border-color: rgba(200,164,78,0.45);
+  background:
+    radial-gradient(ellipse at 50% 25%, rgba(255,248,200,0.22), transparent 55%),
+    linear-gradient(180deg, rgba(220,180,100,0.2) 0%, rgba(200,164,78,0.12) 50%, rgba(180,140,60,0.16) 100%);
+  box-shadow:
+    0 2px 5px rgba(0,0,0,0.14),
+    0 0 6px rgba(200,164,78,0.1),
+    inset 0 1px 0 rgba(255,255,255,0.3),
+    inset 0 -1px 0 rgba(0,0,0,0.06);
+}
+
+.pv-ability__name {
+  font-family: var(--pv-font-display);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pv-ink-dim);
+}
+
+.pv-ability__score {
+  font-family: var(--pv-font-mono);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--pv-ink-heading);
+  line-height: 1.2;
+}
+
+.pv-ability__mod {
+  font-family: var(--pv-font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--pv-ink-accent);
+  line-height: 1;
+}
+
+.pv-ability__save {
+  font-family: var(--pv-font-mono);
+  font-size: 0.65rem;
+  color: var(--pv-ink-dim);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.pv-ability__save-icon {
+  font-size: 0.5rem;
+  color: var(--pv-gold-dim);
+}
+
+/* ── Skills Grid ───────────────────────────────────────────────────────── */
+.pv-skills {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px 12px;
+  margin: 4px 0;
+}
+
+.pv-skill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 0;
+  font-size: 0.78rem;
+}
+
+.pv-skill__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: rgba(160,120,60,0.2);
+  border: 1px solid rgba(160,120,60,0.3);
+}
+
+.pv-skill__dot--prof {
+  background: var(--pv-gold);
+  border-color: var(--pv-gold-dim);
+  box-shadow: 0 0 3px rgba(200,164,78,0.3);
+}
+
+.pv-skill__name {
+  flex: 1;
+  color: var(--pv-ink);
+  font-family: var(--pv-font-body);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pv-skill__bonus {
+  font-family: var(--pv-font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--pv-ink-heading);
+  min-width: 24px;
+  text-align: right;
+}
+
+/* ── Resources — Gemstone Pips ─────────────────────────────────────────── */
+.pv-resources {
+  margin: 8px 0;
+}
+
+.pv-resource {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+.pv-resource + .pv-resource {
+  border-top: 1px solid rgba(160,120,60,0.12);
+}
+
+.pv-resource__name {
+  font-family: var(--pv-font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--pv-ink-heading);
+  min-width: 0;
+  flex-shrink: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pv-resource__recharge {
+  font-size: 0.6rem;
+  color: var(--pv-ink-faint);
+  margin-left: 2px;
+}
+
+.pv-resource__pips {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.pv-resource__pip {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid rgba(160,120,60,0.3);
+  background: rgba(160,120,60,0.08);
+  position: relative;
+}
+
+.pv-resource__pip--available {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,0.35) 0%, transparent 45%),
+    linear-gradient(135deg, #5ab0e8 0%, #3a8ad0 40%, #2070b0 80%, #1860a0 100%);
+  border-color: #1a4a8a;
+  box-shadow:
+    0 0 5px rgba(60,140,220,0.4),
+    0 0 2px rgba(60,140,220,0.2),
+    inset 0 1px 0 rgba(255,255,255,0.3),
+    inset 0 -1px 0 rgba(0,0,0,0.2);
+}
+
+.pv-resource__count {
+  font-family: var(--pv-font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--pv-ink-heading);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* ── Weapons — Brass Plaques ───────────────────────────────────────────── */
+.pv-weapons {
+  margin: 8px 0;
+}
+
+.pv-weapon {
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  position: relative;
+
+  /* Engraved brass plaque */
+  background:
+    /* Sheen highlight */
+    radial-gradient(ellipse at 30% 20%, rgba(255,248,200,0.08), transparent 50%),
+    /* Warm metal base */
+    linear-gradient(180deg, rgba(220,180,100,0.12) 0%, rgba(200,164,78,0.06) 50%, rgba(180,140,60,0.1) 100%);
+  border: 1px solid rgba(180,140,60,0.25);
+  box-shadow:
+    /* Raised from parchment */
+    0 2px 4px rgba(0,0,0,0.1),
+    0 1px 1px rgba(0,0,0,0.06),
+    /* Top bevel */
+    inset 0 1px 0 rgba(255,255,255,0.2),
+    /* Bottom bevel */
+    inset 0 -1px 0 rgba(0,0,0,0.05);
+}
+
+.pv-weapon__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pv-weapon__name {
+  font-family: var(--pv-font-display);
+  font-size: 0.82rem;
+  color: var(--pv-ink-heading);
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pv-weapon__hit {
+  font-family: var(--pv-font-mono);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--pv-ink-accent);
+  flex-shrink: 0;
+}
+
+.pv-weapon__bottom {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.pv-weapon__damage {
+  font-family: var(--pv-font-mono);
+  font-size: 0.78rem;
+  color: var(--pv-ink);
+}
+
+.pv-weapon__tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.pv-weapon__tag {
+  font-family: var(--pv-font-body);
+  font-size: 0.6rem;
+  color: var(--pv-ink-faint);
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(160,120,60,0.08);
+  border: 1px solid rgba(160,120,60,0.12);
+  text-transform: lowercase;
+}
+
+.pv-weapon__sneak {
+  font-family: var(--pv-font-mono);
+  font-size: 0.7rem;
+  color: var(--pv-tier-arcane);
+  margin-top: 2px;
+}
+
+/* ── Spell Attack / Save DC Badges ─────────────────────────────────────── */
+.pv-spell-meta {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  justify-content: center;
+}
+
+.pv-spell-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 8px;
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(255,240,180,0.15), transparent 60%),
+    linear-gradient(180deg, rgba(200,164,78,0.15) 0%, rgba(160,120,60,0.08) 100%);
+  border: 1px solid rgba(160,120,60,0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    0 1px 3px rgba(0,0,0,0.1);
+}
+
+.pv-spell-badge__label {
+  font-family: var(--pv-font-display);
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pv-ink-dim);
+}
+
+.pv-spell-badge__value {
+  font-family: var(--pv-font-mono);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--pv-ink-heading);
+  line-height: 1.2;
+}
+
+/* ── Spell Slots — Gemstones ───────────────────────────────────────────── */
+.pv-spell-slots {
+  margin: 8px 0 12px;
+}
+
+.pv-slot-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+}
+
+.pv-slot-row__level {
+  font-family: var(--pv-font-display);
+  font-size: 0.6rem;
+  color: var(--pv-ink-dim);
+  width: 20px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.pv-slot-row__gems {
+  display: flex;
+  gap: 4px;
+}
+
+.pv-gem {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  position: relative;
+  transform: rotate(45deg);
+}
+
+.pv-gem--available {
+  background:
+    /* Inner fire */
+    radial-gradient(circle at 35% 35%, rgba(255,255,255,0.4) 0%, transparent 40%),
+    /* Core color */
+    linear-gradient(135deg, #80d0ff 0%, #4aa0e0 30%, #2a80c0 60%, #1a60a0 100%);
+  border: 1px solid #1a5090;
+  box-shadow:
+    /* Outer glow */
+    0 0 8px rgba(80,160,240,0.5),
+    0 0 3px rgba(80,160,240,0.3),
+    /* Facet highlights */
+    inset 0 1px 0 rgba(255,255,255,0.4),
+    inset -1px 0 0 rgba(255,255,255,0.1),
+    /* Depth */
+    inset 0 -1px 2px rgba(0,0,0,0.3);
+}
+
+.pv-gem--used {
+  background:
+    radial-gradient(circle at 35% 35%, rgba(100,80,50,0.3) 0%, transparent 40%),
+    linear-gradient(135deg, #4a3828 0%, #3a2818 50%, #2a1808 100%);
+  border: 1px solid rgba(80,60,30,0.4);
+  box-shadow:
+    inset 0 1px 3px rgba(0,0,0,0.4),
+    inset 0 -1px 0 rgba(100,80,40,0.1);
+}
+
+/* ── Spell List — Scroll Cards ─────────────────────────────────────────── */
+.pv-spells {
+  margin: 8px 0;
+}
+
+.pv-spell-group {
+  margin-bottom: 8px;
+}
+
+.pv-spell-group__header {
+  font-family: var(--pv-font-display);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pv-ink-dim);
+  margin-bottom: 4px;
+  padding-left: 2px;
+}
+
+.pv-spell {
+  padding: 5px 8px;
+  margin-bottom: 3px;
+  border-radius: 4px;
+  background: rgba(200,164,78,0.04);
+  border: 1px solid rgba(160,120,60,0.1);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pv-spell:active {
+  background: rgba(200,164,78,0.08);
+}
+
+.pv-spell--active {
+  border-color: rgba(100,80,200,0.3);
+  background: rgba(100,80,200,0.06);
+  box-shadow: 0 0 6px rgba(100,80,200,0.15);
+}
+
+.pv-spell--concentration.pv-spell--active {
+  border-color: rgba(200,120,40,0.4);
+  background: rgba(200,120,40,0.06);
+  box-shadow: 0 0 6px rgba(200,120,40,0.2);
+  animation: pv-concentration-glow 2s ease-in-out infinite;
+}
+
+@keyframes pv-concentration-glow {
+  0%, 100% { box-shadow: 0 0 6px rgba(200,120,40,0.2); }
+  50% { box-shadow: 0 0 10px rgba(200,120,40,0.35); }
+}
+
+.pv-spell--unprepared {
+  opacity: 0.45;
+}
+
+.pv-spell__top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pv-spell__conc-icon {
+  font-size: 0.65rem;
+  color: var(--pv-tier-arcane);
+  flex-shrink: 0;
+}
+
+.pv-spell__name {
+  font-family: var(--pv-font-body);
+  font-size: 0.82rem;
+  color: var(--pv-ink);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pv-spell__rounds {
+  font-family: var(--pv-font-mono);
+  font-size: 0.65rem;
+  color: var(--pv-tier-arcane);
+  flex-shrink: 0;
+  padding: 1px 5px;
+  border-radius: 8px;
+  background: rgba(100,80,200,0.1);
+  border: 1px solid rgba(100,80,200,0.15);
+}
+
+.pv-spell__meta {
+  font-size: 0.68rem;
+  color: var(--pv-ink-faint);
+  margin-top: 1px;
+  display: flex;
+  gap: 8px;
+}
+
+.pv-spell__notes {
+  font-family: var(--pv-font-body);
+  font-size: 0.72rem;
+  color: var(--pv-ink-dim);
+  font-style: italic;
+}
+
+.pv-spell__desc {
+  font-family: var(--pv-font-body);
+  font-size: 0.75rem;
+  color: var(--pv-ink);
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(160,120,60,0.12);
+  line-height: 1.4;
+}
+
+.pv-spell__desc p {
+  margin: 0 0 4px;
+}
+
+/* ── Inventory — Parchment List ────────────────────────────────────────── */
+.pv-gold-display {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 8px 0 12px;
+  flex-wrap: wrap;
+}
+
+.pv-coin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 44px;
+}
+
+.pv-coin__icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--pv-font-display);
+  font-size: 0.55rem;
+  font-weight: 700;
+  box-shadow:
+    0 2px 4px rgba(0,0,0,0.2),
+    inset 0 1px 0 rgba(255,255,255,0.25),
+    inset 0 -1px 0 rgba(0,0,0,0.15);
+}
+
+.pv-coin--cp .pv-coin__icon {
+  background: linear-gradient(145deg, #b87333 0%, #a06028 50%, #8a5020 100%);
+  border: 1px solid #6a4018;
+  color: #e8c0a0;
+}
+
+.pv-coin--sp .pv-coin__icon {
+  background: linear-gradient(145deg, #c0c0c0 0%, #a0a0a0 50%, #888888 100%);
+  border: 1px solid #707070;
+  color: #f0f0f0;
+}
+
+.pv-coin--ep .pv-coin__icon {
+  background: linear-gradient(145deg, #b0c0d0 0%, #90a0b0 50%, #708090 100%);
+  border: 1px solid #607080;
+  color: #e0e8f0;
+}
+
+.pv-coin--gp .pv-coin__icon {
+  background: linear-gradient(145deg, #e8c850 0%, #c8a44e 50%, #a88030 100%);
+  border: 1px solid #8a6820;
+  color: #fff8e0;
+}
+
+.pv-coin--pp .pv-coin__icon {
+  background: linear-gradient(145deg, #e8e8f0 0%, #c8c8d0 50%, #a8a8b0 100%);
+  border: 1px solid #8888a0;
+  color: #ffffff;
+}
+
+.pv-coin__amount {
+  font-family: var(--pv-font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--pv-ink-heading);
+  margin-top: 2px;
+}
+
+.pv-coin__label {
+  font-family: var(--pv-font-display);
+  font-size: 0.5rem;
+  color: var(--pv-ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pv-items {
+  margin: 8px 0;
+}
+
+.pv-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(160,120,60,0.1);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pv-item:last-child {
+  border-bottom: none;
+}
+
+.pv-item:active {
+  background: rgba(200,164,78,0.06);
+}
+
+.pv-item__equipped {
+  width: 14px;
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  color: var(--pv-gold);
+  text-align: center;
+}
+
+.pv-item__name {
+  flex: 1;
+  font-family: var(--pv-font-body);
+  font-size: 0.82rem;
+  color: var(--pv-ink);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pv-item__qty {
+  font-family: var(--pv-font-mono);
+  font-size: 0.72rem;
+  color: var(--pv-ink-dim);
+  flex-shrink: 0;
+}
+
+.pv-item__value {
+  font-family: var(--pv-font-mono);
+  font-size: 0.68rem;
+  color: var(--pv-ink-faint);
+  flex-shrink: 0;
+}
+
+.pv-item__desc {
+  padding: 6px 0 6px 20px;
+  font-family: var(--pv-font-body);
+  font-size: 0.75rem;
+  color: var(--pv-ink-dim);
+  line-height: 1.4;
+  border-bottom: 1px solid rgba(160,120,60,0.1);
+}
+
+.pv-item__modifiers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px 0 4px 20px;
+}
+
+.pv-item__modifier-tag {
+  font-family: var(--pv-font-mono);
+  font-size: 0.6rem;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(100,80,200,0.08);
+  border: 1px solid rgba(100,80,200,0.12);
+  color: var(--pv-ink-dim);
+}
+
+/* ── Empty State — Waiting for DM ──────────────────────────────────────── */
+.pv-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px;
+}
+
+.pv-empty__icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  opacity: 0.5;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.pv-empty__title {
+  font-family: var(--pv-font-display);
+  font-size: 1.1rem;
+  color: var(--pv-gold);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  margin-bottom: 8px;
+}
+
+.pv-empty__text {
+  font-family: var(--pv-font-body);
+  font-size: 0.9rem;
+  color: rgba(200,164,78,0.6);
+  max-width: 280px;
+  line-height: 1.4;
+}
+
+/* ── Death Overlay ─────────────────────────────────────────────────────── */
+.pv-death-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10,8,6,0.85);
+  border-radius: 6px;
+}
+
+.pv-death-overlay__content {
+  text-align: center;
+}
+
+.pv-death-overlay__skull {
+  font-size: 4rem;
+  display: block;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+  margin-bottom: 8px;
+}
+
+.pv-death-overlay__name {
+  font-family: var(--pv-font-display);
+  font-size: 1.2rem;
+  color: var(--pv-gold);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.pv-death-overlay__tagline {
+  font-family: var(--pv-font-body);
+  font-size: 0.85rem;
+  color: rgba(200,164,78,0.6);
+  font-style: italic;
+}
+
+/* ── No items/spells/weapons message ───────────────────────────────────── */
+.pv-none {
+  text-align: center;
+  padding: 20px 16px;
+  font-family: var(--pv-font-body);
+  font-size: 0.82rem;
+  color: var(--pv-ink-faint);
+  font-style: italic;
+  /* Faded quill-written note feel */
+  text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+  opacity: 0.7;
+}
+
+/* ── Passive Perception / Speed / Darkvision / Hit Dice inline ─────────── */
+.pv-prof-bonus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 4px 0 0;
+  font-family: var(--pv-font-body);
+  font-size: 0.75rem;
+  color: var(--pv-ink-dim);
+}
+
+.pv-prof-bonus__value {
+  font-family: var(--pv-font-mono);
+  font-weight: 600;
+  color: var(--pv-ink-heading);
+}
+
+/* ── Transition animation for page content ─────────────────────────────── */
+.pv-page-enter {
+  animation: pv-fade-in 0.15s ease-out;
+}
+
+@keyframes pv-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+@media (min-width: 500px) {
+  .pv-folio {
+    margin: 0 16px 16px;
+  }
+
+  .pv-parchment {
+    padding: 20px 18px 28px;
+  }
+
+  .pv-abilities {
+    gap: 10px;
+  }
+}
+
+@media (min-width: 768px) {
+  .pv-folio {
+    max-width: 540px;
+    margin: 0 auto 16px;
+  }
+
+  .pv-char-select {
+    justify-content: center;
+  }
+}
+
+/* ── Print-safe: hide in print ─────────────────────────────────────────── */
+@media print {
+  .pv-root { display: none; }
+}

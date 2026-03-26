@@ -1,6 +1,7 @@
 import { useStore } from '../../store/useStore';
 import { onStatusChange, type WsStatus } from '../../store/wsClient';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
+import { Swords, Sparkle, Wand, Backpack } from 'lucide-react';
 import { PartyStrip } from './PartyStrip';
 import { HeroCard } from './HeroCard';
 import { CombatCard } from './CombatCard';
@@ -17,11 +18,11 @@ function useWsStatus(): WsStatus {
 
 type CardTab = 'combat' | 'abilities' | 'spells' | 'inventory';
 
-const CARD_TABS: { id: CardTab; icon: string; label: string }[] = [
-  { id: 'combat', icon: '\u2694', label: 'Combat' },
-  { id: 'abilities', icon: '\u2726', label: 'Abilities' },
-  { id: 'spells', icon: '\u2604', label: 'Spells' },
-  { id: 'inventory', icon: '\u26b2', label: 'Items' },
+const CARD_TABS: { id: CardTab; icon: ReactNode; label: string }[] = [
+  { id: 'combat', icon: <Swords size={16} strokeWidth={1.5} />, label: 'Combat' },
+  { id: 'abilities', icon: <Sparkle size={16} strokeWidth={1.5} />, label: 'Abilities' },
+  { id: 'spells', icon: <Wand size={16} strokeWidth={1.5} />, label: 'Spells' },
+  { id: 'inventory', icon: <Backpack size={16} strokeWidth={1.5} />, label: 'Items' },
 ];
 
 export function PlayerView() {

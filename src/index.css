@@ -8928,13 +8928,14 @@ input[type="number"] { -moz-appearance: textfield; }
 /* ── Player banner ───────────────────────────────────────────────────────── */
 
 /*
- * On desktop: compact floating pill anchored to the bottom-right corner.
+ * On desktop: compact floating pill centered at the bottom.
  * On mobile:  full-width strip along the bottom edge (more readable on small screens).
  */
 .player-banner {
   position: fixed;
   bottom: 16px;
-  right: 20px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 100;
   display: inline-flex;
   align-items: center;
@@ -9001,8 +9002,9 @@ input[type="number"] { -moz-appearance: textfield; }
 @media (max-width: 600px) {
   .player-banner {
     bottom: 0;
-    right: 0;
     left: 0;
+    right: 0;
+    transform: none;
     border-radius: 0;
     border-top: 1px solid var(--border-inner);
     border-bottom: none;
@@ -10113,8 +10115,7 @@ input[type="number"] { -moz-appearance: textfield; }
   cursor: grab;
   touch-action: none;
   position: relative;
-  background:
-    radial-gradient(circle at 50% 50%, rgba(30, 26, 22, 1) 0%, rgba(14, 12, 10, 1) 100%);
+  background: #000;
 }
 
 .bm-viewport--panning {
@@ -11594,8 +11595,8 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .pv-hero__portrait-frame {
   position: relative;
-  width: 160px;
-  height: 160px;
+  width: 110px;
+  height: 110px;
   border-radius: 50%;
   padding: 5px;
   background: linear-gradient(145deg, #d4b44e 0%, #a88930 40%, #c8a43e 60%, #e0c860 100%);
@@ -11626,7 +11627,7 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .pv-hero__portrait-empty {
   font-family: var(--font-display);
-  font-size: 3rem;
+  font-size: 2.2rem;
   color: var(--border-gold-dim);
   opacity: 0.4;
 }
@@ -11789,14 +11790,14 @@ input[type="number"] { -moz-appearance: textfield; }
   filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
 }
 
-.pv-badge--ac svg { width: 40px; height: 48px; }
-.pv-badge--spd svg { width: 56px; height: 36px; }
-.pv-badge--pp svg { width: 48px; height: 30px; }
-.pv-badge--dv svg { width: 44px; height: 36px; }
+.pv-badge--ac svg { width: 52px; height: 62px; }
+.pv-badge--spd svg { width: 70px; height: 46px; }
+.pv-badge--pp svg { width: 60px; height: 38px; }
+.pv-badge--dv svg { width: 56px; height: 46px; }
 
 .pv-badge__label {
   font-family: var(--font-display);
-  font-size: 6px;
+  font-size: 7px;
   fill: var(--text-dim);
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -11804,7 +11805,7 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .pv-badge__value {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 16px;
   fill: var(--text-bright);
   font-weight: 700;
 }
@@ -12729,8 +12730,8 @@ input[type="number"] { -moz-appearance: textfield; }
 
 @media (min-width: 480px) {
   .pv-hero__portrait-frame {
-    width: 180px;
-    height: 180px;
+    width: 130px;
+    height: 130px;
   }
 
   .pv-hero__name {
@@ -12763,8 +12764,8 @@ input[type="number"] { -moz-appearance: textfield; }
 
 @media (min-width: 768px) {
   .pv-hero__portrait-frame {
-    width: 200px;
-    height: 200px;
+    width: 150px;
+    height: 150px;
     padding: 6px;
     box-shadow:
       0 0 0 4px #5a4020,
@@ -12812,8 +12813,8 @@ input[type="number"] { -moz-appearance: textfield; }
   }
 
   .pv-hero__portrait-frame {
-    width: 150px;
-    height: 150px;
+    width: 120px;
+    height: 120px;
   }
 
   .pv-hero__name {
@@ -12859,8 +12860,8 @@ input[type="number"] { -moz-appearance: textfield; }
   }
 
   .pv-hero__portrait-frame {
-    width: 200px;
-    height: 200px;
+    width: 150px;
+    height: 150px;
   }
 
   .pv-hero__name {
@@ -12880,13 +12881,13 @@ input[type="number"] { -moz-appearance: textfield; }
     font-size: 0.8rem;
   }
 
-  .pv-badge--ac svg { width: 48px; height: 58px; }
-  .pv-badge--spd svg { width: 66px; height: 42px; }
-  .pv-badge--pp svg { width: 56px; height: 36px; }
-  .pv-badge--dv svg { width: 52px; height: 42px; }
+  .pv-badge--ac svg { width: 58px; height: 70px; }
+  .pv-badge--spd svg { width: 78px; height: 50px; }
+  .pv-badge--pp svg { width: 66px; height: 42px; }
+  .pv-badge--dv svg { width: 62px; height: 50px; }
 
-  .pv-badge__value { font-size: 16px; }
-  .pv-badge__label { font-size: 7px; }
+  .pv-badge__value { font-size: 19px; }
+  .pv-badge__label { font-size: 8px; }
 
   .pv-deck {
     max-width: 560px;

@@ -39,6 +39,7 @@ interface BattleMapState {
   ambientLightCells: string[];   // "col,row:level" format
   lightSources: MapLightSource[];
   lightMaskCells: string[];      // "col,row" keys where light sources are blocked
+  _imgScale: number;             // player-side image downscale ratio (1 = no scaling)
 }
 
 const DEFAULTS: BattleMapState = {
@@ -58,7 +59,38 @@ const DEFAULTS: BattleMapState = {
   ambientLightCells: [],
   lightSources: [],
   lightMaskCells: [],
+  _imgScale: 1,
 };
+
+// ── Player-side image downscaling ───────────────────────────────────────────
+// Mobile Safari crashes when decoding very large map images. Downscale on
+// the player's device to a safe max dimension; the DM's original is untouched.
+
+const PLAYER_MAX_IMG_DIM = 2048;
+
+function downscaleImage(dataUrl: string): Promise<{ url: string; scale: number }> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const { naturalWidth: w, naturalHeight: h } = img;
+      if (w <= PLAYER_MAX_IMG_DIM && h <= PLAYER_MAX_IMG_DIM) {
+        resolve({ url: dataUrl, scale: 1 });
+        return;
+      }
+      const scale = PLAYER_MAX_IMG_DIM / Math.max(w, h);
+      const nw = Math.round(w * scale);
+      const nh = Math.round(h * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = nw;
+      canvas.height = nh;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0, nw, nh);
+      resolve({ url: canvas.toDataURL('image/jpeg', 0.85), scale });
+    };
+    img.onerror = () => resolve({ url: dataUrl, scale: 1 });
+    img.src = dataUrl;
+  });
+}
 
 let state: BattleMapState = { ...DEFAULTS };
 const listeners = new Set<() => void>();
@@ -159,8 +191,10 @@ if (isPlayerMode) {
     emit();
   });
   onBattleMapImageReceived((dataUrl: string) => {
-    state = { ...state, mapImage: dataUrl };
-    emit();
+    downscaleImage(dataUrl).then(({ url, scale }) => {
+      state = { ...state, mapImage: url, _imgScale: scale };
+      emit();
+    });
   });
   onBattleMapCleared(() => {
     state = { ...DEFAULTS };
@@ -416,14 +450,15 @@ export function loadBattleMapExport(data: BattleMapExport) {
 
 export function useBattleMapStore() {
   const snap = useSyncExternalStore(subscribe, getSnapshot);
+  const s = snap._imgScale;
 
   return {
     mapImage: snap.mapImage,
     tokens: snap.tokens,
     templates: snap.templates,
-    gridCellSize: snap.gridCellSize,
-    gridOffsetX: snap.gridOffsetX,
-    gridOffsetY: snap.gridOffsetY,
+    gridCellSize: snap.gridCellSize * s,
+    gridOffsetX: snap.gridOffsetX * s,
+    gridOffsetY: snap.gridOffsetY * s,
     gridVisible: snap.gridVisible,
     gridColor: snap.gridColor,
     fogEnabled: snap.fogEnabled,

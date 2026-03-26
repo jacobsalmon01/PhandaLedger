@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useBattleMapStore } from '../store/useBattleMapStore';
 import { useStore } from '../store/useStore';
@@ -6,6 +6,42 @@ import { isPlayerMode } from '../store/wsClient';
 import type { MapToken, MapTemplate, MapLightSource, AmbientLightLevel } from '../types/battlemap';
 import type { Character } from '../types/character';
 
+
+// ── Zoom limits ─────────────────────────────────────────────────────────────
+// Keep conservative to avoid crashing mobile Safari (GPU texture memory limits
+// when CSS scale() is applied across multiple overlay canvases).
+const ZOOM_MIN = 0.1;
+const ZOOM_MAX = 5;
+
+// ── Canvas memory safety ────────────────────────────────────────────────────
+// Large map images can allocate multiple canvases at full resolution, exceeding
+// mobile Safari's GPU memory budget and crashing the page. Cap the backing
+// store to 2048² pixels; CSS width/height still matches the image so the
+// browser upscales the lower-res overlay — perfectly fine for grid/fog/light.
+const MAX_CANVAS_AREA = 4_194_304; // 2048 * 2048
+
+function canvasScaleFor(w: number, h: number): number {
+  const px = w * h;
+  return px > MAX_CANVAS_AREA ? Math.sqrt(MAX_CANVAS_AREA / px) : 1;
+}
+
+/** Resize a canvas backing store (capped), apply the coordinate transform, and clear. */
+function prepCanvas(
+  canvas: HTMLCanvasElement,
+  imgW: number,
+  imgH: number,
+  scale: number,
+): CanvasRenderingContext2D | null {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+  const w = Math.round(imgW * scale);
+  const h = Math.round(imgH * scale);
+  if (canvas.width !== w) canvas.width = w;
+  if (canvas.height !== h) canvas.height = h;
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  ctx.clearRect(0, 0, imgW, imgH);
+  return ctx;
+}
 
 // ── Token color palette ──────────────────────────────────────────────────────
 
@@ -671,6 +707,7 @@ export function BattleMap() {
   const [panX, setPanX] = useState(0);
   const [panY, setPanY] = useState(0);
   const [imgSize, setImgSize] = useState({ w: 0, h: 0 });
+  const cScale = useMemo(() => canvasScaleFor(imgSize.w, imgSize.h), [imgSize.w, imgSize.h]);
 
   // ── Interaction state ──
   const [dragTokenId, setDragTokenId] = useState<string | null>(null);
@@ -879,7 +916,7 @@ export function BattleMap() {
     const rect = viewportRef.current.getBoundingClientRect();
     const cx = rect.width / 2, cy = rect.height / 2;
     const currentZoom = zoomRef.current;
-    const newZoom = Math.max(0.02, Math.min(20, currentZoom * factor));
+    const newZoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, currentZoom * factor));
     const wx = (cx - panXRef.current) / currentZoom;
     const wy = (cy - panYRef.current) / currentZoom;
     const newPanX = cx - wx * newZoom;
@@ -920,12 +957,8 @@ export function BattleMap() {
   useEffect(() => {
     const canvas = gridCanvasRef.current;
     if (!canvas || !imgSize.w || !imgSize.h) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = prepCanvas(canvas, imgSize.w, imgSize.h, cScale);
     if (!ctx) return;
-
-    if (canvas.width !== imgSize.w) canvas.width = imgSize.w;
-    if (canvas.height !== imgSize.h) canvas.height = imgSize.h;
-    ctx.clearRect(0, 0, imgSize.w, imgSize.h);
     if (!gridVisible) return;
 
     const offX = ((gridOffsetX % gridCellSize) + gridCellSize) % gridCellSize;
@@ -952,19 +985,15 @@ export function BattleMap() {
       ctx.moveTo(0, y + 0.5); ctx.lineTo(imgSize.w, y + 0.5);
     }
     ctx.stroke();
-  }, [imgSize, gridCellSize, gridOffsetX, gridOffsetY, gridVisible, gridColor]);
+  }, [imgSize, gridCellSize, gridOffsetX, gridOffsetY, gridVisible, gridColor, cScale]);
 
   // ── Fog of war canvas rendering ──
 
   useEffect(() => {
     const canvas = fogCanvasRef.current;
     if (!canvas || !imgSize.w || !imgSize.h) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = prepCanvas(canvas, imgSize.w, imgSize.h, cScale);
     if (!ctx) return;
-
-    if (canvas.width !== imgSize.w) canvas.width = imgSize.w;
-    if (canvas.height !== imgSize.h) canvas.height = imgSize.h;
-    ctx.clearRect(0, 0, imgSize.w, imgSize.h);
 
     if (!fogEnabled) return;
 
@@ -987,19 +1016,15 @@ export function BattleMap() {
       );
     }
     ctx.globalCompositeOperation = 'source-over';
-  }, [fogEnabled, fogRevealed, imgSize, gridCellSize, gridOffsetX, gridOffsetY]);
+  }, [fogEnabled, fogRevealed, imgSize, gridCellSize, gridOffsetX, gridOffsetY, cScale]);
 
   // ── Fog brush preview canvas ──
 
   useEffect(() => {
     const canvas = fogPreviewCanvasRef.current;
     if (!canvas || !imgSize.w || !imgSize.h || isPlayerMode) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = prepCanvas(canvas, imgSize.w, imgSize.h, cScale);
     if (!ctx) return;
-
-    if (canvas.width !== imgSize.w) canvas.width = imgSize.w;
-    if (canvas.height !== imgSize.h) canvas.height = imgSize.h;
-    ctx.clearRect(0, 0, imgSize.w, imgSize.h);
 
     if (!fogMode || fogBrushPreview.length === 0) return;
 
@@ -1015,19 +1040,15 @@ export function BattleMap() {
       ctx.fillRect(x, y, gridCellSize, gridCellSize);
       ctx.strokeRect(x + 0.5, y + 0.5, gridCellSize - 1, gridCellSize - 1);
     }
-  }, [fogMode, fogBrushPreview, imgSize, gridCellSize, gridOffsetX, gridOffsetY]);
+  }, [fogMode, fogBrushPreview, imgSize, gridCellSize, gridOffsetX, gridOffsetY, cScale]);
 
   // ── Light canvas rendering ──
 
   useEffect(() => {
     const canvas = lightCanvasRef.current;
     if (!canvas || !imgSize.w || !imgSize.h) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = prepCanvas(canvas, imgSize.w, imgSize.h, cScale);
     if (!ctx) return;
-
-    if (canvas.width !== imgSize.w) canvas.width = imgSize.w;
-    if (canvas.height !== imgSize.h) canvas.height = imgSize.h;
-    ctx.clearRect(0, 0, imgSize.w, imgSize.h);
 
     if (!lightingEnabled) return;
 
@@ -1216,19 +1237,15 @@ export function BattleMap() {
       }
       ctx.restore();
     }
-  }, [lightingEnabled, lightMode, ambientLightDefault, ambientLightCells, lightSources, lightMaskCells, tokens, characters, selectedTokenId, imgSize, gridCellSize, gridOffsetX, gridOffsetY]);
+  }, [lightingEnabled, lightMode, ambientLightDefault, ambientLightCells, lightSources, lightMaskCells, tokens, characters, selectedTokenId, imgSize, gridCellSize, gridOffsetX, gridOffsetY, cScale]);
 
   // ── Light brush preview canvas ──
 
   useEffect(() => {
     const canvas = lightPreviewCanvasRef.current;
     if (!canvas || !imgSize.w || !imgSize.h || isPlayerMode) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = prepCanvas(canvas, imgSize.w, imgSize.h, cScale);
     if (!ctx) return;
-
-    if (canvas.width !== imgSize.w) canvas.width = imgSize.w;
-    if (canvas.height !== imgSize.h) canvas.height = imgSize.h;
-    ctx.clearRect(0, 0, imgSize.w, imgSize.h);
 
     if (!lightMode || lightBrushPreview.length === 0) return;
 
@@ -1245,19 +1262,15 @@ export function BattleMap() {
       ctx.fillRect(x, y, gridCellSize, gridCellSize);
       ctx.strokeRect(x + 0.5, y + 0.5, gridCellSize - 1, gridCellSize - 1);
     }
-  }, [lightMode, lightMaskMode, lightBrushPreview, imgSize, gridCellSize, gridOffsetX, gridOffsetY]);
+  }, [lightMode, lightMaskMode, lightBrushPreview, imgSize, gridCellSize, gridOffsetX, gridOffsetY, cScale]);
 
   // ── Measure canvas rendering ──
 
   useEffect(() => {
     const canvas = measureCanvasRef.current;
     if (!canvas || !imgSize.w || !imgSize.h) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = prepCanvas(canvas, imgSize.w, imgSize.h, cScale);
     if (!ctx) return;
-
-    if (canvas.width !== imgSize.w) canvas.width = imgSize.w;
-    if (canvas.height !== imgSize.h) canvas.height = imgSize.h;
-    ctx.clearRect(0, 0, imgSize.w, imgSize.h);
 
     if (!measureStart || !measureEnd) return;
 
@@ -1323,19 +1336,15 @@ export function BattleMap() {
     ctx.fillStyle = '#fff';
     ctx.fillText(label, mx, my);
     ctx.restore();
-  }, [measureStart, measureEnd, imgSize, gridCellSize, gridOffsetX, gridOffsetY]);
+  }, [measureStart, measureEnd, imgSize, gridCellSize, gridOffsetX, gridOffsetY, cScale]);
 
   // ── Move mode canvas rendering (movement range + path line) ──
 
   useEffect(() => {
     const canvas = moveCanvasRef.current;
     if (!canvas || !imgSize.w || !imgSize.h) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = prepCanvas(canvas, imgSize.w, imgSize.h, cScale);
     if (!ctx) return;
-
-    if (canvas.width !== imgSize.w) canvas.width = imgSize.w;
-    if (canvas.height !== imgSize.h) canvas.height = imgSize.h;
-    ctx.clearRect(0, 0, imgSize.w, imgSize.h);
 
     // Use local moveMode for DM, or pendingMove for players
     const pm = pendingMove;
@@ -1395,7 +1404,7 @@ export function BattleMap() {
     }
 
     ctx.restore();
-  }, [pendingMove, imgSize, gridCellSize, gridOffsetX, gridOffsetY]);
+  }, [pendingMove, imgSize, gridCellSize, gridOffsetX, gridOffsetY, cScale]);
 
   // ── Zoom (non-passive wheel) ──
 
@@ -1409,7 +1418,7 @@ export function BattleMap() {
       const factor = e.ctrlKey
         ? 1 - e.deltaY * 0.01
         : e.deltaY > 0 ? 0.92 : 1 / 0.92;
-      const newZoom = Math.max(0.02, Math.min(20, currentZoom * factor));
+      const newZoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, currentZoom * factor));
       const rect = el!.getBoundingClientRect();
       const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
       const wx = (cx - panXRef.current) / currentZoom;
@@ -1666,7 +1675,7 @@ export function BattleMap() {
       const midY = (pts[0].y + pts[1].y) / 2;
       const prev = pinchStartRef.current;
 
-      const newZoom = Math.max(0.02, Math.min(20, prev.zoom * (dist / prev.dist)));
+      const newZoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, prev.zoom * (dist / prev.dist)));
       const rect = viewportRef.current!.getBoundingClientRect();
       const wx = (prev.midX - rect.left - panXRef.current) / zoomRef.current;
       const wy = (prev.midY - rect.top - panYRef.current) / zoomRef.current;
@@ -2520,11 +2529,13 @@ export function BattleMap() {
             </svg>
           )}
 
-          <canvas
-            ref={measureCanvasRef}
-            className="bm-measure-canvas"
-            style={{ width: imgSize.w, height: imgSize.h }}
-          />
+          {!isPlayerMode && (
+            <canvas
+              ref={measureCanvasRef}
+              className="bm-measure-canvas"
+              style={{ width: imgSize.w, height: imgSize.h }}
+            />
+          )}
 
           <canvas
             ref={moveCanvasRef}

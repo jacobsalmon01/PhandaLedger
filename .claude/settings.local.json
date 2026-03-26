@@ -29,7 +29,8 @@
       "Bash(npx vitest:*)",
       "Bash(wc -l /Users/jake/Development/PhandaLedger/src/**/*.tsx)",
       "Bash(grep -E \"\\\\.\\(tsx?|css\\)$\")",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "Bash(grep:*)"
     ]
   }
 }

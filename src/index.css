@@ -3732,6 +3732,66 @@ body::after {
   border-color: rgba(155, 44, 44, 0.3);
 }
 
+/* ── Spell tiers (prepared / unprepared separation) ── */
+.spell-tier {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.spell-tier--prepared {
+  border-left: 2px solid rgba(200, 164, 78, 0.18);
+  padding-left: 4px;
+  border-radius: 2px 0 0 2px;
+}
+
+.spell-tier--unprepared {
+  margin-top: 2px;
+  border-left: 2px solid rgba(100, 90, 70, 0.15);
+  padding-left: 4px;
+  border-radius: 2px 0 0 2px;
+}
+
+.spell-tier__divider {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 4px 3px;
+}
+
+.spell-tier__divider-rule {
+  flex: 1;
+  height: 1px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(160, 149, 128, 0.2) 0px,
+    rgba(160, 149, 128, 0.2) 3px,
+    transparent 3px,
+    transparent 7px
+  );
+}
+
+.spell-tier__divider-label {
+  font-family: var(--font-display);
+  font-size: 0.48rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(160, 149, 128, 0.5);
+  flex-shrink: 0;
+}
+
+.spell-tier__divider-count {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  color: rgba(160, 149, 128, 0.4);
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  padding: 0 5px;
+  line-height: 1.5;
+  flex-shrink: 0;
+}
+
 /* ── Spell rows ── */
 .spell-row {
   position: relative;
@@ -3763,11 +3823,15 @@ body::after {
 }
 
 .spell-row--unprepared {
-  opacity: 0.55;
+  opacity: 0.5;
+  background: rgba(0, 0, 0, 0.12);
+  border-color: transparent;
+  border-left-color: transparent;
 }
 
 .spell-row--unprepared:hover {
   opacity: 0.8;
+  background: rgba(0, 0, 0, 0.08);
 }
 
 /* ── Prepared toggle button ── */
@@ -12746,6 +12810,161 @@ input[type="number"] { -moz-appearance: textfield; }
 .pv-spell-row__desc p { margin: 4px 0; }
 .pv-spell-row__desc strong { color: var(--text-parchment); }
 
+/* ── Spell Book Section ── */
+
+.pv-spellbook__section-label {
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 6px 8px 2px;
+}
+
+.pv-spellbook {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(200,164,78,0.15);
+}
+
+.pv-spellbook__header {
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  color: var(--text-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0 8px 6px;
+}
+
+.pv-spellbook__search {
+  width: calc(100% - 16px);
+  margin: 0 8px 6px;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--border-inner);
+  color: var(--text-parchment);
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  padding: 5px 8px;
+  border-radius: 4px;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+.pv-spellbook__search:focus { border-color: var(--border-gold-dim); }
+.pv-spellbook__search::placeholder { color: var(--text-dim); opacity: 0.5; }
+
+.pv-spellbook__group {
+  margin-bottom: 2px;
+}
+
+.pv-spellbook__group-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-size: 0.7rem;
+  color: var(--text-parchment);
+  text-align: left;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+.pv-spellbook__group-toggle:hover { background: rgba(200,164,78,0.06); }
+
+.pv-spellbook__chevron {
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  transition: transform 0.15s;
+  display: inline-block;
+}
+.pv-spellbook__chevron--open { transform: rotate(90deg); }
+
+.pv-spellbook__group-name { flex: 1; }
+
+.pv-spellbook__group-count {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--text-dim);
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  padding: 0 5px;
+  line-height: 1.5;
+}
+
+.pv-spellbook__group-badge {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  border-radius: 3px;
+  padding: 0 4px;
+  line-height: 1.4;
+}
+.pv-spellbook__group-badge--prep {
+  color: var(--text-gold);
+  border: 1px solid rgba(200,164,78,0.3);
+}
+.pv-spellbook__group-badge--learned {
+  color: var(--text-parchment);
+  border: 1px solid rgba(200,180,150,0.2);
+}
+
+/* ── Spell Book Rows ── */
+
+.pv-spellbook__row {
+  border-left: 2px solid transparent;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.pv-spellbook__row--prepared {
+  border-left-color: var(--text-gold);
+  background: linear-gradient(90deg, rgba(200,164,78,0.08) 0%, transparent 60%);
+}
+
+.pv-spellbook__row--learned {
+  /* normal styling */
+}
+
+.pv-spellbook__row--available {
+  opacity: 0.45;
+}
+
+.pv-spellbook__row-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 3px 4px 3px 6px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  color: var(--text-parchment);
+  text-align: left;
+  width: 100%;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+.pv-spellbook__row-btn:hover { background: rgba(200,164,78,0.06); }
+
+.pv-spellbook__row--available .pv-spellbook__row-btn {
+  color: var(--text-dim);
+}
+
+.pv-spellbook__indicator {
+  font-size: 0.55rem;
+  flex-shrink: 0;
+  width: 12px;
+  text-align: center;
+}
+.pv-spellbook__indicator--prepared { color: var(--text-gold); }
+.pv-spellbook__indicator--learned  { color: var(--text-parchment); }
+.pv-spellbook__indicator--available { color: var(--text-dim); }
+
+.pv-spellbook__spell-name { flex: 1; }
+
 /* ═══ Inventory Card — Leather Pouch ═══ */
 
 .pv-gold {
@@ -13151,7 +13370,8 @@ input[type="number"] { -moz-appearance: textfield; }
   bottom: 0;
   left: 0;
   right: 0;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   height: calc(56px + env(safe-area-inset-bottom, 0px));
   padding-bottom: env(safe-area-inset-bottom, 0px);
   z-index: 90;
@@ -13166,71 +13386,131 @@ input[type="number"] { -moz-appearance: textfield; }
     0 -4px 12px rgba(0,0,0,0.4);
 }
 
-.pv-bottom-nav__item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-dim);
-  transition: background 0.2s, color 0.2s;
-  position: relative;
-  padding: 6px 4px;
-}
+/* ── Sliding brass plate indicator ── */
+.pv-bottom-nav__slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.15, 1);
 
-.pv-bottom-nav__item:first-child {
-  border-right: 1px solid rgba(0,0,0,0.3);
-}
-
-.pv-bottom-nav__item:hover {
-  background: rgba(255,200,100,0.04);
-}
-
-.pv-bottom-nav__item--active {
+  /* Brass plate */
   background:
     repeating-linear-gradient(92deg,
       transparent 0px, transparent 3px,
       rgba(0,0,0,0.03) 3px, rgba(0,0,0,0.03) 4px),
     linear-gradient(0deg, #5a3f28 0%, #4a3420 100%);
-  color: var(--text-gold);
   box-shadow:
-    inset 0 3px 0 #c8a43e,
-    inset 0 -1px 0 rgba(255,200,100,0.08);
+    inset 0 1px 0 rgba(255,200,100,0.1),
+    inset 0 -1px 0 rgba(0,0,0,0.2);
 }
 
-.pv-bottom-nav__item--active::after {
+.pv-bottom-nav__slider--right {
+  transform: translateX(100%);
+}
+
+/* Gold accent bar on the slider top edge */
+.pv-bottom-nav__slider::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 20px;
+  top: -2px;
+  left: 12%;
+  right: 12%;
   height: 3px;
-  background: #c8a43e;
+  background: linear-gradient(90deg, transparent, #c8a43e 20%, #dbb850 50%, #c8a43e 80%, transparent);
   border-radius: 0 0 2px 2px;
-  box-shadow: 0 0 6px rgba(200,164,78,0.3);
+  box-shadow: 0 0 8px rgba(200,164,78,0.35), 0 0 3px rgba(200,164,78,0.2);
 }
 
+/* Subtle warm glow inside the slider */
+.pv-bottom-nav__slider::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 100% at 50% 0%, rgba(200,164,78,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ── Center divider rivet ── */
+.pv-bottom-nav__rivet {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  z-index: 3;
+  background:
+    radial-gradient(ellipse at 35% 30%, #d4a84e 0%, #8a6d3b 50%, #4a3518 100%);
+  border: 1px solid #2a1808;
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.5),
+    inset 0 1px 1px rgba(255,220,120,0.2);
+  pointer-events: none;
+}
+
+/* ── Nav items ── */
+.pv-bottom-nav__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-dim);
+  position: relative;
+  z-index: 1;
+  padding: 6px 4px;
+  transition: color 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pv-bottom-nav__item:active {
+  background: rgba(255,200,100,0.04);
+}
+
+.pv-bottom-nav__item--active {
+  color: var(--text-gold);
+}
+
+/* ── Icon ── */
+.pv-bottom-nav__icon {
+  position: relative;
+  display: inline-flex;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.15, 1);
+}
+
+.pv-bottom-nav__item--active .pv-bottom-nav__icon {
+  transform: scale(1.12) translateY(-1px);
+}
+
+/* ── Label ── */
 .pv-bottom-nav__label {
   font-family: var(--font-display);
   font-size: 0.55rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  opacity: 0.7;
 }
 
-.pv-bottom-nav__icon-wrap {
-  position: relative;
-  display: inline-flex;
+.pv-bottom-nav__item--active .pv-bottom-nav__label {
+  opacity: 1;
+  transform: translateY(-0.5px);
+  text-shadow: 0 0 8px rgba(200,164,78,0.2);
 }
 
+/* ── Map-available dot ── */
 .pv-bottom-nav__dot {
   position: absolute;
   top: -2px;
-  right: -5px;
+  right: -6px;
   width: 6px;
   height: 6px;
   border-radius: 50%;

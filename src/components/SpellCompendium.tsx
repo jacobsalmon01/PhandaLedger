@@ -14,7 +14,7 @@ const LEVEL_PILL_LABELS = ['C', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 const ALL_SCHOOLS = [...new Set(SPELLS.map((s) => s.school).filter(Boolean))].sort();
 
 /** Normalize a class string to a compendium class key, e.g. "Life Cleric" → "cleric" */
-function normalizeClass(cls: string): string {
+export function normalizeClass(cls: string): string {
   const lower = cls.toLowerCase();
   for (const known of ALL_CLASSES) {
     if (lower.includes(known)) return known;

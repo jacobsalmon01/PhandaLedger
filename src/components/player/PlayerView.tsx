@@ -124,18 +124,26 @@ export function PlayerView() {
 
       {/* ── Bottom navigation ── */}
       <nav className="pv-bottom-nav">
+        {/* Sliding brass plate indicator */}
+        <div className={`pv-bottom-nav__slider${activeView === 'map' ? ' pv-bottom-nav__slider--right' : ''}`} />
+
+        {/* Center divider rivet */}
+        <div className="pv-bottom-nav__rivet" />
+
         <button
           className={`pv-bottom-nav__item${activeView === 'sheet' ? ' pv-bottom-nav__item--active' : ''}`}
           onClick={() => setActiveView('sheet')}
         >
-          <Scroll size={18} strokeWidth={1.5} />
+          <span className="pv-bottom-nav__icon">
+            <Scroll size={18} strokeWidth={1.5} />
+          </span>
           <span className="pv-bottom-nav__label">Sheet</span>
         </button>
         <button
           className={`pv-bottom-nav__item${activeView === 'map' ? ' pv-bottom-nav__item--active' : ''}`}
           onClick={() => setActiveView('map')}
         >
-          <span className="pv-bottom-nav__icon-wrap">
+          <span className="pv-bottom-nav__icon">
             <MapIcon size={18} strokeWidth={1.5} />
             {mapAvailable && activeView !== 'map' && (
               <span className="pv-bottom-nav__dot" />

@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { Character, PreparedSpell, SpellcastingAbility } from '../../types/character';
 import { spellAttackBonus, spellSaveDC, abilityMod, profBonus } from '../../types/character';
 import { uuid } from '../../utils/uuid';
-import { SpellCompendium } from '../SpellCompendium';
-import type { SpellEntry } from '../../data/spells';
+import { SpellCompendium, normalizeClass } from '../SpellCompendium';
+import { SPELLS, type SpellEntry } from '../../data/spells';
 
 interface Props {
   ch: Character;
@@ -171,6 +171,216 @@ function SpellForm({ form, patch, onSave, onCancel }: FormProps) {
   );
 }
 
+// ── DM Spell Book ─────────────────────────────────────────────────────────────
+
+const LEVEL_LABELS = ['Cantrips', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th'];
+
+type SpellStatus = 'prepared' | 'learned' | 'available';
+
+interface BookEntry {
+  spell: SpellEntry;
+  status: SpellStatus;
+  charSpellId?: string; // id of the PreparedSpell on character, if learned/prepared
+}
+
+function DmSpellBook({ ch, updateSelected }: Props) {
+  const [search, setSearch] = useState('');
+  const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
+  const [collapsedLevels, setCollapsedLevels] = useState<Set<number>>(() => new Set([0,1,2,3,4,5,6,7,8,9]));
+
+  const normalizedClass = useMemo(() => normalizeClass(ch.class), [ch.class]);
+
+  const classSpells = useMemo(() => {
+    if (!normalizedClass) return [];
+    return SPELLS.filter(s => s.classes.includes(normalizedClass));
+  }, [normalizedClass]);
+
+  // Map character's spells by lowercase name
+  const charSpellMap = useMemo(() => {
+    const m = new Map<string, PreparedSpell>();
+    for (const s of ch.spells) {
+      m.set(s.name.toLowerCase(), s);
+    }
+    return m;
+  }, [ch.spells]);
+
+  // Build grouped entries
+  const grouped = useMemo(() => {
+    const query = search.toLowerCase();
+    const groups = new Map<number, BookEntry[]>();
+
+    for (const spell of classSpells) {
+      if (query && !spell._nameLower.includes(query)) continue;
+
+      const charSpell = charSpellMap.get(spell._nameLower);
+      let status: SpellStatus = 'available';
+      if (charSpell) {
+        status = (charSpell.prepared || charSpell.alwaysPrepared) ? 'prepared' : 'learned';
+      }
+
+      const group = groups.get(spell.level) ?? [];
+      group.push({ spell, status, charSpellId: charSpell?.id });
+      groups.set(spell.level, group);
+    }
+
+    // Sort: prepared → learned → available, then alpha
+    const statusOrder: Record<SpellStatus, number> = { prepared: 0, learned: 1, available: 2 };
+    for (const [, entries] of groups) {
+      entries.sort((a, b) => {
+        const d = statusOrder[a.status] - statusOrder[b.status];
+        if (d !== 0) return d;
+        return a.spell.name.localeCompare(b.spell.name);
+      });
+    }
+
+    return groups;
+  }, [classSpells, charSpellMap, search]);
+
+  if (classSpells.length === 0) return null;
+
+  const isSearching = search.length > 0;
+  const statusIcon: Record<SpellStatus, string> = { prepared: '\u25cf', learned: '\u25d0', available: '\u25cb' };
+
+  function toggleLevel(level: number) {
+    setCollapsedLevels(prev => {
+      const next = new Set(prev);
+      if (next.has(level)) next.delete(level);
+      else next.add(level);
+      return next;
+    });
+  }
+
+  function addSpell(entry: SpellEntry) {
+    const spell: PreparedSpell = {
+      id: uuid(),
+      name: entry.name,
+      level: entry.level,
+      concentration: entry.concentration,
+      duration: entry.duration,
+      durationRounds: 0,
+      castingTime: entry.castingTime,
+      notes: '',
+      description: entry.description,
+      prepared: false,
+      alwaysPrepared: false,
+      fromItem: false,
+      itemChargesEmpty: false,
+      active: false,
+      roundsRemaining: 0,
+    };
+    updateSelected((c) => ({ ...c, spells: [...c.spells, spell] }));
+  }
+
+  function togglePrepared(id: string) {
+    updateSelected((c) => ({
+      ...c,
+      spells: c.spells.map((s) =>
+        s.id === id ? { ...s, prepared: !s.prepared, active: s.prepared ? false : s.active, roundsRemaining: s.prepared ? 0 : s.roundsRemaining } : s
+      ),
+    }));
+  }
+
+  function removeSpell(id: string) {
+    updateSelected((c) => ({ ...c, spells: c.spells.filter((s) => s.id !== id) }));
+  }
+
+  return (
+    <div className="dm-spellbook">
+      <div className="dm-spellbook__header">
+        <span className="dm-spellbook__title">Spell Book</span>
+        <span className="dm-spellbook__subtitle">{normalizedClass}</span>
+      </div>
+      <input
+        type="text"
+        className="dm-spellbook__search"
+        placeholder="Search spells\u2026"
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+      />
+
+      <div className="dm-spellbook__legend">
+        <span className="dm-spellbook__legend-item"><span className="dm-spellbook__indicator dm-spellbook__indicator--prepared">{'\u25cf'}</span> Prepared</span>
+        <span className="dm-spellbook__legend-item"><span className="dm-spellbook__indicator dm-spellbook__indicator--learned">{'\u25d0'}</span> Learned</span>
+        <span className="dm-spellbook__legend-item"><span className="dm-spellbook__indicator dm-spellbook__indicator--available">{'\u25cb'}</span> Available</span>
+      </div>
+
+      {Array.from(grouped.entries())
+        .sort(([a], [b]) => a - b)
+        .map(([level, entries]) => {
+          const isCollapsed = !isSearching && collapsedLevels.has(level);
+          const prepCount = entries.filter(e => e.status === 'prepared').length;
+          const learnedCount = entries.filter(e => e.status === 'learned').length;
+
+          return (
+            <div key={level} className="dm-spellbook__group">
+              <button
+                className="dm-spellbook__group-toggle"
+                onClick={() => toggleLevel(level)}
+              >
+                <span className={`dm-spellbook__chevron${isCollapsed ? '' : ' dm-spellbook__chevron--open'}`}>&#9656;</span>
+                <span className="dm-spellbook__group-name">{LEVEL_LABELS[level]}</span>
+                <span className="dm-spellbook__group-count">{entries.length}</span>
+                {prepCount > 0 && <span className="dm-spellbook__group-badge dm-spellbook__group-badge--prep">{prepCount}</span>}
+                {learnedCount > 0 && <span className="dm-spellbook__group-badge dm-spellbook__group-badge--learned">{learnedCount}</span>}
+              </button>
+
+              {!isCollapsed && entries.map(({ spell, status, charSpellId }) => (
+                <div key={spell.slug} className={`dm-spellbook__row dm-spellbook__row--${status}`}>
+                  <div className="dm-spellbook__row-main">
+                    <button
+                      className={`dm-spellbook__status-btn dm-spellbook__status-btn--${status}`}
+                      title={
+                        status === 'available' ? 'Add to spell list (learned, not prepared)'
+                          : status === 'learned' ? 'Prepare this spell'
+                          : 'Unprepare this spell'
+                      }
+                      onClick={() => {
+                        if (status === 'available') addSpell(spell);
+                        else if (charSpellId) togglePrepared(charSpellId);
+                      }}
+                    >
+                      {statusIcon[status]}
+                    </button>
+                    <button
+                      className="dm-spellbook__name-btn"
+                      onClick={() => setExpandedSlug(expandedSlug === spell.slug ? null : spell.slug)}
+                    >
+                      {spell.name}
+                    </button>
+                    {spell.concentration && <span className="dm-spellbook__badge">C</span>}
+                    {spell.ritual && <span className="dm-spellbook__badge">R</span>}
+                    <span className="dm-spellbook__meta">{spell.castingTime}</span>
+
+                    {/* Remove button for learned/prepared spells */}
+                    {charSpellId && (
+                      <button
+                        className="dm-spellbook__remove-btn"
+                        title="Remove from spell list"
+                        onClick={() => removeSpell(charSpellId)}
+                      >&times;</button>
+                    )}
+                  </div>
+
+                  {expandedSlug === spell.slug && spell.description && (
+                    <div
+                      className="spell-desc-panel"
+                      style={{ marginLeft: 24 }}
+                    >
+                      <div
+                        className="spell-desc-panel__body"
+                        dangerouslySetInnerHTML={{ __html: spell.description }}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          );
+        })}
+    </div>
+  );
+}
+
 // ── Main section ──────────────────────────────────────────────────────────────
 
 export function SpellsSection({ ch, updateSelected }: Props) {
@@ -309,23 +519,19 @@ export function SpellsSection({ ch, updateSelected }: Props) {
     }));
   }
 
-  // Group by level, split into prepared / unprepared sub-lists
-  const grouped = new Map<number, { prepared: PreparedSpell[]; unprepared: PreparedSpell[] }>();
+  // Group ONLY prepared/active spells by level for the main section
+  const grouped = new Map<number, PreparedSpell[]>();
   for (const s of ch.spells) {
-    if (!grouped.has(s.level)) grouped.set(s.level, { prepared: [], unprepared: [] });
-    const g = grouped.get(s.level)!;
     const isPrepOrAlways = s.level === 0 || s.alwaysPrepared || s.fromItem || s.prepared;
-    if (isPrepOrAlways) g.prepared.push(s);
-    else g.unprepared.push(s);
+    if (!isPrepOrAlways) continue;
+    if (!grouped.has(s.level)) grouped.set(s.level, []);
+    grouped.get(s.level)!.push(s);
   }
-  const sortSpells = (arr: PreparedSpell[]) =>
-    [...arr].sort((a, b) => {
+  for (const [lvl, arr] of grouped) {
+    grouped.set(lvl, [...arr].sort((a, b) => {
       if (a.active !== b.active) return a.active ? -1 : 1;
       return a.name.localeCompare(b.name);
-    });
-  for (const [, g] of grouped) {
-    g.prepared = sortSpells(g.prepared);
-    g.unprepared = sortSpells(g.unprepared);
+    }));
   }
   const levels = [...grouped.keys()].sort((a, b) => a - b);
 
@@ -369,7 +575,7 @@ export function SpellsSection({ ch, updateSelected }: Props) {
   return (
     <section className="section">
       <h2 className="section__heading section__heading--flex">
-        <span>Known Spells</span>
+        <span>Spells</span>
         {editId !== 'new' && (
           <div className="spells-header-actions">
             {ch.spells.length > 0 && (
@@ -378,7 +584,6 @@ export function SpellsSection({ ch, updateSelected }: Props) {
                 <button className="spells-prepare-btn spells-prepare-btn--prepare" onClick={prepareAll} title="Mark all spells as prepared">Prepare All</button>
               </>
             )}
-            <button className="spells-add-btn spells-add-btn--compendium" onClick={() => setShowCompendium(true)}>⊕ Browse</button>
             <button className="spells-add-btn" onClick={openAdd}>+ Custom</button>
           </div>
         )}
@@ -434,9 +639,9 @@ export function SpellsSection({ ch, updateSelected }: Props) {
         )}
       </div>
 
-      {ch.spells.length === 0 && editId !== 'new' && (
+      {levels.length === 0 && editId !== 'new' && (
         <div className="spells-empty">
-          No spells known. Add spells to your list, then mark them prepared each day.
+          No spells prepared. Use the Spell Book below to add and prepare spells.
         </div>
       )}
 
@@ -446,187 +651,14 @@ export function SpellsSection({ ch, updateSelected }: Props) {
         </div>
       )}
 
+      {/* ── Prepared / Active Spells ── */}
       <div className="spells-list">
         {levels.map((level) => {
-          const { prepared: preparedSpells, unprepared: unpreparedSpells } = grouped.get(level)!;
+          const spells = grouped.get(level)!;
           const slotData = level > 0
             ? (ch.spellSlots[level - 1] ?? { max: 0, used: 0 })
             : null;
           const slotsLeft = slotData ? slotData.max - slotData.used : null;
-
-          function renderSpellRow(spell: PreparedSpell) {
-            const isEditing = editId === spell.id;
-            const isPrepared = spell.level === 0 || spell.alwaysPrepared || spell.fromItem || spell.prepared;
-            const canCast = isPrepared && !spell.itemChargesEmpty && (spell.fromItem || hasSlot(ch, spell.level));
-            const expired = spell.active && spell.durationRounds > 0 && spell.roundsRemaining === 0;
-            const isConc = spell.active && spell.concentration;
-
-            return (
-              <div
-                key={spell.id}
-                className={[
-                  'spell-row',
-                  spell.alwaysPrepared ? 'spell-row--always-prepared' : '',
-                  spell.fromItem ? 'spell-row--from-item' : '',
-                  spell.itemChargesEmpty ? 'spell-row--charges-empty' : '',
-                  !isPrepared ? 'spell-row--unprepared' : '',
-                  spell.active && !isConc ? 'spell-row--active' : '',
-                  isConc ? 'spell-row--concentrating' : '',
-                  expired ? 'spell-row--expired' : '',
-                ].filter(Boolean).join(' ')}
-              >
-                {!isEditing ? (
-                  <>
-                    {/* ── Top line: prepared · cast · name · badges · rounds · actions ── */}
-                    <div className="spell-row__top">
-                      {spell.level === 0 && <span className="spell-cantrip-dot">◆</span>}
-                      {spell.level > 0 && spell.alwaysPrepared && !spell.fromItem && (
-                        <span className="spell-always-dot" title="Always prepared — granted by class or subclass">◈</span>
-                      )}
-                      {spell.fromItem && (
-                        <button
-                          className={`spell-item-btn${spell.itemChargesEmpty ? ' spell-item-btn--empty' : ''}`}
-                          title={spell.itemChargesEmpty ? 'Item out of charges — click to restore' : 'From item — click to mark out of charges'}
-                          onClick={() => updateSelected((c) => ({
-                            ...c,
-                            spells: c.spells.map((s) =>
-                              s.id === spell.id ? { ...s, itemChargesEmpty: !s.itemChargesEmpty, active: !s.itemChargesEmpty ? false : s.active, roundsRemaining: !s.itemChargesEmpty ? 0 : s.roundsRemaining } : s
-                            ),
-                          }))}
-                        >
-                          {spell.itemChargesEmpty ? '⊘' : '⊕'}
-                        </button>
-                      )}
-                      {spell.level > 0 && !spell.alwaysPrepared && !spell.fromItem && (
-                        <button
-                          className={`spell-prepared-btn${isPrepared ? ' spell-prepared-btn--on' : ''}`}
-                          title={isPrepared ? 'Prepared — click to unprepare' : 'Unprepared — click to prepare'}
-                          onClick={() => togglePrepared(spell.id)}
-                        >
-                          {isPrepared ? '●' : '○'}
-                        </button>
-                      )}
-
-                      <button
-                        className={`spell-cast-btn${spell.active ? ' spell-cast-btn--active' : ''}${!canCast && !spell.active ? ' spell-cast-btn--locked' : ''}`}
-                        title={
-                          spell.itemChargesEmpty
-                            ? 'Item out of charges'
-                            : !isPrepared
-                              ? 'Not prepared'
-                              : spell.active
-                                ? 'Recast (expends another slot)'
-                                : canCast
-                                  ? spell.fromItem
-                                    ? `Cast from item${level === 0 ? '' : ' (no slot used)'}`
-                                    : level === 0 ? 'Cast cantrip' : `Cast — uses 1 ${ORDINALS[level]} slot`
-                                  : 'No slots remaining'
-                        }
-                        disabled={!spell.active && !canCast}
-                        onClick={() => cast(spell)}
-                      >
-                        {spell.active ? '◆' : '▶'}
-                      </button>
-
-                      <span className="spell-row__name">{spell.name || 'Unnamed'}</span>
-                      {spell.description && (
-                        <button
-                          className={`spell-desc-btn${expandedDescId === spell.id ? ' spell-desc-btn--open' : ''}`}
-                          title={expandedDescId === spell.id ? 'Hide description' : 'Show description'}
-                          aria-expanded={expandedDescId === spell.id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setExpandedDescId(expandedDescId === spell.id ? null : spell.id);
-                          }}
-                        >ⓘ</button>
-                      )}
-
-                      {spell.concentration && (
-                        <span className={`spell-conc-badge${spell.active ? ' spell-conc-badge--active' : ''}`}>
-                          {spell.active ? '◎ Concentrating' : '◎ Conc'}
-                        </span>
-                      )}
-
-                      {spell.active && spell.durationRounds > 0 && (
-                        <span className={`spell-rounds${expired ? ' spell-rounds--expired' : ''}`}>
-                          <span className="spell-rounds__num">{spell.roundsRemaining}</span>
-                          <span className="spell-rounds__unit">rnd</span>
-                          <button
-                            className="spell-rounds__tick"
-                            title="Tick down one round"
-                            onClick={() => tickRound(spell.id)}
-                            disabled={expired}
-                          >−</button>
-                        </span>
-                      )}
-
-                      <div className="spell-row__actions">
-                        {spell.active && (
-                          <button
-                            className="spell-end-btn"
-                            onClick={() => endSpell(spell.id)}
-                            title="End spell"
-                          >
-                            End
-                          </button>
-                        )}
-                        <button
-                          className="spell-action-btn"
-                          title="Edit"
-                          onClick={() => openEdit(spell)}
-                        >✎</button>
-                        <button
-                          className="spell-action-btn spell-action-btn--remove"
-                          title="Remove"
-                          onClick={() => remove(spell.id)}
-                        >×</button>
-                      </div>
-                    </div>
-
-                    {/* ── Bottom line: meta + notes ── */}
-                    {(spell.castingTime || spell.duration || spell.notes) && (
-                      <div className="spell-row__bottom">
-                        {spell.castingTime && (
-                          <span className="spell-meta__piece">{spell.castingTime}</span>
-                        )}
-                        {spell.duration && (
-                          <>
-                            <span className="spell-meta__dot">·</span>
-                            <span className="spell-meta__piece">{spell.duration}</span>
-                          </>
-                        )}
-                        {spell.notes && (
-                          <>
-                            {(spell.castingTime || spell.duration) && (
-                              <span className="spell-meta__dot">—</span>
-                            )}
-                            <span className="spell-meta__notes">{spell.notes}</span>
-                          </>
-                        )}
-                      </div>
-                    )}
-
-                    {/* ── Inline description panel ── */}
-                    {spell.description && expandedDescId === spell.id && (
-                      <div className="spell-desc-panel">
-                        <div
-                          className="spell-desc-panel__body"
-                          dangerouslySetInnerHTML={{ __html: spell.description.replace(/<br\s*\/?>/gi, '<br/>') }}
-                        />
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <SpellForm
-                    form={form}
-                    patch={patch}
-                    onSave={() => saveEdit(spell.id)}
-                    onCancel={cancel}
-                  />
-                )}
-              </div>
-            );
-          }
 
           return (
             <div key={level} className="spell-group">
@@ -644,29 +676,185 @@ export function SpellsSection({ ch, updateSelected }: Props) {
                 <span className="spell-group__rule" />
               </div>
 
-              {/* ── Prepared spells ── */}
-              {preparedSpells.length > 0 && (
-                <div className="spell-tier spell-tier--prepared">
-                  {preparedSpells.map(renderSpellRow)}
-                </div>
-              )}
+              {spells.map((spell) => {
+                const isEditing = editId === spell.id;
+                const isPrepared = spell.level === 0 || spell.alwaysPrepared || spell.fromItem || spell.prepared;
+                const canCast = isPrepared && !spell.itemChargesEmpty && (spell.fromItem || hasSlot(ch, level));
+                const expired = spell.active && spell.durationRounds > 0 && spell.roundsRemaining === 0;
+                const isConc = spell.active && spell.concentration;
 
-              {/* ── Unprepared divider + spells ── */}
-              {unpreparedSpells.length > 0 && (
-                <div className="spell-tier spell-tier--unprepared">
-                  <div className="spell-tier__divider">
-                    <span className="spell-tier__divider-rule" />
-                    <span className="spell-tier__divider-label">Not Prepared</span>
-                    <span className="spell-tier__divider-count">{unpreparedSpells.length}</span>
-                    <span className="spell-tier__divider-rule" />
+                return (
+                  <div
+                    key={spell.id}
+                    className={[
+                      'spell-row',
+                      spell.alwaysPrepared ? 'spell-row--always-prepared' : '',
+                      spell.fromItem ? 'spell-row--from-item' : '',
+                      spell.itemChargesEmpty ? 'spell-row--charges-empty' : '',
+                      spell.active && !isConc ? 'spell-row--active' : '',
+                      isConc ? 'spell-row--concentrating' : '',
+                      expired ? 'spell-row--expired' : '',
+                    ].filter(Boolean).join(' ')}
+                  >
+                    {!isEditing ? (
+                      <>
+                        {/* ── Top line: prepared · cast · name · badges · rounds · actions ── */}
+                        <div className="spell-row__top">
+                          {spell.level === 0 && <span className="spell-cantrip-dot">◆</span>}
+                          {spell.level > 0 && spell.alwaysPrepared && !spell.fromItem && (
+                            <span className="spell-always-dot" title="Always prepared — granted by class or subclass">◈</span>
+                          )}
+                          {spell.fromItem && (
+                            <button
+                              className={`spell-item-btn${spell.itemChargesEmpty ? ' spell-item-btn--empty' : ''}`}
+                              title={spell.itemChargesEmpty ? 'Item out of charges — click to restore' : 'From item — click to mark out of charges'}
+                              onClick={() => updateSelected((c) => ({
+                                ...c,
+                                spells: c.spells.map((s) =>
+                                  s.id === spell.id ? { ...s, itemChargesEmpty: !s.itemChargesEmpty, active: !s.itemChargesEmpty ? false : s.active, roundsRemaining: !s.itemChargesEmpty ? 0 : s.roundsRemaining } : s
+                                ),
+                              }))}
+                            >
+                              {spell.itemChargesEmpty ? '⊘' : '⊕'}
+                            </button>
+                          )}
+                          {spell.level > 0 && !spell.alwaysPrepared && !spell.fromItem && (
+                            <button
+                              className={`spell-prepared-btn${isPrepared ? ' spell-prepared-btn--on' : ''}`}
+                              title={isPrepared ? 'Prepared — click to unprepare' : 'Unprepared — click to prepare'}
+                              onClick={() => togglePrepared(spell.id)}
+                            >
+                              {isPrepared ? '●' : '○'}
+                            </button>
+                          )}
+
+                          <button
+                            className={`spell-cast-btn${spell.active ? ' spell-cast-btn--active' : ''}${!canCast && !spell.active ? ' spell-cast-btn--locked' : ''}`}
+                            title={
+                              spell.itemChargesEmpty
+                                ? 'Item out of charges'
+                                : !isPrepared
+                                  ? 'Not prepared'
+                                  : spell.active
+                                    ? 'Recast (expends another slot)'
+                                    : canCast
+                                      ? spell.fromItem
+                                        ? `Cast from item${level === 0 ? '' : ' (no slot used)'}`
+                                        : level === 0 ? 'Cast cantrip' : `Cast — uses 1 ${ORDINALS[level]} slot`
+                                      : 'No slots remaining'
+                            }
+                            disabled={!spell.active && !canCast}
+                            onClick={() => cast(spell)}
+                          >
+                            {spell.active ? '◆' : '▶'}
+                          </button>
+
+                          <span className="spell-row__name">{spell.name || 'Unnamed'}</span>
+                          {spell.description && (
+                            <button
+                              className={`spell-desc-btn${expandedDescId === spell.id ? ' spell-desc-btn--open' : ''}`}
+                              title={expandedDescId === spell.id ? 'Hide description' : 'Show description'}
+                              aria-expanded={expandedDescId === spell.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExpandedDescId(expandedDescId === spell.id ? null : spell.id);
+                              }}
+                            >ⓘ</button>
+                          )}
+
+                          {spell.concentration && (
+                            <span className={`spell-conc-badge${spell.active ? ' spell-conc-badge--active' : ''}`}>
+                              {spell.active ? '◎ Concentrating' : '◎ Conc'}
+                            </span>
+                          )}
+
+                          {spell.active && spell.durationRounds > 0 && (
+                            <span className={`spell-rounds${expired ? ' spell-rounds--expired' : ''}`}>
+                              <span className="spell-rounds__num">{spell.roundsRemaining}</span>
+                              <span className="spell-rounds__unit">rnd</span>
+                              <button
+                                className="spell-rounds__tick"
+                                title="Tick down one round"
+                                onClick={() => tickRound(spell.id)}
+                                disabled={expired}
+                              >−</button>
+                            </span>
+                          )}
+
+                          <div className="spell-row__actions">
+                            {spell.active && (
+                              <button
+                                className="spell-end-btn"
+                                onClick={() => endSpell(spell.id)}
+                                title="End spell"
+                              >
+                                End
+                              </button>
+                            )}
+                            <button
+                              className="spell-action-btn"
+                              title="Edit"
+                              onClick={() => openEdit(spell)}
+                            >✎</button>
+                            <button
+                              className="spell-action-btn spell-action-btn--remove"
+                              title="Remove"
+                              onClick={() => remove(spell.id)}
+                            >×</button>
+                          </div>
+                        </div>
+
+                        {/* ── Bottom line: meta + notes ── */}
+                        {(spell.castingTime || spell.duration || spell.notes) && (
+                          <div className="spell-row__bottom">
+                            {spell.castingTime && (
+                              <span className="spell-meta__piece">{spell.castingTime}</span>
+                            )}
+                            {spell.duration && (
+                              <>
+                                <span className="spell-meta__dot">·</span>
+                                <span className="spell-meta__piece">{spell.duration}</span>
+                              </>
+                            )}
+                            {spell.notes && (
+                              <>
+                                {(spell.castingTime || spell.duration) && (
+                                  <span className="spell-meta__dot">—</span>
+                                )}
+                                <span className="spell-meta__notes">{spell.notes}</span>
+                              </>
+                            )}
+                          </div>
+                        )}
+
+                        {/* ── Inline description panel ── */}
+                        {spell.description && expandedDescId === spell.id && (
+                          <div className="spell-desc-panel">
+                            <div
+                              className="spell-desc-panel__body"
+                              dangerouslySetInnerHTML={{ __html: spell.description.replace(/<br\s*\/?>/gi, '<br/>') }}
+                            />
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <SpellForm
+                        form={form}
+                        patch={patch}
+                        onSave={() => saveEdit(spell.id)}
+                        onCancel={cancel}
+                      />
+                    )}
                   </div>
-                  {unpreparedSpells.map(renderSpellRow)}
-                </div>
-              )}
+                );
+              })}
             </div>
           );
         })}
       </div>
+
+      {/* ── DM Spell Book ── */}
+      <DmSpellBook ch={ch} updateSelected={updateSelected} />
 
       {showCompendium && (
         <SpellCompendium

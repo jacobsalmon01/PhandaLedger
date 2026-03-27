@@ -11672,11 +11672,18 @@ input[type="number"] { -moz-appearance: textfield; }
 /* ── HP Orb — Glass Crystal in Metal Cradle ── */
 
 .pv-hero__hp-orb {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 108px;
+  height: 108px;
   margin: var(--gap-xs) 0;
 }
 
 .pv-hp-orb {
   position: relative;
+  z-index: 1;
   width: 80px;
   height: 80px;
   border-radius: 50%;
@@ -11767,6 +11774,189 @@ input[type="number"] { -moz-appearance: textfield; }
   text-shadow: 0 0 6px rgba(58,122,155,0.5);
   z-index: 3;
   white-space: nowrap;
+}
+
+/* ── HP Ring — Engraved Arc Gauge ── */
+
+.pv-hp-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pv-hp-ring__track {
+  stroke: #0c0a06;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.5));
+}
+
+.pv-hp-ring__fill {
+  transition: stroke-dashoffset 0.7s ease-out, stroke 0.5s ease;
+}
+
+/* Fill color per HP tier */
+.pv-hp-ring--healthy .pv-hp-ring__fill {
+  stroke: var(--hp-healthy);
+  filter: drop-shadow(0 0 3px rgba(106,170,74,0.45));
+}
+
+.pv-hp-ring--wounded .pv-hp-ring__fill {
+  stroke: var(--hp-wounded);
+  filter: drop-shadow(0 0 3px rgba(200,164,78,0.45));
+}
+
+.pv-hp-ring--critical .pv-hp-ring__fill {
+  stroke: var(--hp-critical);
+  filter: drop-shadow(0 0 3px rgba(155,44,44,0.5));
+}
+
+/* Flash overlay on damage/heal */
+.pv-hp-ring__flash {
+  pointer-events: none;
+}
+
+.pv-hp-ring__flash--damage {
+  stroke: #d43030;
+  filter: drop-shadow(0 0 5px rgba(220,50,50,0.6));
+  animation: ringFlashFade 0.55s ease-out forwards;
+}
+
+.pv-hp-ring__flash--heal {
+  stroke: #f0d050;
+  filter: drop-shadow(0 0 6px rgba(240,210,60,0.5));
+  animation: ringFlashFade 0.65s ease-out forwards;
+}
+
+@keyframes ringFlashFade {
+  0%   { opacity: 0.85; }
+  30%  { opacity: 0.5; }
+  100% { opacity: 0; }
+}
+
+/* ── HP Orb Animations — Damage & Heal ── */
+
+/* --- Damage: red pulse glow + shake --- */
+.pv-hp-orb--damage {
+  animation: orbDamagePulse 0.7s ease-out;
+}
+
+@keyframes orbDamagePulse {
+  0%   { box-shadow: inset 0 4px 16px rgba(0,0,0,0.8), inset 0 -2px 8px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.6), 0 0 12px rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.4); }
+  15%  { box-shadow: inset 0 4px 16px rgba(0,0,0,0.8), inset 0 -2px 8px rgba(0,0,0,0.5), 0 0 0 2px rgba(180,40,40,0.7), 0 0 18px rgba(180,40,40,0.5), 0 0 30px rgba(140,20,20,0.3); }
+  40%  { box-shadow: inset 0 4px 16px rgba(0,0,0,0.8), inset 0 -2px 8px rgba(0,0,0,0.5), 0 0 0 1.5px rgba(160,30,30,0.4), 0 0 14px rgba(140,20,20,0.25), 0 0 20px rgba(120,15,15,0.15); }
+  100% { box-shadow: inset 0 4px 16px rgba(0,0,0,0.8), inset 0 -2px 8px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.6), 0 0 12px rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.4); }
+}
+
+/* Damage number shake */
+.pv-hp-orb__current--shake {
+  animation: hpNumberShake 0.4s ease-out;
+}
+
+@keyframes hpNumberShake {
+  0%, 100% { transform: translateX(0); }
+  15%      { transform: translateX(-3px) rotate(-2deg); }
+  30%      { transform: translateX(2.5px) rotate(1.5deg); }
+  45%      { transform: translateX(-2px) rotate(-1deg); }
+  60%      { transform: translateX(1.5px); }
+  75%      { transform: translateX(-0.5px); }
+}
+
+/* --- Heal: golden glow + warm shimmer --- */
+.pv-hp-orb--heal {
+  animation: orbHealGlow 0.8s ease-out;
+}
+
+@keyframes orbHealGlow {
+  0%   { box-shadow: inset 0 4px 16px rgba(0,0,0,0.8), inset 0 -2px 8px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.6), 0 0 12px rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.4); }
+  20%  { box-shadow: inset 0 4px 16px rgba(0,0,0,0.6), inset 0 0 12px rgba(180,160,60,0.15), 0 0 0 2px rgba(200,170,50,0.5), 0 0 20px rgba(200,170,50,0.35), 0 0 32px rgba(160,140,40,0.2); }
+  50%  { box-shadow: inset 0 4px 16px rgba(0,0,0,0.7), inset 0 0 8px rgba(160,140,50,0.08), 0 0 0 1.5px rgba(180,150,40,0.25), 0 0 14px rgba(160,140,40,0.15), 0 0 22px rgba(140,120,30,0.08); }
+  100% { box-shadow: inset 0 4px 16px rgba(0,0,0,0.8), inset 0 -2px 8px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.6), 0 0 12px rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.4); }
+}
+
+/* --- Ripple ring that expands from the orb --- */
+.pv-hp-orb__ripple {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.pv-hp-orb__ripple--dmg {
+  border: 2px solid rgba(180,40,40,0.6);
+  animation: rippleExpand 0.6s ease-out forwards;
+  box-shadow: 0 0 8px rgba(180,40,40,0.3);
+}
+
+.pv-hp-orb__ripple--heal {
+  border: 2px solid rgba(200,180,60,0.5);
+  animation: rippleExpand 0.7s ease-out forwards;
+  box-shadow: 0 0 8px rgba(200,180,60,0.25);
+}
+
+@keyframes rippleExpand {
+  0%   { inset: -2px; opacity: 0.8; }
+  100% { inset: -14px; opacity: 0; }
+}
+
+/* --- Heal sparkle particles --- */
+.pv-hp-orb__sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+  overflow: visible;
+}
+
+.pv-hp-orb__spark {
+  position: absolute;
+  bottom: 30%;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,230,120,0.9), rgba(200,170,50,0.4));
+  box-shadow: 0 0 4px rgba(255,220,80,0.6), 0 0 8px rgba(200,170,50,0.3);
+  animation: sparkRise 0.9s ease-out forwards;
+}
+
+@keyframes sparkRise {
+  0%   { transform: translateY(0) scale(0.4); opacity: 0; }
+  15%  { opacity: 1; transform: translateY(-4px) scale(1); }
+  60%  { opacity: 0.8; transform: translateY(-20px) scale(0.8); }
+  100% { opacity: 0; transform: translateY(-36px) scale(0.2); }
+}
+
+/* --- Floating damage/heal numbers --- */
+.pv-hp-float {
+  position: absolute;
+  left: 50%;
+  top: -4px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+  pointer-events: none;
+  z-index: 10;
+  white-space: nowrap;
+  animation: hpFloatUp 1.1s ease-out forwards;
+}
+
+.pv-hp-float--damage {
+  color: #d44;
+  text-shadow: 0 0 6px rgba(200,40,40,0.5), 0 1px 3px rgba(0,0,0,0.8);
+}
+
+.pv-hp-float--heal {
+  color: #d4b744;
+  text-shadow: 0 0 6px rgba(200,170,50,0.5), 0 1px 3px rgba(0,0,0,0.8);
+}
+
+@keyframes hpFloatUp {
+  0%   { transform: translate(-50%, 0) scale(0.6); opacity: 0; }
+  12%  { transform: translate(-50%, -6px) scale(1.15); opacity: 1; }
+  30%  { transform: translate(-50%, -14px) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -40px) scale(0.85); opacity: 0; }
 }
 
 /* ── Stat Badges ── */
@@ -12738,6 +12928,11 @@ input[type="number"] { -moz-appearance: textfield; }
     font-size: 1.7rem;
   }
 
+  .pv-hero__hp-orb {
+    width: 120px;
+    height: 120px;
+  }
+
   .pv-hp-orb {
     width: 90px;
     height: 90px;
@@ -12866,6 +13061,11 @@ input[type="number"] { -moz-appearance: textfield; }
 
   .pv-hero__name {
     font-size: 2rem;
+  }
+
+  .pv-hero__hp-orb {
+    width: 132px;
+    height: 132px;
   }
 
   .pv-hp-orb {

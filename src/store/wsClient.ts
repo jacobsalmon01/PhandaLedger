@@ -20,9 +20,10 @@ export type WsRole = 'admin' | 'player';
 const _params = new URLSearchParams(window.location.search);
 const _hasDmToken = _params.has('dm');
 const _forcePlayer = _params.has('player');
+const _isProjector = _params.has('projector');
 
 export const role: WsRole =
-  _forcePlayer
+  _forcePlayer || _isProjector
     ? 'player'
     : window.location.hostname === 'localhost' ||
       window.location.hostname === '127.0.0.1' ||
@@ -33,6 +34,8 @@ export const role: WsRole =
 export const isPlayerMode = role === 'player';
 /** True only when player mode is forced via ?player query param (dev convenience). */
 export const isDevPlayerMode = _forcePlayer;
+/** Projector mode — fullscreen battlemap, independently pannable/zoomable. */
+export const isProjectorMode = _isProjector;
 
 // ── Status ────────────────────────────────────────────────────────────────────
 
@@ -54,6 +57,10 @@ const battleMapListeners      = new Set<AnyFn<unknown>>();
 const battleMapImageListeners = new Set<AnyFn<string>>();
 const battleMapClearListeners = new Set<() => void>();
 
+// Projector viewport listeners
+export type ProjectorViewport = { zoom: number; centerWorldX: number; centerWorldY: number };
+const projectorViewportListeners = new Set<AnyFn<ProjectorViewport>>();
+
 function setStatus(s: WsStatus) {
   _status = s;
   statusListeners.forEach((fn) => fn(s));
@@ -68,6 +75,7 @@ let retryTimer: ReturnType<typeof setTimeout> | null = null;
 let pendingState: unknown = null;
 let pendingBattleMap: unknown = null;
 let pendingBattleMapImage: string | null = null;
+let pendingProjectorViewport: ProjectorViewport | null = null;
 
 function connect() {
   retryTimer = null;
@@ -97,6 +105,10 @@ function connect() {
       _send({ type: 'battle_map_image', payload: pendingBattleMapImage });
       pendingBattleMapImage = null;
     }
+    if (pendingProjectorViewport !== null) {
+      _send({ type: 'projector_viewport', payload: pendingProjectorViewport });
+      pendingProjectorViewport = null;
+    }
   };
 
   socket.onmessage = ({ data }) => {
@@ -121,6 +133,9 @@ function connect() {
           break;
         case 'battle_map_clear':
           battleMapClearListeners.forEach((fn) => fn());
+          break;
+        case 'projector_viewport':
+          projectorViewportListeners.forEach((fn) => fn(msg.payload));
           break;
         case 'waiting':
           // Player connected before the DM — banner handles this via 'connecting' status.
@@ -245,6 +260,24 @@ export function onBattleMapImageReceived(fn: AnyFn<string>): () => void {
 export function onBattleMapCleared(fn: () => void): () => void {
   battleMapClearListeners.add(fn);
   return () => battleMapClearListeners.delete(fn);
+}
+
+// ── Projector Viewport API ────────────────────────────────────────────────────
+
+/** Broadcast projector viewport (world coords) to projector clients. Admin only. */
+export function broadcastProjectorViewport(viewport: ProjectorViewport) {
+  if (role !== 'admin') return;
+  if (_status === 'connected') {
+    _send({ type: 'projector_viewport', payload: viewport });
+  } else {
+    pendingProjectorViewport = viewport;
+  }
+}
+
+/** Subscribe to projector viewport updates (projector client only). */
+export function onProjectorViewportReceived(fn: AnyFn<ProjectorViewport>): () => void {
+  projectorViewportListeners.add(fn);
+  return () => projectorViewportListeners.delete(fn);
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────

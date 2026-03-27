@@ -53,6 +53,9 @@ let latestState = null;
 let latestBattleMap = null;
 let latestBattleMapImage = null;
 
+/** Projector viewport cached for late-joining projector clients. */
+let latestProjectorViewport = null;
+
 /** The active admin WebSocket (only one at a time — the DM's tab). */
 let adminWs = null;
 
@@ -116,8 +119,12 @@ wss.on('connection', (ws, req) => {
         } else if (msg.type === 'battle_map_clear') {
           latestBattleMap = null;
           latestBattleMapImage = null;
+          latestProjectorViewport = null;
           console.log(`  ↑ Battle map cleared by DM — broadcasting to ${players.size} player(s)`);
           broadcastPlayers({ type: 'battle_map_clear' });
+        } else if (msg.type === 'projector_viewport') {
+          latestProjectorViewport = msg.payload;
+          broadcastPlayers({ type: 'projector_viewport', payload: latestProjectorViewport });
         }
       } catch { /* ignore malformed */ }
     });
@@ -147,6 +154,9 @@ wss.on('connection', (ws, req) => {
     }
     if (latestBattleMap) {
       send(ws, { type: 'battle_map', payload: latestBattleMap });
+    }
+    if (latestProjectorViewport) {
+      send(ws, { type: 'projector_viewport', payload: latestProjectorViewport });
     }
 
     ws.on('close', () => {
@@ -184,15 +194,17 @@ httpServer.on('error', (err) => {
 httpServer.listen(PORT, '0.0.0.0', () => {
   const lan = getLanIp();
   const base = lan ? `http://${lan}:${PORT}` : `http://localhost:${PORT}`;
-  const dmUrl    = `${base}?dm=${DM_TOKEN}`;
-  const playerUrl = base;
+  const dmUrl        = `${base}?dm=${DM_TOKEN}`;
+  const playerUrl    = base;
+  const projectorUrl = `${base}?projector`;
 
   const bar = '─'.repeat(52);
   console.log(`\n  ╭${bar}╮`);
   console.log(`  │       ✦  PhandaLedger — Live Session  ✦        │`);
   console.log(`  ├${bar}┤`);
-  console.log(`  │  DM (you)  →  ${dmUrl.padEnd(36)}  │`);
-  console.log(`  │  Players   →  ${playerUrl.padEnd(36)}  │`);
+  console.log(`  │  DM (you)   →  ${dmUrl.padEnd(35)}  │`);
+  console.log(`  │  Players    →  ${playerUrl.padEnd(35)}  │`);
+  console.log(`  │  Projector  →  ${projectorUrl.padEnd(35)}  │`);
   console.log(`  ╰${bar}╯\n`);
   console.log('  Open your DM URL — players scan the QR code below:\n');
 

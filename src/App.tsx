@@ -5,7 +5,7 @@ import { BattleMap } from './components/BattleMap';
 import { PlayerBanner } from './components/PlayerBanner';
 import { PlayerView } from './components/player/PlayerView';
 import { useStore } from './store/useStore';
-import { isPlayerMode } from './store/wsClient';
+import { isPlayerMode, isProjectorMode } from './store/wsClient';
 import { parseShareHash } from './utils/shareUrl';
 import type { PartyExport } from './utils/importExport';
 
@@ -79,10 +79,14 @@ export default function App() {
   const [incomingShare, setIncomingShare] = useState<PartyExport | null>(null);
   const [showBattleMap, setShowBattleMap] = useState(false);
 
-  // Apply player-mode body class for CSS-based read-only enforcement.
+  // Apply player-mode / projector-mode body class for CSS-based enforcement.
   useEffect(() => {
-    if (isPlayerMode) document.body.classList.add('player-mode');
-    return () => document.body.classList.remove('player-mode');
+    if (isProjectorMode) document.body.classList.add('projector-mode');
+    else if (isPlayerMode) document.body.classList.add('player-mode');
+    return () => {
+      document.body.classList.remove('player-mode');
+      document.body.classList.remove('projector-mode');
+    };
   }, []);
 
   // Detect a share hash on mount and offer to load it.
@@ -105,6 +109,10 @@ export default function App() {
     if (!incomingShare) return;
     replaceParty(incomingShare);
     setIncomingShare(null);
+  }
+
+  if (isProjectorMode) {
+    return <div className="projector-root"><BattleMap /></div>;
   }
 
   if (isPlayerMode) {

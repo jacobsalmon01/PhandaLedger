@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useBattleMapStore } from '../store/useBattleMapStore';
 import { useStore } from '../store/useStore';
-import { isPlayerMode } from '../store/wsClient';
+import { isPlayerMode, isProjectorMode, broadcastProjectorViewport, onProjectorViewportReceived } from '../store/wsClient';
+import type { ProjectorViewport } from '../store/wsClient';
 import type { MapToken, MapTemplate, MapLightSource, AmbientLightLevel } from '../types/battlemap';
 import type { Character } from '../types/character';
 
@@ -691,6 +692,7 @@ export function BattleMap() {
     gridCellSize, gridOffsetX, gridOffsetY, gridVisible, gridColor,
     fogEnabled, fogRevealed, pendingMove,
     lightingEnabled, ambientLightDefault, ambientLightCells, lightSources, lightMaskCells,
+    imgScale,
     setMapImage, addToken, moveToken, removeToken,
     addTemplate, updateTemplate, removeTemplate,
     updateGridConfig, clearMap,
@@ -765,6 +767,15 @@ export function BattleMap() {
   const gridPanelRef = useRef<HTMLDivElement>(null);
   const [gridPanelAnchor, setGridPanelAnchor] = useState<{ top: number; left: number } | null>(null);
 
+  // ── Projector control (DM side) ──
+  const [projectorControlMode, setProjectorControlMode] = useState(false);
+  const savedDmViewportRef = useRef<{ zoom: number; panX: number; panY: number } | null>(null);
+  const lastProjectorViewportRef = useRef<ProjectorViewport | null>(null);
+
+  // ── Projector receiving (projector side) ──
+  const hasReceivedProjectorViewportRef = useRef(false);
+  const lastReceivedViewportRef = useRef<ProjectorViewport | null>(null);
+
   // ── Refs ──
   const viewportRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -821,6 +832,65 @@ export function BattleMap() {
   useEffect(() => { zoomRef.current = zoom; }, [zoom]);
   useEffect(() => { panXRef.current = panX; }, [panX]);
   useEffect(() => { panYRef.current = panY; }, [panY]);
+
+  // ── Projector: receive viewport from DM ──
+  // The DM's world coordinates are based on the full-size image. The projector
+  // may have a downscaled image (_imgScale < 1). The pan formula cancels the
+  // scale factor, but the zoom must be divided by imgScale so the smaller image
+  // is rendered at the correct physical size.
+  const imgScaleRef = useRef(imgScale);
+  imgScaleRef.current = imgScale;
+
+  useEffect(() => {
+    if (!isProjectorMode) return;
+    return onProjectorViewportReceived((vp: ProjectorViewport) => {
+      lastReceivedViewportRef.current = vp;
+      hasReceivedProjectorViewportRef.current = true;
+      if (!viewportRef.current) return;
+      const rect = viewportRef.current.getBoundingClientRect();
+      const s = imgScaleRef.current;
+      const localZoom = s < 1 ? vp.zoom / s : vp.zoom;
+      const newPanX = rect.width / 2 - vp.centerWorldX * vp.zoom;
+      const newPanY = rect.height / 2 - vp.centerWorldY * vp.zoom;
+      setZoom(localZoom); zoomRef.current = localZoom;
+      setPanX(newPanX); panXRef.current = newPanX;
+      setPanY(newPanY); panYRef.current = newPanY;
+    });
+  }, []);
+
+  // ── Projector: reapply viewport on window resize ──
+  useEffect(() => {
+    if (!isProjectorMode) return;
+    function handleResize() {
+      const vp = lastReceivedViewportRef.current;
+      if (!vp || !viewportRef.current) return;
+      const rect = viewportRef.current.getBoundingClientRect();
+      const s = imgScaleRef.current;
+      const localZoom = s < 1 ? vp.zoom / s : vp.zoom;
+      const newPanX = rect.width / 2 - vp.centerWorldX * vp.zoom;
+      const newPanY = rect.height / 2 - vp.centerWorldY * vp.zoom;
+      setZoom(localZoom); zoomRef.current = localZoom;
+      setPanX(newPanX); panXRef.current = newPanX;
+      setPanY(newPanY); panYRef.current = newPanY;
+    }
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // ── DM: broadcast viewport to projector when in control mode ──
+  useEffect(() => {
+    if (!projectorControlMode) return;
+    const timer = setTimeout(() => {
+      if (!viewportRef.current) return;
+      const rect = viewportRef.current.getBoundingClientRect();
+      const centerWorldX = (rect.width / 2 - panX) / zoom;
+      const centerWorldY = (rect.height / 2 - panY) / zoom;
+      const vp: ProjectorViewport = { zoom, centerWorldX, centerWorldY };
+      lastProjectorViewportRef.current = vp;
+      broadcastProjectorViewport(vp);
+    }, 60);
+    return () => clearTimeout(timer);
+  }, [projectorControlMode, zoom, panX, panY]);
 
   // ── Helpers ──
 
@@ -949,6 +1019,8 @@ export function BattleMap() {
     const img = e.currentTarget;
     const w = img.naturalWidth, h = img.naturalHeight;
     if (imgSize.w !== w || imgSize.h !== h) setImgSize({ w, h });
+    // Projector: skip fitToView if already receiving viewport from DM
+    if (isProjectorMode && hasReceivedProjectorViewportRef.current) return;
     fitToViewWithSize(w, h);
   }
 
@@ -2053,6 +2125,34 @@ export function BattleMap() {
     setPanY(0); panYRef.current = 0;
   }
 
+  // ── Projector control toggle (DM) ──
+
+  function toggleProjectorControl() {
+    if (!projectorControlMode) {
+      // Toggle ON — save DM viewport, load last projector viewport if available
+      savedDmViewportRef.current = { zoom, panX, panY };
+      if (lastProjectorViewportRef.current && viewportRef.current) {
+        const vp = lastProjectorViewportRef.current;
+        const rect = viewportRef.current.getBoundingClientRect();
+        const newPanX = rect.width / 2 - vp.centerWorldX * vp.zoom;
+        const newPanY = rect.height / 2 - vp.centerWorldY * vp.zoom;
+        setZoom(vp.zoom); zoomRef.current = vp.zoom;
+        setPanX(newPanX); panXRef.current = newPanX;
+        setPanY(newPanY); panYRef.current = newPanY;
+      }
+      setProjectorControlMode(true);
+    } else {
+      // Toggle OFF — restore saved DM viewport
+      if (savedDmViewportRef.current) {
+        const sv = savedDmViewportRef.current;
+        setZoom(sv.zoom); zoomRef.current = sv.zoom;
+        setPanX(sv.panX); panXRef.current = sv.panX;
+        setPanY(sv.panY); panYRef.current = sv.panY;
+      }
+      setProjectorControlMode(false);
+    }
+  }
+
   // ── Render: empty state ──
 
   if (!mapImage) {
@@ -2062,11 +2162,11 @@ export function BattleMap() {
           <div className="bm-empty__icon">{'\u2694'}</div>
           <div className="bm-empty__title">Battle Map</div>
           <div className="bm-empty__text">
-            {isPlayerMode
+            {isPlayerMode || isProjectorMode
               ? 'The DM has not loaded a battle map yet.'
               : 'Upload a map image to begin placing tokens and tracking combat positions.'}
           </div>
-          {!isPlayerMode && (
+          {!isPlayerMode && !isProjectorMode && (
             <>
               <button className="bm-empty__btn" onClick={() => fileInputRef.current?.click()}>
                 Upload Map
@@ -2307,6 +2407,20 @@ export function BattleMap() {
 
             <span className="bm-toolbar__div" />
 
+            <button
+              className={`bm-toolbar__icon-btn bm-toolbar__icon-btn--cyan${projectorControlMode ? ' bm-toolbar__icon-btn--active' : ''}`}
+              onClick={toggleProjectorControl}
+              title={projectorControlMode ? 'Stop adjusting projector' : 'Adjust projector view'}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <rect x="1" y="3" width="14" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
+                <path d="M6 14h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                <path d="M8 12v2" stroke="currentColor" strokeWidth="1.3"/>
+              </svg>
+            </button>
+
+            <span className="bm-toolbar__div" />
+
             <div ref={gridPanelRef}>
               <button
                 className={`bm-toolbar__icon-btn${showGridPanel ? ' bm-toolbar__icon-btn--active' : ''}`}
@@ -2407,8 +2521,13 @@ export function BattleMap() {
         </div>
       )}
 
+      {/* Projector control indicator */}
+      {projectorControlMode && (
+        <div className="bm-projector-indicator">Adjusting Projector View</div>
+      )}
+
       {/* Player toolbar */}
-      {isPlayerMode && (
+      {isPlayerMode && !isProjectorMode && (
         <div className="bm-toolbar bm-toolbar--player">
           <div className="bm-toolbar__group">
             <div className="bm-toolbar__zoom">
@@ -2441,6 +2560,7 @@ export function BattleMap() {
           measureMode && 'bm-viewport--measuring',
           fogMode && 'bm-viewport--fog',
           lightMode && 'bm-viewport--light',
+          isProjectorMode && 'bm-viewport--projector',
         ].filter(Boolean).join(' ')}
         onPointerDown={handleViewportPointerDown}
         onPointerMove={handlePointerMove}

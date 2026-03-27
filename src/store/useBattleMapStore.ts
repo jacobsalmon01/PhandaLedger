@@ -469,6 +469,7 @@ export function useBattleMapStore() {
     ambientLightCells: snap.ambientLightCells,
     lightSources: snap.lightSources,
     lightMaskCells: snap.lightMaskCells,
+    imgScale: s,
     setMapImage:      useCallback((url: string) => _setMapImage(url), []),
     addToken:         useCallback((t: Omit<MapToken, 'id'>) => _addToken(t), []),
     updateToken:      useCallback((id: string, u: Partial<Omit<MapToken, 'id'>>) => _updateToken(id, u), []),

@@ -13698,6 +13698,49 @@ input[type="number"] { -moz-appearance: textfield; }
   50%      { opacity: 1; }
 }
 
+/* ═══ Projector Mode ═══ */
+
+.projector-root {
+  width: 100vw;
+  height: 100dvh;
+  background: #000;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.projector-root > .main {
+  border: none;
+  height: 100%;
+}
+
+body.projector-mode {
+  overflow: hidden;
+}
+
+.bm-viewport--projector {
+  pointer-events: none;
+  cursor: default;
+}
+
+.bm-projector-indicator {
+  position: absolute;
+  top: 42px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  background: rgba(80, 200, 240, 0.15);
+  border: 1px solid rgba(80, 200, 240, 0.4);
+  color: #70daf0;
+  padding: 4px 14px;
+  border-radius: 4px;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
 /* ═══ Map Container (Player View) ═══ */
 
 .pv-map-container {

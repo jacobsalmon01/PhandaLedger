@@ -44,6 +44,45 @@ function hpColor(ch: Character): string {
   return 'var(--hp-critical)';
 }
 
+function DmTools({ addCharacter, onShowCompendium, characters, selectedId, onImport }: {
+  addCharacter: () => void;
+  onShowCompendium: () => void;
+  characters: Character[];
+  selectedId: string | null;
+  onImport: (exported: PartyExport) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="dm-tools">
+      <button className="dm-tools__header" onClick={() => setExpanded((e) => !e)}>
+        <span className="dm-tools__chevron">{expanded ? '▾' : '▸'}</span>
+        <span className="dm-tools__title">DM Tools</span>
+      </button>
+      {expanded && (
+        <div className="dm-tools__body">
+          <button className="btn-add-pc" onClick={addCharacter}>
+            + New Adventurer
+          </button>
+          <button className="btn-compendium" onClick={onShowCompendium}>
+            ✦ Spell Compendium
+          </button>
+          <div className="ie-divider" />
+          <ImportExportControls
+            characters={characters}
+            selectedId={selectedId}
+            onImport={onImport}
+          />
+          <div className="ie-divider" />
+          <div className="ie-controls">
+            <ShareControls />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface SidebarProps {
   open?: boolean;
   onNavigate?: () => void;
@@ -157,24 +196,13 @@ export function Sidebar({ open, onNavigate, showBattleMap, onSetView }: SidebarP
         <SpellCompendium onClose={() => setShowCompendium(false)} />
       )}
 
-      <div className="sidebar-footer">
-        <button className="btn-add-pc" onClick={addCharacter}>
-          + New Adventurer
-        </button>
-        <button className="btn-compendium" onClick={() => setShowCompendium(true)}>
-          ✦ Spell Compendium
-        </button>
-        <div className="ie-divider" />
-        <ImportExportControls
-          characters={characters}
-          selectedId={selectedId}
-          onImport={handleImport}
-        />
-        <div className="ie-divider" />
-        <div className="ie-controls">
-          <ShareControls />
-        </div>
-      </div>
+      <DmTools
+        addCharacter={addCharacter}
+        onShowCompendium={() => setShowCompendium(true)}
+        characters={characters}
+        selectedId={selectedId}
+        onImport={handleImport}
+      />
     </aside>
   );
 }

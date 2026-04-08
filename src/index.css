@@ -13272,6 +13272,57 @@ input[type="number"] { -moz-appearance: textfield; }
   color: var(--text-dim);
 }
 
+.pv-inv-item-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+button.pv-inv-item {
+  all: unset;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--text-parchment);
+  border-radius: 4px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+button.pv-inv-item--expandable {
+  cursor: pointer;
+}
+
+button.pv-inv-item--expandable:hover {
+  background: rgba(200,164,78,0.06);
+}
+
+button.pv-inv-item--equipped {
+  background: linear-gradient(90deg, rgba(200,164,78,0.08) 0%, transparent 60%);
+  border-left: 2px solid rgba(200,164,78,0.4);
+}
+
+.pv-inv-item__info {
+  font-size: 0.55rem;
+  color: var(--text-dim);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.pv-inv-item__desc {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  padding: 4px 8px 8px;
+  line-height: 1.5;
+  border-left: 2px solid rgba(200,164,78,0.3);
+  margin-left: 8px;
+  background: linear-gradient(90deg, rgba(200,164,78,0.03) 0%, transparent 40%);
+  white-space: pre-wrap;
+}
+
 /* ═══ Resources Card — Wooden Counting Board ═══ */
 
 .pv-resources__list {
@@ -13297,9 +13348,35 @@ input[type="number"] { -moz-appearance: textfield; }
 }
 
 .pv-resource__header {
+  all: unset;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pv-resource__header--expandable {
+  cursor: pointer;
+}
+
+.pv-resource__info {
+  font-size: 0.5rem;
+  color: var(--text-dim);
+  margin-right: auto;
+  margin-left: 6px;
+}
+
+.pv-resource__desc {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  padding: 4px 8px 6px;
+  line-height: 1.5;
+  border-left: 2px solid rgba(200,164,78,0.3);
+  margin: 4px 0 2px 4px;
+  background: linear-gradient(90deg, rgba(200,164,78,0.03) 0%, transparent 40%);
+  white-space: pre-wrap;
 }
 
 .pv-resource__name {

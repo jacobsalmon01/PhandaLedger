@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { Character } from '../../types/character';
 
 interface Props {
@@ -11,6 +12,8 @@ const RECHARGE_LABELS: Record<string, string> = {
 };
 
 export function ResourcesCard({ ch }: Props) {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
   if (ch.resources.length === 0) return null;
 
   return (
@@ -21,10 +24,17 @@ export function ResourcesCard({ ch }: Props) {
           const remaining = r.max - r.used;
           return (
             <div key={r.id} className="pv-resource">
-              <div className="pv-resource__header">
+              <button
+                className={`pv-resource__header${r.description ? ' pv-resource__header--expandable' : ''}`}
+                onClick={() => r.description && setExpandedId(expandedId === r.id ? null : r.id)}
+              >
                 <span className="pv-resource__name">{r.name}</span>
+                {r.description && <span className="pv-resource__info">{expandedId === r.id ? '\u25be' : '\u25b8'}</span>}
                 <span className="pv-resource__recharge">{RECHARGE_LABELS[r.recharge] ?? r.recharge}</span>
-              </div>
+              </button>
+              {expandedId === r.id && r.description && (
+                <div className="pv-resource__desc">{r.description}</div>
+              )}
               <div className="pv-resource__pips">
                 {Array.from({ length: r.max }, (_, i) => (
                   <span

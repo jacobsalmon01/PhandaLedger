@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { Character } from '../../types/character';
 
 interface Props {
@@ -5,6 +6,7 @@ interface Props {
 }
 
 export function InventoryCard({ ch }: Props) {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const equipped = ch.inventory.filter((i) => i.equipped);
   const carried = ch.inventory.filter((i) => !i.equipped);
 
@@ -32,10 +34,19 @@ export function InventoryCard({ ch }: Props) {
         <div className="pv-inv-section">
           <div className="pv-inv-section__label">Equipped</div>
           {equipped.map((item) => (
-            <div key={item.id} className="pv-inv-item pv-inv-item--equipped">
-              <span className="pv-inv-item__icon">{'\u25c6'}</span>
-              <span className="pv-inv-item__name">{item.name}</span>
-              {item.quantity > 1 && <span className="pv-inv-item__qty">{'\u00d7'}{item.quantity}</span>}
+            <div key={item.id} className="pv-inv-item-wrap">
+              <button
+                className={`pv-inv-item pv-inv-item--equipped${item.description ? ' pv-inv-item--expandable' : ''}`}
+                onClick={() => item.description && setExpandedId(expandedId === item.id ? null : item.id)}
+              >
+                <span className="pv-inv-item__icon">{'\u25c6'}</span>
+                <span className="pv-inv-item__name">{item.name}</span>
+                {item.quantity > 1 && <span className="pv-inv-item__qty">{'\u00d7'}{item.quantity}</span>}
+                {item.description && <span className="pv-inv-item__info">{expandedId === item.id ? '\u25be' : '\u25b8'}</span>}
+              </button>
+              {expandedId === item.id && item.description && (
+                <div className="pv-inv-item__desc">{item.description}</div>
+              )}
             </div>
           ))}
         </div>
@@ -46,10 +57,19 @@ export function InventoryCard({ ch }: Props) {
         <div className="pv-inv-section">
           <div className="pv-inv-section__label">Carried</div>
           {carried.map((item) => (
-            <div key={item.id} className="pv-inv-item">
-              <span className="pv-inv-item__name">{item.name}</span>
-              {item.quantity > 1 && <span className="pv-inv-item__qty">{'\u00d7'}{item.quantity}</span>}
-              {item.valuegp > 0 && <span className="pv-inv-item__value">{item.valuegp} gp</span>}
+            <div key={item.id} className="pv-inv-item-wrap">
+              <button
+                className={`pv-inv-item${item.description ? ' pv-inv-item--expandable' : ''}`}
+                onClick={() => item.description && setExpandedId(expandedId === item.id ? null : item.id)}
+              >
+                <span className="pv-inv-item__name">{item.name}</span>
+                {item.quantity > 1 && <span className="pv-inv-item__qty">{'\u00d7'}{item.quantity}</span>}
+                {item.valuegp > 0 && <span className="pv-inv-item__value">{item.valuegp} gp</span>}
+                {item.description && <span className="pv-inv-item__info">{expandedId === item.id ? '\u25be' : '\u25b8'}</span>}
+              </button>
+              {expandedId === item.id && item.description && (
+                <div className="pv-inv-item__desc">{item.description}</div>
+              )}
             </div>
           ))}
         </div>

@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { abilityMod, profBonus } from '../types/character';
 import type { AbilityScores } from '../types/character';
+import { rollDie } from '../utils/rng';
 
 type DieType = 4 | 6 | 8 | 10 | 12 | 20 | 100;
 type AdvMode = 'normal' | 'advantage' | 'disadvantage';
@@ -31,10 +32,6 @@ const SKILLS: SkillDef[] = [
   { key: 'stealth',        label: 'Stealth',         ability: 'dex' },
   { key: 'survival',       label: 'Survival',        ability: 'wis' },
 ];
-
-function rollDie(faces: number): number {
-  return Math.floor(Math.random() * faces) + 1;
-}
 
 interface FreeRollResult {
   roll1: number; roll2: number; chosen: number; other: number; die: DieType; mode: AdvMode;

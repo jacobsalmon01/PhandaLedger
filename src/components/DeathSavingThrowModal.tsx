@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import type { Character } from '../types/character';
+import { rollDie } from '../utils/rng';
 
 type Phase = 'choose' | 'rolling' | 'landing' | 'result';
 type RollOutcome = 'nat20' | 'nat1' | 'success' | 'failure';
@@ -8,10 +9,6 @@ interface Props {
   ch: Character;
   updateSelected: (updater: (ch: Character) => Character) => void;
   onDismiss: () => void;
-}
-
-function rollDie(faces: number): number {
-  return Math.floor(Math.random() * faces) + 1;
 }
 
 export function DeathSavingThrowModal({ ch, updateSelected, onDismiss }: Props) {

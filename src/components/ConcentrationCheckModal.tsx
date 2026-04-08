@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import type { Character, PreparedSpell } from '../types/character';
 import { abilityMod, profBonus } from '../types/character';
+import { rollDie } from '../utils/rng';
 
 type Phase = 'choose' | 'rolling' | 'landing' | 'result';
 
@@ -10,10 +11,6 @@ interface Props {
   damage: number;
   onBreak: () => void;
   onKeep: () => void;
-}
-
-function rollDie(faces: number): number {
-  return Math.floor(Math.random() * faces) + 1;
 }
 
 export function ConcentrationCheckModal({ ch, spell, damage, onBreak, onKeep }: Props) {

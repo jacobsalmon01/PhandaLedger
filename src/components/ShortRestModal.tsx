@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { type Character, abilityMod } from '../types/character';
+import { rollDie as rollDieFaces } from '../utils/rng';
 
 interface Props {
   characters: Character[];
@@ -13,7 +14,7 @@ function parseDieSides(type: string): number {
 }
 
 function rollDie(type: string): number {
-  return Math.floor(Math.random() * parseDieSides(type)) + 1;
+  return rollDieFaces(parseDieSides(type));
 }
 
 function hpColor(current: number, max: number): string {

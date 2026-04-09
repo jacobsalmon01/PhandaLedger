@@ -775,6 +775,7 @@ export function BattleMap() {
   // ── Projector receiving (projector side) ──
   const hasReceivedProjectorViewportRef = useRef(false);
   const lastReceivedViewportRef = useRef<ProjectorViewport | null>(null);
+  const [projectorSelectedTokenId, setProjectorSelectedTokenId] = useState<string | null>(null);
 
   // ── Refs ──
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -846,6 +847,8 @@ export function BattleMap() {
     return onProjectorViewportReceived((vp: ProjectorViewport) => {
       lastReceivedViewportRef.current = vp;
       hasReceivedProjectorViewportRef.current = true;
+      // Always update selected token for darkvision
+      setProjectorSelectedTokenId(vp.selectedTokenId ?? null);
       if (!viewportRef.current) return;
       const rect = viewportRef.current.getBoundingClientRect();
       const s = imgScaleRef.current;
@@ -885,12 +888,20 @@ export function BattleMap() {
       const rect = viewportRef.current.getBoundingClientRect();
       const centerWorldX = (rect.width / 2 - panX) / zoom;
       const centerWorldY = (rect.height / 2 - panY) / zoom;
-      const vp: ProjectorViewport = { zoom, centerWorldX, centerWorldY };
+      const vp: ProjectorViewport = { zoom, centerWorldX, centerWorldY, selectedTokenId };
       lastProjectorViewportRef.current = vp;
       broadcastProjectorViewport(vp);
     }, 60);
     return () => clearTimeout(timer);
-  }, [projectorControlMode, zoom, panX, panY]);
+  }, [projectorControlMode, zoom, panX, panY, selectedTokenId]);
+
+  // ── DM: broadcast selected token to projector (even outside control mode) ──
+  useEffect(() => {
+    if (isPlayerMode || isProjectorMode || projectorControlMode) return;
+    const last = lastProjectorViewportRef.current;
+    if (!last) return;
+    broadcastProjectorViewport({ ...last, selectedTokenId });
+  }, [selectedTokenId, projectorControlMode]);
 
   // ── Helpers ──
 
@@ -1230,8 +1241,9 @@ export function BattleMap() {
     }
 
     // Step 5: Darkvision — if a PC token with darkvision is selected, lighten dark→dim in their radius
-    if (selectedTokenId) {
-      const selToken = tokens.find((t) => t.id === selectedTokenId);
+    const dvTokenId = isProjectorMode ? projectorSelectedTokenId : selectedTokenId;
+    if (dvTokenId) {
+      const selToken = tokens.find((t) => t.id === dvTokenId);
       if (selToken?.characterId) {
         const ch = characters.find((c) => c.id === selToken.characterId);
         const dv = ch?.darkvision || 0;
@@ -1309,7 +1321,7 @@ export function BattleMap() {
       }
       ctx.restore();
     }
-  }, [lightingEnabled, lightMode, ambientLightDefault, ambientLightCells, lightSources, lightMaskCells, tokens, characters, selectedTokenId, imgSize, gridCellSize, gridOffsetX, gridOffsetY, cScale]);
+  }, [lightingEnabled, lightMode, ambientLightDefault, ambientLightCells, lightSources, lightMaskCells, tokens, characters, selectedTokenId, projectorSelectedTokenId, imgSize, gridCellSize, gridOffsetX, gridOffsetY, cScale]);
 
   // ── Light brush preview canvas ──
 
@@ -2769,7 +2781,9 @@ export function BattleMap() {
             const isSelected = selectedTokenId === token.id;
             const pos = isDragging ? dragPos : tokenWorldPos(token);
             const size = token.size * gridCellSize;
-            const fontSize = Math.min(20, Math.max(9, size * 0.22));
+            // Compute font from original (unscaled) cell size, then scale to match world coords
+            const originalSize = imgScale < 1 ? size / imgScale : size;
+            const fontSize = Math.min(20, Math.max(9, originalSize * 0.22)) * imgScale;
 
             // HP bar for PC tokens
             let hpBar: React.ReactNode = null;
@@ -2821,6 +2835,29 @@ export function BattleMap() {
             );
           })}
         </div>
+
+        {/* Compass rose — projector mode only */}
+        {isProjectorMode && (
+          <div className="bm-compass">
+            <svg viewBox="0 0 80 80">
+              {/* N arrow (red) */}
+              <polygon points="40,14 44,38 36,38" fill="#c0392b" />
+              {/* S arrow */}
+              <polygon points="40,66 36,42 44,42" fill="#bbb" />
+              {/* E arrow */}
+              <polygon points="66,40 42,36 42,44" fill="#bbb" />
+              {/* W arrow */}
+              <polygon points="14,40 38,44 38,36" fill="#bbb" />
+              {/* Center dot */}
+              <circle cx="40" cy="40" r="3" fill="#d4a017" />
+              {/* Labels */}
+              <text x="40" y="10" textAnchor="middle" dominantBaseline="middle" fill="#c0392b" fontSize="10" fontWeight="bold" fontFamily="Cinzel, serif">N</text>
+              <text x="40" y="74" textAnchor="middle" dominantBaseline="middle" fill="#ccc" fontSize="9" fontFamily="Cinzel, serif">S</text>
+              <text x="74" y="40" textAnchor="middle" dominantBaseline="middle" fill="#ccc" fontSize="9" fontFamily="Cinzel, serif">E</text>
+              <text x="6" y="40" textAnchor="middle" dominantBaseline="middle" fill="#ccc" fontSize="9" fontFamily="Cinzel, serif">W</text>
+            </svg>
+          </div>
+        )}
       </div>
     </main>
   );

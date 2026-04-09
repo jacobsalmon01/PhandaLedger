@@ -13860,6 +13860,18 @@ body.projector-mode {
   white-space: nowrap;
 }
 
+.bm-compass {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  width: 140px;
+  height: 140px;
+  z-index: 150;
+  opacity: 0.75;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.7));
+}
+
 /* ═══ Map Container (Player View) ═══ */
 
 .pv-map-container {

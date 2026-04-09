@@ -58,7 +58,7 @@ const battleMapImageListeners = new Set<AnyFn<string>>();
 const battleMapClearListeners = new Set<() => void>();
 
 // Projector viewport listeners
-export type ProjectorViewport = { zoom: number; centerWorldX: number; centerWorldY: number };
+export type ProjectorViewport = { zoom: number; centerWorldX: number; centerWorldY: number; selectedTokenId?: string | null };
 const projectorViewportListeners = new Set<AnyFn<ProjectorViewport>>();
 
 function setStatus(s: WsStatus) {

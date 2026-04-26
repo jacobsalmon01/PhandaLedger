@@ -13655,11 +13655,27 @@ button.pv-inv-item--equipped {
     max-width: 480px;
     max-height: calc(100vh - 80px);
     max-height: calc(100dvh - 80px);
-    overflow-y: auto;
+    min-height: 0;
   }
 
   .pv-deck__frame {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 80px);
+    max-height: calc(100dvh - 80px);
+    min-height: 0;
     border-width: 2px;
+  }
+
+  .pv-deck__tabs {
+    flex: 0 0 auto;
+  }
+
+  .pv-deck__content {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .pv-connection {

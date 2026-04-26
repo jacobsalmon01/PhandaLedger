@@ -12,6 +12,18 @@ function signed(n: number): string {
   return n >= 0 ? `+${n}` : `${n}`;
 }
 
+function spellDescriptionHtml(description: string): string {
+  const normalized = description.replace(/<br\s*\/?>/gi, '<br/>');
+  if (/<[a-zA-Z][\s\S]*>/.test(normalized)) return normalized;
+  return normalized
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/\n/g, '<br/>');
+}
+
 const LEVEL_LABELS = ['Cantrips', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th'];
 
 type SpellStatus = 'prepared' | 'learned' | 'available';
@@ -224,24 +236,41 @@ export function SpellsCard({ ch }: Props) {
               .map(([level, spells]) => (
                 <div key={level} className="pv-spells__group">
                   <div className="pv-spells__group-header">{LEVEL_LABELS[level]}</div>
-                  {spells.map((s) => (
-                    <div key={s.id} className="pv-spell-row">
-                      <button
-                        className="pv-spell-row__name"
-                        onClick={() => setExpandedId(expandedId === s.id ? null : s.id)}
-                      >
-                        {s.active && <span className="pv-spell-row__active">{'\u25c6'}</span>}
-                        {s.name}
-                        {s.concentration && <span className="pv-spell-row__conc">C</span>}
-                      </button>
-                      {expandedId === s.id && s.description && (
-                        <div
-                          className="pv-spell-row__desc"
-                          dangerouslySetInnerHTML={{ __html: s.description }}
-                        />
-                      )}
-                    </div>
-                  ))}
+                  {spells.map((s, spellIndex) => {
+                    const hasDescription = s.description.trim().length > 0;
+                    const rowId = s.id || `${level}:${spellIndex}:${s.name}`;
+                    const isExpanded = expandedId === rowId;
+                    return (
+                      <div key={rowId} className="pv-spell-row">
+                        <button
+                          className={`pv-spell-row__name${hasDescription ? ' pv-spell-row__name--expandable' : ''}`}
+                          onClick={() => hasDescription && setExpandedId(isExpanded ? null : rowId)}
+                          title={hasDescription ? (isExpanded ? 'Hide description' : 'Show description') : undefined}
+                        >
+                          {s.active && <span className="pv-spell-row__active">{'\u25c6'}</span>}
+                          <span className="pv-spell-row__title">{s.name}</span>
+                          {s.concentration && <span className="pv-spell-row__conc">C</span>}
+                          {hasDescription && <span className="pv-spell-row__info">{isExpanded ? '\u25be' : '\u25b8'}</span>}
+                        </button>
+                        {(s.castingTime || s.duration || s.notes) && (
+                          <div className="pv-spell-row__summary">
+                            {(s.castingTime || s.duration) && (
+                              <span className="pv-spell-row__meta">
+                                {[s.castingTime, s.duration].filter(Boolean).join(' · ')}
+                              </span>
+                            )}
+                            {s.notes && <span className="pv-spell-row__notes">{s.notes}</span>}
+                          </div>
+                        )}
+                        {isExpanded && hasDescription && (
+                          <div
+                            className="pv-spell-row__desc"
+                            dangerouslySetInnerHTML={{ __html: spellDescriptionHtml(s.description) }}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               ))}
           </div>

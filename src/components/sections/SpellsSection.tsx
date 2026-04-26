@@ -155,6 +155,17 @@ function SpellForm({ form, patch, onSave, onCancel }: FormProps) {
         </label>
       </div>
 
+      <label className="spell-form__field">
+        <span className="spell-form__label">Description</span>
+        <textarea
+          className="spell-form__input spell-form__textarea"
+          value={form.description}
+          placeholder="Full spell text players can read in their spell view..."
+          rows={4}
+          onChange={(e) => patch('description', e.target.value)}
+        />
+      </label>
+
       <div className="spell-form__row spell-form__row--actions">
         <button
           className="spell-form__save"

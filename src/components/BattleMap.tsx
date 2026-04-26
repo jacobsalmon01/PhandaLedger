@@ -1135,9 +1135,11 @@ export function BattleMap() {
 
     if (!lightingEnabled) return;
 
-    // Opacity values — brutally obvious for players, reduced for DM
-    const DARK_ALPHA = isPlayerMode ? 0.88 : 0.55;
-    const DIM_ALPHA  = isPlayerMode ? 0.45 : 0.25;
+    // Viewer modes need the map readable at table/projector distance, while
+    // still preserving the same dark/dim/bright lighting rules.
+    const viewerMode = isPlayerMode || isProjectorMode;
+    const DARK_ALPHA = viewerMode ? 0.68 : 0.55;
+    const DIM_ALPHA  = viewerMode ? 0.32 : 0.25;
 
     // Step 1: Fill entire canvas with the ambient default darkness
     const defaultAlpha = ambientLightDefault === 'dark' ? DARK_ALPHA

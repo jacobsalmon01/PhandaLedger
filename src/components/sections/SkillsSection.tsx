@@ -1,5 +1,5 @@
 import type { Character, AbilityScores } from '../../types/character';
-import { abilityMod, profBonus } from '../../types/character';
+import { abilityMod, profBonus, skillProficiencyMultiplier } from '../../types/character';
 
 interface Props {
   ch: Character;
@@ -43,26 +43,45 @@ export function SkillsSection({ ch, updateSelected }: Props) {
   function toggle(key: string) {
     updateSelected((c) => ({
       ...c,
-      skillProficiencies: c.skillProficiencies.includes(key)
-        ? c.skillProficiencies.filter((k) => k !== key)
-        : [...c.skillProficiencies, key],
+      ...(() => {
+        const multiplier = skillProficiencyMultiplier(c, key);
+        if (multiplier === 0) {
+          return {
+            skillProficiencies: [...c.skillProficiencies, key],
+            skillExpertise: c.skillExpertise.filter((k) => k !== key),
+          };
+        }
+        if (multiplier === 1) {
+          return {
+            skillProficiencies: c.skillProficiencies.includes(key) ? c.skillProficiencies : [...c.skillProficiencies, key],
+            skillExpertise: [...c.skillExpertise.filter((k) => k !== key), key],
+          };
+        }
+        return {
+          skillProficiencies: c.skillProficiencies.filter((k) => k !== key),
+          skillExpertise: c.skillExpertise.filter((k) => k !== key),
+        };
+      })(),
     }));
   }
 
   function renderSkill(skill: SkillDef) {
-    const isProficient = ch.skillProficiencies.includes(skill.key);
-    const bonus = abilityMod(ch.abilities[skill.ability]) + (isProficient ? pb : 0);
+    const multiplier = skillProficiencyMultiplier(ch, skill.key);
+    const isProficient = multiplier > 0;
+    const isExpertise = multiplier === 2;
+    const bonus = abilityMod(ch.abilities[skill.ability]) + pb * multiplier;
     const bonusStr = bonus >= 0 ? `+${bonus}` : `${bonus}`;
     return (
       <button
         key={skill.key}
-        className={`skill-row${isProficient ? ' skill-row--proficient' : ''}`}
+        className={`skill-row${isProficient ? ' skill-row--proficient' : ''}${isExpertise ? ' skill-row--expertise' : ''}`}
         onClick={() => toggle(skill.key)}
-        title={`${skill.label} (${skill.abilityAbbr})${isProficient ? ` — proficient (+${pb})` : ' — click to add proficiency'}`}
+        title={`${skill.label} (${skill.abilityAbbr})${isExpertise ? ` — expertise (+${pb * 2})` : isProficient ? ` — proficient (+${pb})` : ' — click to add proficiency'}`}
       >
         <span className="skill-row__indicator" />
         <span className="skill-row__name">{skill.label}</span>
         <span className="skill-row__ability">{skill.abilityAbbr}</span>
+        {isExpertise && <span className="skill-row__expertise">x2</span>}
         <span className="skill-row__bonus">{bonusStr}</span>
       </button>
     );

@@ -6,7 +6,7 @@ import {
   ImportValidationError,
   CURRENT_EXPORT_VERSION,
 } from './importExport';
-import { createCharacter } from '../types/character';
+import { createCharacter, passivePerception, skillBonus, skillProficiencyMultiplier } from '../types/character';
 
 // ── validatePartyExport ───────────────────────────────────────────────────────
 
@@ -33,7 +33,9 @@ describe('validatePartyExport', () => {
   });
 
   it('falls back to null selectedId when field is absent', () => {
-    const { selectedId: _omit, ...rest } = validPayload();
+    const payload = validPayload();
+    delete (payload as Partial<typeof payload>).selectedId;
+    const rest = payload;
     const result = validatePartyExport(rest);
     expect(result.selectedId).toBeNull();
   });
@@ -45,7 +47,9 @@ describe('validatePartyExport', () => {
   });
 
   it('throws when version is missing', () => {
-    const { version: _omit, ...rest } = validPayload();
+    const payload = validPayload();
+    delete (payload as Partial<typeof payload>).version;
+    const rest = payload;
     expect(() => validatePartyExport(rest)).toThrow(ImportValidationError);
   });
 
@@ -103,6 +107,7 @@ describe('migrateCharacters', () => {
     expect(result.shortRestsUsed).toBe(0);
     expect(result.abilities).toBeDefined();
     expect(result.spellSlots).toEqual([]);
+    expect(result.skillExpertise).toEqual([]);
   });
 
   it('does not overwrite fields that are already present', () => {
@@ -114,6 +119,38 @@ describe('migrateCharacters', () => {
 
   it('handles an empty array', () => {
     expect(migrateCharacters([])).toEqual([]);
+  });
+
+  it('keeps expertise skills proficient when migrating', () => {
+    const ch = { ...createCharacter(), skillProficiencies: [], skillExpertise: ['stealth'] };
+    const [result] = migrateCharacters([ch]);
+    expect(result.skillProficiencies).toContain('stealth');
+    expect(result.skillExpertise).toEqual(['stealth']);
+  });
+});
+
+// ── Skill expertise helpers ─────────────────────────────────────────────────
+
+describe('skill expertise helpers', () => {
+  it('doubles only proficiency bonus for expertise skills', () => {
+    const ch = createCharacter('Keswick');
+    ch.level = 4;
+    ch.abilities.dex = 18;
+    ch.skillProficiencies = ['stealth'];
+    ch.skillExpertise = ['stealth'];
+
+    expect(skillProficiencyMultiplier(ch, 'stealth')).toBe(2);
+    expect(skillBonus(ch, 'stealth', 'dex')).toBe(8);
+  });
+
+  it('includes expertise in passive perception', () => {
+    const ch = createCharacter('Scout');
+    ch.level = 4;
+    ch.abilities.wis = 14;
+    ch.skillProficiencies = ['perception'];
+    ch.skillExpertise = ['perception'];
+
+    expect(passivePerception(ch)).toBe(16);
   });
 });
 

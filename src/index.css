@@ -2384,6 +2384,21 @@ body::after {
   box-shadow: 0 0 4px rgba(200, 164, 78, 0.45);
 }
 
+.attr-check-row--expertise {
+  background: rgba(200, 164, 78, 0.07);
+  border-color: rgba(200, 164, 78, 0.26);
+}
+
+.attr-check-row--expertise:hover {
+  border-color: var(--border-gold-dim);
+}
+
+.attr-check-row--expertise .attr-check-row__dot {
+  background: radial-gradient(circle at 50% 50%, var(--text-bright) 0 28%, var(--text-gold) 32% 100%);
+  border-color: var(--border-gold);
+  box-shadow: 0 0 8px rgba(212, 180, 90, 0.68);
+}
+
 .attr-check-row__name {
   font-family: var(--font-body);
   font-size: 0.9rem;
@@ -2401,6 +2416,26 @@ body::after {
   color: var(--text-parchment);
 }
 
+.attr-check-row--expertise .attr-check-row__name {
+  color: var(--text-bright);
+}
+
+.attr-check-row__expertise {
+  font-family: var(--font-display);
+  font-size: 0.48rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--bg-deep);
+  background: var(--text-gold);
+  border: 1px solid var(--border-gold);
+  border-radius: 2px;
+  padding: 1px 3px 0;
+  line-height: 1.2;
+  box-shadow: 0 0 6px rgba(212, 180, 90, 0.2);
+  flex-shrink: 0;
+}
+
 .attr-check-row__bonus {
   font-family: var(--font-mono);
   font-size: 0.95rem;
@@ -2412,6 +2447,11 @@ body::after {
 
 .attr-check-row--proficient .attr-check-row__bonus {
   color: var(--text-gold);
+}
+
+.attr-check-row--expertise .attr-check-row__bonus {
+  color: var(--text-bright);
+  text-shadow: 0 0 8px rgba(212, 180, 90, 0.35);
 }
 
 .ability-card {
@@ -5198,6 +5238,12 @@ body::after {
   opacity: 0.65;
 }
 
+.skill-mod-preview__prof--expertise {
+  color: var(--text-bright);
+  opacity: 0.95;
+  text-shadow: 0 0 8px rgba(212, 180, 90, 0.35);
+}
+
 /* ── Result box ── */
 .skill-check-result {
   display: flex;
@@ -5363,6 +5409,11 @@ body::after {
 }
 
 .skill-check-result__prof { color: var(--text-gold); opacity: 0.75; }
+.skill-check-result__prof--expertise {
+  color: var(--text-bright);
+  opacity: 0.95;
+  text-shadow: 0 0 8px rgba(212, 180, 90, 0.35);
+}
 .skill-check-result__adv--advantage    { color: rgba(106, 170, 74, 0.85); }
 .skill-check-result__adv--disadvantage { color: rgba(200, 80, 80, 0.85); }
 
@@ -12828,14 +12879,27 @@ input[type="number"] { -moz-appearance: textfield; }
   color: var(--text-parchment);
 }
 
+.pv-skill--expertise {
+  color: var(--text-bright);
+}
+
 .pv-skill__dot {
+  font-family: var(--font-display);
   font-size: 0.4rem;
-  width: 8px;
+  font-weight: 700;
+  width: 12px;
   text-align: center;
 }
 
 .pv-skill--prof .pv-skill__dot {
   color: var(--text-gold);
+}
+
+.pv-skill--expertise .pv-skill__dot {
+  font-size: 0.42rem;
+  letter-spacing: 0;
+  color: var(--text-bright);
+  text-shadow: 0 0 6px rgba(212, 180, 90, 0.45);
 }
 
 .pv-skill__name {
@@ -12850,6 +12914,11 @@ input[type="number"] { -moz-appearance: textfield; }
 .pv-skill__bonus {
   font-family: var(--font-mono);
   font-size: 0.55rem;
+}
+
+.pv-skill--expertise .pv-skill__bonus {
+  color: var(--text-gold);
+  text-shadow: 0 0 6px rgba(212, 180, 90, 0.3);
 }
 
 /* ═══ Spells Card — Crystal Gems ═══ */
@@ -13907,4 +13976,3 @@ body.projector-mode {
     padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
   }
 }
-

@@ -147,6 +147,7 @@ export interface Character {
 
   saveProficiencies: string[];
   skillProficiencies: string[];
+  skillExpertise: string[];
 
   shortRestsUsed: number;          // 0–2, resets on long rest
   lastLongRestAt: string | null;   // display label, e.g. "Fri Mar 19 · 9:00 PM"
@@ -192,6 +193,7 @@ export function createCharacter(name = ''): Character {
 
     saveProficiencies: [],
     skillProficiencies: [],
+    skillExpertise: [],
 
     shortRestsUsed: 0,
     lastLongRestAt: null,
@@ -222,6 +224,45 @@ export function abilityMod(score: number): number {
 /** Proficiency bonus from level */
 export function profBonus(level: number): number {
   return Math.ceil(level / 4) + 1;
+}
+
+function uniqueStringArray(values: unknown): string[] {
+  if (!Array.isArray(values)) return [];
+  return [...new Set(values.filter((value): value is string => typeof value === 'string'))];
+}
+
+/** Normalize skill proficiency/expertise data after loading older saves. */
+export function normalizeSkillTraining(ch: Character): Character {
+  const skillProficiencies = uniqueStringArray((ch as { skillProficiencies?: unknown }).skillProficiencies);
+  const skillExpertise = uniqueStringArray((ch as { skillExpertise?: unknown }).skillExpertise);
+  ch.skillExpertise = skillExpertise;
+  ch.skillProficiencies = [...new Set([...skillProficiencies, ...skillExpertise])];
+  return ch;
+}
+
+/** Skill proficiency multiplier: 0 none, 1 proficient, 2 expertise. */
+export function skillProficiencyMultiplier(
+  ch: Pick<Character, 'skillProficiencies' | 'skillExpertise'>,
+  skillKey: string,
+): 0 | 1 | 2 {
+  if (ch.skillExpertise?.includes(skillKey)) return 2;
+  return ch.skillProficiencies.includes(skillKey) ? 1 : 0;
+}
+
+/** Skill bonus: ability modifier + proficiency bonus multiplied by training. */
+export function skillBonus(
+  ch: Pick<Character, 'abilities' | 'level' | 'skillProficiencies' | 'skillExpertise'>,
+  skillKey: string,
+  ability: keyof AbilityScores,
+): number {
+  return abilityMod(ch.abilities[ability]) + profBonus(ch.level) * skillProficiencyMultiplier(ch, skillKey);
+}
+
+/** Passive Perception: 10 + Perception bonus, including Expertise. */
+export function passivePerception(
+  ch: Pick<Character, 'abilities' | 'level' | 'skillProficiencies' | 'skillExpertise'>,
+): number {
+  return 10 + skillBonus(ch, 'perception', 'wis');
 }
 
 /** Compute base AC from armor type, base AC, and DEX modifier (no item modifiers) */

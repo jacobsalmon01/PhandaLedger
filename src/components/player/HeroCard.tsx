@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import type { Character } from '../../types/character';
-import { abilityMod, profBonus, calcEffectiveAC } from '../../types/character';
+import { calcEffectiveAC, passivePerception } from '../../types/character';
 import { getConditionDef, getExhaustionLevel, type ConditionEntry } from '../../types/conditions';
 
 interface Props {
@@ -15,8 +15,7 @@ interface HpDelta {
 
 export function HeroCard({ ch }: Props) {
   const ac = calcEffectiveAC(ch);
-  const percMod = abilityMod(ch.abilities.wis) + (ch.skillProficiencies.includes('perception') ? profBonus(ch.level) : 0);
-  const pp = 10 + percMod;
+  const pp = passivePerception(ch);
 
   const hpPct = ch.hp.max > 0 ? Math.max(0, Math.min(1, ch.hp.current / ch.hp.max)) : 1;
   const hpColor = hpPct > 0.5 ? 'var(--hp-healthy)' : hpPct > 0.25 ? 'var(--hp-wounded)' : 'var(--hp-critical)';

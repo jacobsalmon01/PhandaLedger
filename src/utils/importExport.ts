@@ -12,7 +12,7 @@
  * Current format: v1.
  */
 
-import { type Character, createCharacter } from '../types/character';
+import { type Character, createCharacter, normalizeSkillTraining } from '../types/character';
 import type { BattleMapExport } from '../store/useBattleMapStore';
 
 // ── Public types ──────────────────────────────────────────────────────────────
@@ -115,6 +115,7 @@ export function migrateCharacters(characters: Character[]): Character[] {
         migrated[key] = template[key];
       }
     }
+    normalizeSkillTraining(migrated);
     return migrated;
   });
 }

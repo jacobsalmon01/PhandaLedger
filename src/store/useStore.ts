@@ -1,5 +1,5 @@
 import { useSyncExternalStore, useCallback } from 'react';
-import { type Character, createCharacter } from '../types/character';
+import { type Character, createCharacter, normalizeSkillTraining } from '../types/character';
 import { type InitiativeEntry } from '../types/initiative';
 import { type PartyExport } from '../utils/importExport';
 import { uuid } from '../utils/uuid';
@@ -17,7 +17,7 @@ interface AppState {
 // ── Persistent store with subscribe/getSnapshot for useSyncExternalStore ──
 
 let state: AppState = { characters: [], selectedId: null, initiative: [] };
-let listeners = new Set<() => void>();
+const listeners = new Set<() => void>();
 
 function emit() {
   listeners.forEach((l) => l());
@@ -37,6 +37,7 @@ function migrateState(parsed: AppState): AppState {
         (ch as unknown as Record<string, unknown>)[key] = template[key];
       }
     }
+    normalizeSkillTraining(ch);
     ch.inventory = (ch.inventory || []).map((item) => {
       const raw = item as unknown as Record<string, unknown>;
       return { equipped: false, modifiers: [], ...raw } as unknown as typeof item;
@@ -124,7 +125,7 @@ function setState(updater: (prev: AppState) => AppState) {
   if (!isPlayerMode) {
     persist();
     // Omit selectedId — players manage their own navigation independently.
-    const { selectedId: _omit, ...broadcastable } = state;
+    const broadcastable = { characters: state.characters, initiative: state.initiative };
     broadcastState(broadcastable);
   }
   emit();

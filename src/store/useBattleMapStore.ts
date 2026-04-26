@@ -3,6 +3,7 @@ import type { MapToken, MapTemplate, AmbientLightLevel, MapLightSource } from '.
 import { uuid } from '../utils/uuid';
 import {
   isPlayerMode,
+  isProjectorMode,
   broadcastBattleMap,
   broadcastBattleMapImage,
   broadcastBattleMapClear,
@@ -66,7 +67,7 @@ const DEFAULTS: BattleMapState = {
 // Mobile Safari crashes when decoding very large map images. Downscale on
 // the player's device to a safe max dimension; the DM's original is untouched.
 
-const PLAYER_MAX_IMG_DIM = 2048;
+const PLAYER_MAX_IMG_DIM = isProjectorMode ? 2560 : 2048;
 
 function downscaleImage(dataUrl: string): Promise<{ url: string; scale: number }> {
   return new Promise((resolve) => {

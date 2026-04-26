@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import type { Character, PortraitCrop } from '../../types/character';
-import { abilityMod, profBonus, calcEffectiveAC } from '../../types/character';
+import { calcEffectiveAC, passivePerception } from '../../types/character';
 import { PortraitCropModal } from '../PortraitCropModal';
 import { NumericInput } from '../NumericInput';
 import { ConditionPicker } from '../ConditionPicker';
@@ -233,8 +233,8 @@ export function CharacterHeader({ ch, updateSelected }: Props) {
             </svg>
           </div>
           {(() => {
-            const percMod = abilityMod(ch.abilities.wis) + (ch.skillProficiencies.includes('perception') ? profBonus(ch.level) : 0);
-            const pp = 10 + percMod;
+            const pp = passivePerception(ch);
+            const percMod = pp - 10;
             return (
               <div className="pp-badge" title={`Passive Perception ${pp} (10 ${percMod >= 0 ? '+' : ''}${percMod})`}>
                 <svg className="pp-badge__svg" viewBox="0 0 60 38" fill="none" xmlns="http://www.w3.org/2000/svg">

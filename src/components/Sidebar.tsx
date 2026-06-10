@@ -5,7 +5,7 @@ import type { PartyExport } from '../utils/importExport';
 import { ImportExportControls } from './ImportExportControls';
 import { ShareControls } from './ShareControls';
 import { WatcherBadge } from './PlayerBanner';
-import { InitiativeTracker } from './InitiativeTracker';
+import { combatUi } from '../store/useCombatUi';
 import { DiceRoller } from './DiceRoller';
 import { RestsSection } from './RestsSection';
 import { SpellCompendium } from './SpellCompendium';
@@ -91,7 +91,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ open, onNavigate, showBattleMap, onSetView }: SidebarProps) {
-  const { characters, selectedId, addCharacter, removeCharacter, selectCharacter, replaceParty } = useStore();
+  const { characters, selectedId, initiative, addCharacter, removeCharacter, selectCharacter, replaceParty } = useStore();
   const [pendingRemove, setPendingRemove] = useState<Character | null>(null);
   const [showCompendium, setShowCompendium] = useState(false);
 
@@ -188,7 +188,17 @@ export function Sidebar({ open, onNavigate, showBattleMap, onSetView }: SidebarP
         </div>
       )}
 
-      <InitiativeTracker />
+      <button
+        className="cb-launch"
+        onClick={() => combatUi.openBoard()}
+        title="Open the full-screen combat board"
+      >
+        <span className="cb-launch__icon">⚔</span>
+        <span className="cb-launch__label">Combat Board</span>
+        {initiative.length > 0 && (
+          <span className="cb-launch__count">{initiative.length}</span>
+        )}
+      </button>
       <DiceRoller />
       <RestsSection />
 

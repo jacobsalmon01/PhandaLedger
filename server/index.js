@@ -24,7 +24,8 @@ import { randomBytes } from 'crypto';
 import qrcode from 'qrcode-terminal';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PORT = Number(process.env.PORT ?? 3000);
+const START_PORT = Number(process.env.PORT ?? 3000);
+const MAX_PORT_ATTEMPTS = 10; // try START_PORT … START_PORT + 9 before giving up
 const DIST = path.join(__dirname, '..', 'dist');
 
 // ── DM token ──────────────────────────────────────────────────────────────────
@@ -181,19 +182,31 @@ function getLanIp() {
   return null;
 }
 
-httpServer.on('error', (err) => {
+let port = START_PORT;
+
+// Note: `ws` re-emits the HTTP server's `listening` and `error` events on the
+// WebSocketServer instance, so we attach to `wss` (an unhandled 'error' on it
+// would otherwise crash the process before our retry logic runs).
+wss.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
-    console.error(`\n  ✖ Port ${PORT} is already in use.`);
-    console.error(`  Run: lsof -ti :${PORT} | xargs kill\n`);
+    const nextPort = port + 1;
+    if (nextPort < START_PORT + MAX_PORT_ATTEMPTS) {
+      console.warn(`  ⚠ Port ${port} is in use — trying ${nextPort}…`);
+      port = nextPort;
+      httpServer.listen(port, '0.0.0.0');
+      return;
+    }
+    console.error(`\n  ✖ Ports ${START_PORT}–${START_PORT + MAX_PORT_ATTEMPTS - 1} are all in use.`);
+    console.error(`  Free one with: lsof -ti :${START_PORT} | xargs kill\n`);
   } else {
     console.error('\n  ✖ Server error:', err.message, '\n');
   }
   process.exit(1);
 });
 
-httpServer.listen(PORT, '0.0.0.0', () => {
+wss.on('listening', () => {
   const lan = getLanIp();
-  const base = lan ? `http://${lan}:${PORT}` : `http://localhost:${PORT}`;
+  const base = lan ? `http://${lan}:${port}` : `http://localhost:${port}`;
   const dmUrl        = `${base}?dm=${DM_TOKEN}`;
   const playerUrl    = base;
   const projectorUrl = `${base}?projector`;
@@ -214,3 +227,5 @@ httpServer.listen(PORT, '0.0.0.0', () => {
     console.log('  Press Ctrl+C to end the session.\n');
   });
 });
+
+httpServer.listen(port, '0.0.0.0');

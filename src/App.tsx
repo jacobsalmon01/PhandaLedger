@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { CharacterSheet } from './components/CharacterSheet';
 import { BattleMap } from './components/BattleMap';
+import { CombatBoard } from './components/CombatBoard';
 import { PlayerBanner } from './components/PlayerBanner';
 import { PlayerView } from './components/player/PlayerView';
 import { useStore } from './store/useStore';
@@ -141,6 +142,8 @@ export default function App() {
         onSetView={(v) => setShowBattleMap(v === 'map')}
       />
       {showBattleMap ? <BattleMap /> : <CharacterSheet />}
+
+      <CombatBoard />
 
       {incomingShare && (
         <IncomingShareModal

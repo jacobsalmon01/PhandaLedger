@@ -397,6 +397,7 @@ export function useStore() {
     removeCharacter,
     selectCharacter,
     updateSelected,
+    updateCharacter,
     transferItem,
     shortRest,
     longRest,

@@ -3,6 +3,7 @@ import type { MapToken, MapTemplate, AmbientLightLevel, MapLightSource } from '.
 import { uuid } from '../utils/uuid';
 import {
   isPlayerMode,
+  isProjectorMode,
   broadcastBattleMap,
   broadcastBattleMapImage,
   broadcastBattleMapClear,
@@ -191,6 +192,14 @@ if (isPlayerMode) {
     emit();
   });
   onBattleMapImageReceived((dataUrl: string) => {
+    // Projector is driven by a real computer (HDMI/laptop), not mobile Safari,
+    // so render the DM's original full-resolution image. The 2048px + JPEG
+    // downscale stays for actual player devices (phones/tablets).
+    if (isProjectorMode) {
+      state = { ...state, mapImage: dataUrl, _imgScale: 1 };
+      emit();
+      return;
+    }
     downscaleImage(dataUrl).then(({ url, scale }) => {
       state = { ...state, mapImage: url, _imgScale: scale };
       emit();

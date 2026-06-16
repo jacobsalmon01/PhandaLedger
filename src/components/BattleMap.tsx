@@ -153,12 +153,13 @@ function AddTokenMenu({
   characters: Character[];
   tokens: MapToken[];
   onAddPartyToken: (ch: Character) => void;
-  onAddCustomToken: (opts: { label: string; color: string; size: number }) => void;
+  onAddCustomToken: (opts: { label: string; color: string; size: number; count: number }) => void;
   style?: React.CSSProperties;
 }) {
   const [label, setLabel] = useState('');
   const [color, setColor] = useState(TOKEN_COLORS[1].hex);
   const [size, setSize] = useState(1);
+  const [count, setCount] = useState(1);
 
   const placedCharIds = new Set(
     tokens.filter((t) => t.characterId).map((t) => t.characterId!),
@@ -166,6 +167,7 @@ function AddTokenMenu({
 
   return (
     <div className="bm-add-menu" style={style} onClick={(e) => e.stopPropagation()}>
+      <div className="bm-add-menu__scroll">
       {characters.length > 0 && (
         <div className="bm-add-menu__section">
           <div className="bm-add-menu__heading">Party</div>
@@ -201,10 +203,10 @@ function AddTokenMenu({
         <div className="bm-add-menu__custom">
           <input
             className="bm-add-menu__input"
-            placeholder="Label..."
+            placeholder={count > 1 ? 'Prefix (e.g. O)' : 'Label...'}
             value={label}
             onChange={(e) => setLabel(e.target.value)}
-            maxLength={4}
+            maxLength={count > 1 ? 2 : 4}
           />
           <div className="bm-add-menu__colors">
             {TOKEN_COLORS.map((c) => (
@@ -231,16 +233,49 @@ function AddTokenMenu({
               ))}
             </div>
           </div>
+          <div className="bm-add-menu__size-row">
+            <span className="bm-add-menu__size-label">Count</span>
+            <div className="bm-add-menu__count-row">
+              <button
+                className="bm-add-menu__count-btn"
+                onClick={() => setCount((c) => Math.max(1, c - 1))}
+                disabled={count <= 1}
+              >
+                −
+              </button>
+              <input
+                type="number"
+                className="bm-add-menu__count"
+                min={1}
+                max={20}
+                value={count}
+                onChange={(e) => setCount(Math.max(1, Math.min(20, parseInt(e.target.value, 10) || 1)))}
+              />
+              <button
+                className="bm-add-menu__count-btn"
+                onClick={() => setCount((c) => Math.min(20, c + 1))}
+                disabled={count >= 20}
+              >
+                +
+              </button>
+              {count > 1 && (
+                <span className="bm-add-menu__count-hint">
+                  → {(label || '?').toUpperCase().slice(0, 2)}1…{(label || '?').toUpperCase().slice(0, 2)}{count}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
+      </div>
       </div>
       <button
         className="bm-add-menu__place-btn"
         onClick={() => {
-          onAddCustomToken({ label: label || '?', color, size });
+          onAddCustomToken({ label: label || '?', color, size, count });
           setLabel('');
         }}
       >
-        Place Token
+        {count > 1 ? `Place ${count} Tokens` : 'Place Token'}
       </button>
     </div>
   );
@@ -2007,12 +2042,23 @@ export function BattleMap() {
     setShowAddMenu(false);
   }
 
-  function handleAddCustomToken(opts: { label: string; color: string; size: number }) {
+  function handleAddCustomToken(opts: { label: string; color: string; size: number; count: number }) {
     const center = viewportCenter();
-    addToken({
-      label: opts.label.slice(0, 4).toUpperCase() || '?',
-      color: opts.color, col: center.col, row: center.row, size: opts.size,
-    });
+    const count = Math.max(1, opts.count);
+    // Single token → label as-is. A group → prefix + auto-number (O1, O2, …),
+    // spread across a small cluster so they don't stack on one cell.
+    const prefix = (opts.label || '?').toUpperCase();
+    const perRow = Math.min(5, count);
+    for (let i = 0; i < count; i++) {
+      const label = count > 1 ? `${prefix.slice(0, 2)}${i + 1}` : prefix.slice(0, 4);
+      addToken({
+        label: label || '?',
+        color: opts.color,
+        col: center.col + (i % perRow),
+        row: center.row + Math.floor(i / perRow),
+        size: opts.size,
+      });
+    }
   }
 
 
@@ -2703,7 +2749,10 @@ export function BattleMap() {
                   }}
                   onPointerDown={!isPlayerMode ? handleGhostPointerDown : undefined}
                 >
-                  <span className="bm-token__label" style={{ fontSize: Math.min(20, Math.max(9, ghostSize * 0.22)) }}>
+                  <span
+                    className="bm-token__label"
+                    style={{ fontSize: Math.min(20, Math.max(9, ghostSize * 0.22)) * (ghostToken.label.length <= 1 ? 1 : ghostToken.label.length === 2 ? 0.82 : 0.66) }}
+                  >
                     {ghostToken.label}
                   </span>
                 </div>
@@ -2781,9 +2830,12 @@ export function BattleMap() {
             const isSelected = selectedTokenId === token.id;
             const pos = isDragging ? dragPos : tokenWorldPos(token);
             const size = token.size * gridCellSize;
-            // Compute font from original (unscaled) cell size, then scale to match world coords
+            // Compute font from original (unscaled) cell size, then scale to match world coords.
+            // Shrink for multi-character labels (e.g. "O1", "Da") so 2–3 chars fit the circle
+            // instead of clipping to an ellipsis.
             const originalSize = imgScale < 1 ? size / imgScale : size;
-            const fontSize = Math.min(20, Math.max(9, originalSize * 0.22)) * imgScale;
+            const lenScale = token.label.length <= 1 ? 1 : token.label.length === 2 ? 0.82 : 0.66;
+            const fontSize = Math.min(20, Math.max(9, originalSize * 0.22)) * lenScale * imgScale;
 
             // HP bar for PC tokens
             let hpBar: React.ReactNode = null;

@@ -10860,12 +10860,12 @@ input[type="number"] { -moz-appearance: textfield; }
   color: #fff;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.01em;
   pointer-events: none;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 85%;
+  max-width: 94%;
   text-align: center;
   z-index: 1;
   line-height: 1;
@@ -11126,9 +11126,17 @@ input[type="number"] { -moz-appearance: textfield; }
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(0,0,0,0.3);
   backdrop-filter: blur(12px);
   z-index: 200;
-  max-height: 420px;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  max-height: min(420px, calc(100vh - 90px));
+  overflow: hidden;
   animation: bm-menu-in 0.1s ease-out;
+}
+/* Scrollable content; the Place button below stays pinned/visible. */
+.bm-add-menu__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 @keyframes bm-menu-in {
@@ -11164,6 +11172,9 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .bm-add-menu__party-list {
   padding: 2px 0;
+  /* Cap the roster so you don't scroll past the whole party to reach Custom + Place. */
+  max-height: 168px;
+  overflow-y: auto;
 }
 
 .bm-add-menu__party-item {
@@ -11235,6 +11246,49 @@ input[type="number"] { -moz-appearance: textfield; }
   color: var(--text-bright);
   font-family: var(--font-body);
   font-size: 0.78rem;
+}
+.bm-add-menu__count-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.bm-add-menu__count-btn {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border-inner);
+  border-radius: 3px;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+  transition: all 0.12s;
+}
+.bm-add-menu__count-btn:hover:not(:disabled) {
+  border-color: var(--border-gold-dim);
+  color: var(--text-bright);
+}
+.bm-add-menu__count-btn:disabled { opacity: 0.4; cursor: default; }
+.bm-add-menu__count {
+  width: 40px;
+  height: 22px;
+  text-align: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border-inner);
+  border-radius: 3px;
+  color: var(--text-bright);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+.bm-add-menu__count:focus { outline: none; border-color: var(--border-gold-dim); }
+.bm-add-menu__count-hint {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  color: var(--text-gold);
+  letter-spacing: 0.02em;
 }
 
 .bm-add-menu__input::placeholder {
@@ -11325,6 +11379,7 @@ input[type="number"] { -moz-appearance: textfield; }
 }
 
 .bm-add-menu__place-btn {
+  flex: 0 0 auto;
   font-family: var(--font-display);
   font-size: 0.6rem;
   font-weight: 700;

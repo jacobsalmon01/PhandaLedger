@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useStore } from '../store/useStore';
-import { abilityMod, profBonus } from '../types/character';
+import { abilityMod, profBonus, skillProfMult } from '../types/character';
 import type { AbilityScores } from '../types/character';
 import { rollDie } from '../utils/rng';
 
@@ -39,7 +39,7 @@ interface FreeRollResult {
 
 interface SkillCheckResult {
   rawRoll: number; otherRoll: number | null; modifier: number; total: number;
-  skillLabel: string; charName: string; proficient: boolean;
+  skillLabel: string; charName: string; proficient: boolean; expertise: boolean;
   mode: AdvMode; natType: 'nat20' | 'nat1' | null;
 }
 
@@ -105,8 +105,8 @@ export function DiceRoller() {
     const ch = characters.find((c) => c.id === skillCharId);
     if (!ch) return;
     const skillDef = SKILLS.find((s) => s.key === skillKey)!;
-    const isProficient = ch.skillProficiencies.includes(skillKey);
-    const mod = abilityMod(ch.abilities[skillDef.ability]) + (isProficient ? profBonus(ch.level) : 0);
+    const mult = skillProfMult(ch, skillKey);
+    const mod = abilityMod(ch.abilities[skillDef.ability]) + mult * profBonus(ch.level);
     const charName = ch.name || 'Character';
 
     clearSkillTimer();
@@ -128,7 +128,7 @@ export function DiceRoller() {
           rawRoll: chosen, otherRoll: skillMode !== 'normal' ? other : null,
           modifier: mod, total: chosen + mod,
           skillLabel: skillDef.label, charName,
-          proficient: isProficient, mode: skillMode, natType: nt,
+          proficient: mult >= 1, expertise: mult === 2, mode: skillMode, natType: nt,
         };
         skillTimerRef.current = setTimeout(() => {
           setSkillPhase('revealing');
@@ -168,9 +168,11 @@ export function DiceRoller() {
 
   const selectedChar       = characters.find((c) => c.id === skillCharId) ?? null;
   const currentSkillDef    = SKILLS.find((s) => s.key === skillKey)!;
-  const currentProficient  = selectedChar?.skillProficiencies.includes(skillKey) ?? false;
+  const currentMult        = selectedChar ? skillProfMult(selectedChar, skillKey) : 0;
+  const currentProficient  = currentMult >= 1;
+  const currentExpertise   = currentMult === 2;
   const currentMod         = selectedChar
-    ? abilityMod(selectedChar.abilities[currentSkillDef.ability]) + (currentProficient ? profBonus(selectedChar.level) : 0)
+    ? abilityMod(selectedChar.abilities[currentSkillDef.ability]) + currentMult * profBonus(selectedChar.level)
     : null;
 
   const badgeContent = tab === 'free'
@@ -261,9 +263,10 @@ export function DiceRoller() {
                     {SKILLS.map((s) => {
                       if (!selectedChar) return <option key={s.key} value={s.key}>{s.label}</option>;
                       const ch = selectedChar;
-                      const prof = ch.skillProficiencies.includes(s.key);
-                      const m = abilityMod(ch.abilities[s.ability]) + (prof ? profBonus(ch.level) : 0);
-                      return <option key={s.key} value={s.key}>{s.label} ({m >= 0 ? '+' : ''}{m}{prof ? ' ★' : ''})</option>;
+                      const mult = skillProfMult(ch, s.key);
+                      const m = abilityMod(ch.abilities[s.ability]) + mult * profBonus(ch.level);
+                      const mark = mult === 2 ? ' ★★' : mult === 1 ? ' ★' : '';
+                      return <option key={s.key} value={s.key}>{s.label} ({m >= 0 ? '+' : ''}{m}{mark})</option>;
                     })}
                   </select>
                 </div>
@@ -274,7 +277,7 @@ export function DiceRoller() {
                 <div className="skill-mod-preview">
                   <span className="skill-mod-preview__value">{currentMod >= 0 ? `+${currentMod}` : `${currentMod}`}</span>
                   <span className="skill-mod-preview__name">{currentSkillDef.label}</span>
-                  {currentProficient && <span className="skill-mod-preview__prof">Proficient</span>}
+                  {currentProficient && <span className="skill-mod-preview__prof">{currentExpertise ? 'Expertise' : 'Proficient'}</span>}
                 </div>
               )}
 
@@ -333,7 +336,7 @@ export function DiceRoller() {
 
                       <div className={`skill-check-result__meta${isSkillRevealing ? ' skill-check-result__meta--enter' : ''}`}>
                         {skillResult.skillLabel}
-                        {skillResult.proficient && <span className="skill-check-result__prof"> · Proficient</span>}
+                        {skillResult.proficient && <span className="skill-check-result__prof"> · {skillResult.expertise ? 'Expertise' : 'Proficient'}</span>}
                         {skillResult.mode !== 'normal' && (
                           <span className={`skill-check-result__adv skill-check-result__adv--${skillResult.mode}`}>
                             {' · '}{skillResult.mode === 'advantage' ? 'ADV' : 'DIS'}

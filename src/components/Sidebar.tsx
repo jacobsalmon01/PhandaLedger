@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useStore } from '../store/useStore';
 import type { Character } from '../types/character';
+import type { InitiativeEntry } from '../types/initiative';
 import type { PartyExport } from '../utils/importExport';
 import { ImportExportControls } from './ImportExportControls';
 import { ShareControls } from './ShareControls';
@@ -44,11 +45,12 @@ function hpColor(ch: Character): string {
   return 'var(--hp-critical)';
 }
 
-function DmTools({ addCharacter, onShowCompendium, characters, selectedId, onImport }: {
+function DmTools({ addCharacter, onShowCompendium, characters, selectedId, initiative, onImport }: {
   addCharacter: () => void;
   onShowCompendium: () => void;
   characters: Character[];
   selectedId: string | null;
+  initiative: InitiativeEntry[];
   onImport: (exported: PartyExport) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -71,6 +73,7 @@ function DmTools({ addCharacter, onShowCompendium, characters, selectedId, onImp
           <ImportExportControls
             characters={characters}
             selectedId={selectedId}
+            initiative={initiative}
             onImport={onImport}
           />
           <div className="ie-divider" />
@@ -211,6 +214,7 @@ export function Sidebar({ open, onNavigate, showBattleMap, onSetView }: SidebarP
         onShowCompendium={() => setShowCompendium(true)}
         characters={characters}
         selectedId={selectedId}
+        initiative={initiative}
         onImport={handleImport}
       />
     </aside>

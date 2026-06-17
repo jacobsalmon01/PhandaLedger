@@ -1,5 +1,5 @@
 import type { Character, AbilityScores, StatKey } from '../../types/character';
-import { abilityMod, profBonus, applyModifiers } from '../../types/character';
+import { abilityMod, profBonus, applyModifiers, canHaveExpertise, skillProfMult } from '../../types/character';
 import { NumericInput } from '../NumericInput';
 
 interface Props {
@@ -44,6 +44,7 @@ const SKILLS_BY_ABILITY: Record<keyof AbilityScores, { key: string; label: strin
 
 export function AbilityScoresSection({ ch, updateSelected }: Props) {
   const pb = profBonus(ch.level);
+  const expertiseAllowed = canHaveExpertise(ch.class);
 
   function toggleSave(key: keyof AbilityScores) {
     updateSelected((c) => ({
@@ -54,13 +55,28 @@ export function AbilityScoresSection({ ch, updateSelected }: Props) {
     }));
   }
 
-  function toggleSkill(skillKey: string) {
-    updateSelected((c) => ({
-      ...c,
-      skillProficiencies: c.skillProficiencies.includes(skillKey)
-        ? c.skillProficiencies.filter((k) => k !== skillKey)
-        : [...c.skillProficiencies, skillKey],
-    }));
+  // Cycle a skill through its proficiency states on click.
+  // Expertise-capable classes: none → proficient → expertise → none.
+  // Other classes: none → proficient → none.
+  function cycleSkill(skillKey: string) {
+    updateSelected((c) => {
+      const isProf = c.skillProficiencies.includes(skillKey);
+      const isExpert = c.skillExpertise.includes(skillKey);
+      if (isExpert) {
+        return {
+          ...c,
+          skillProficiencies: c.skillProficiencies.filter((k) => k !== skillKey),
+          skillExpertise: c.skillExpertise.filter((k) => k !== skillKey),
+        };
+      }
+      if (isProf) {
+        if (canHaveExpertise(c.class)) {
+          return { ...c, skillExpertise: [...c.skillExpertise, skillKey] };
+        }
+        return { ...c, skillProficiencies: c.skillProficiencies.filter((k) => k !== skillKey) };
+      }
+      return { ...c, skillProficiencies: [...c.skillProficiencies, skillKey] };
+    });
   }
 
   return (
@@ -130,14 +146,22 @@ export function AbilityScoresSection({ ch, updateSelected }: Props) {
               {/* Skills */}
               {skills.length > 0 && <div className="attr-col__divider attr-col__divider--skills" />}
               {skills.map(({ key: skillKey, label: skillLabel }) => {
-                const isProficient = ch.skillProficiencies.includes(skillKey);
-                const bonus = mod + (isProficient ? pb : 0);
+                const mult = skillProfMult(ch, skillKey);
+                const bonus = mod + mult * pb;
+                const stateClass = mult === 2
+                  ? ' attr-check-row--expert'
+                  : mult === 1 ? ' attr-check-row--proficient' : '';
+                const title = mult === 2
+                  ? `${skillLabel} (expertise, +${2 * pb}) — click to clear`
+                  : mult === 1
+                    ? `${skillLabel} (proficient, +${pb})${expertiseAllowed ? ' — click for expertise' : ''}`
+                    : `${skillLabel} — click to add proficiency`;
                 return (
                   <button
                     key={skillKey}
-                    className={`attr-check-row${isProficient ? ' attr-check-row--proficient' : ''}`}
-                    onClick={() => toggleSkill(skillKey)}
-                    title={`${skillLabel}${isProficient ? ` (proficient, +${pb})` : ' — click to add proficiency'}`}
+                    className={`attr-check-row${stateClass}`}
+                    onClick={() => cycleSkill(skillKey)}
+                    title={title}
                   >
                     <span className="attr-check-row__dot" />
                     <span className="attr-check-row__name">{skillLabel}</span>

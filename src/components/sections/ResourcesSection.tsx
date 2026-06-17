@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import type { Character, TrackedResource, RechargeOn } from '../../types/character';
+import { RESOURCE_PIP_LIMIT } from '../../types/character';
 import { uuid } from '../../utils/uuid';
+import { NumericInput } from '../NumericInput';
 
 interface Props {
   ch: Character;
@@ -45,7 +47,7 @@ export function ResourcesSection({ ch, updateSelected }: Props) {
   return (
     <section className="section">
       <h2 className="section__heading">Resources</h2>
-      <p className="res-hint">Click a pip to expend · click again to restore · click the badge to cycle recharge type</p>
+      <p className="res-hint">Spend &amp; restore uses · large pools show a numeric tracker · click the badge to cycle recharge type</p>
 
       {ch.resources.length === 0 && (
         <div className="res-empty">
@@ -73,51 +75,76 @@ export function ResourcesSection({ ch, updateSelected }: Props) {
                   onClick={() => setExpandedDescId(expandedDescId === res.id ? null : res.id)}
                 >ⓘ</button>
                 <div className="res-row__track">
-                <div className="res-row__pips">
-                  {Array.from({ length: res.max }, (_, pipIdx) => {
-                    const isFilled = pipIdx < available;
-                    return (
-                      <button
-                        key={pipIdx}
-                        className={`res-pip${isFilled ? ' res-pip--available' : ' res-pip--used'}`}
-                        title={isFilled ? 'Expend' : 'Restore'}
-                        onClick={() =>
-                          updateResource(res.id, (r) =>
-                            isFilled
-                              ? { ...r, used: Math.min(r.used + 1, r.max) }
-                              : { ...r, used: Math.max(r.used - 1, 0) }
-                          )
-                        }
+                {res.max > RESOURCE_PIP_LIMIT ? (
+                  <div className={`res-num${available === 0 ? ' res-num--spent' : available === res.max ? ' res-num--full' : ''}`}>
+                    <button
+                      className="res-num__step"
+                      title="Spend one"
+                      disabled={available <= 0}
+                      onClick={() => updateResource(res.id, (r) => ({ ...r, used: Math.min(r.used + 1, r.max) }))}
+                    >−</button>
+                    <div className="res-num__readout">
+                      <NumericInput
+                        className="res-num__avail"
+                        value={available}
+                        fallback={0}
+                        onCommit={(v) => {
+                          const remaining = Math.max(0, Math.min(v, res.max));
+                          updateResource(res.id, (r) => ({ ...r, used: r.max - remaining }));
+                        }}
                       />
-                    );
-                  })}
-                </div>
-                <div className={`res-row__count${available === 0 ? ' res-row__count--spent' : available === res.max ? ' res-row__count--full' : ''}`}>
-                  <span className="res-row__count-avail">{available}</span>
-                  <span className="res-row__count-sep">/</span>
-                  <span className="res-row__count-max">{res.max}</span>
-                </div>
+                      <span className="res-num__sep">/</span>
+                      <span className="res-num__max">{res.max}</span>
+                    </div>
+                    <button
+                      className="res-num__step"
+                      title="Restore one"
+                      disabled={available >= res.max}
+                      onClick={() => updateResource(res.id, (r) => ({ ...r, used: Math.max(r.used - 1, 0) }))}
+                    >+</button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="res-row__pips">
+                      {Array.from({ length: res.max }, (_, pipIdx) => {
+                        const isFilled = pipIdx < available;
+                        return (
+                          <button
+                            key={pipIdx}
+                            className={`res-pip${isFilled ? ' res-pip--available' : ' res-pip--used'}`}
+                            title={isFilled ? 'Expend' : 'Restore'}
+                            onClick={() =>
+                              updateResource(res.id, (r) =>
+                                isFilled
+                                  ? { ...r, used: Math.min(r.used + 1, r.max) }
+                                  : { ...r, used: Math.max(r.used - 1, 0) }
+                              )
+                            }
+                          />
+                        );
+                      })}
+                    </div>
+                    <div className={`res-row__count${available === 0 ? ' res-row__count--spent' : available === res.max ? ' res-row__count--full' : ''}`}>
+                      <span className="res-row__count-avail">{available}</span>
+                      <span className="res-row__count-sep">/</span>
+                      <span className="res-row__count-max">{res.max}</span>
+                    </div>
+                  </>
+                )}
               </div>
               <div className="res-row__controls">
-                <div className="spell-slot-adj-row">
-                  <button
-                    className="spell-slot-adj"
-                    onClick={() =>
-                      updateResource(res.id, (r) => ({
-                        ...r,
-                        max: Math.max(1, r.max - 1),
-                        used: Math.min(r.used, Math.max(1, r.max - 1)),
-                      }))
-                    }
-                    disabled={res.max <= 1}
-                  >−</button>
-                  <span className="spell-slot-count">{res.max}</span>
-                  <button
-                    className="spell-slot-adj"
-                    onClick={() => updateResource(res.id, (r) => ({ ...r, max: r.max + 1 }))}
-                    disabled={res.max >= 20}
-                  >+</button>
-                </div>
+                <label className="res-max-edit" title="Maximum uses">
+                  <span className="res-max-edit__label">Max</span>
+                  <NumericInput
+                    className="res-max-edit__input"
+                    value={res.max}
+                    fallback={1}
+                    onCommit={(v) => {
+                      const newMax = Math.max(1, Math.min(999, v));
+                      updateResource(res.id, (r) => ({ ...r, max: newMax, used: Math.min(r.used, newMax) }));
+                    }}
+                  />
+                </label>
                 <button
                   className="res-recharge-tag"
                   title={`Recharges on: ${RECHARGE_TITLES[res.recharge]}. Click to change.`}

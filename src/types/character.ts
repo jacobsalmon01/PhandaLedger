@@ -108,6 +108,12 @@ export interface TrackedResource {
   recharge: RechargeOn;
 }
 
+/**
+ * Resources at or below this many uses render as clickable pips; larger pools
+ * (e.g. Lay on Hands, Ki, Sorcery Points) render as a numeric tracker instead.
+ */
+export const RESOURCE_PIP_LIMIT = 10;
+
 export type ArmorType = 'none' | 'light' | 'medium' | 'heavy';
 
 export type SpellcastingAbility = 'int' | 'wis' | 'cha';
@@ -147,6 +153,7 @@ export interface Character {
 
   saveProficiencies: string[];
   skillProficiencies: string[];
+  skillExpertise: string[];   // skills with doubled proficiency (Rogue/Bard expertise)
 
   shortRestsUsed: number;          // 0–2, resets on long rest
   lastLongRestAt: string | null;   // display label, e.g. "Fri Mar 19 · 9:00 PM"
@@ -192,6 +199,7 @@ export function createCharacter(name = ''): Character {
 
     saveProficiencies: [],
     skillProficiencies: [],
+    skillExpertise: [],
 
     shortRestsUsed: 0,
     lastLongRestAt: null,
@@ -222,6 +230,19 @@ export function abilityMod(score: number): number {
 /** Proficiency bonus from level */
 export function profBonus(level: number): number {
   return Math.ceil(level / 4) + 1;
+}
+
+/** Classes whose features grant Expertise (doubled proficiency on chosen skills). */
+export function canHaveExpertise(charClass: string): boolean {
+  const c = charClass.toLowerCase();
+  return c.includes('rogue') || c.includes('bard');
+}
+
+/** Proficiency multiplier for a skill: 2 = expertise, 1 = proficient, 0 = none. */
+export function skillProfMult(ch: Pick<Character, 'skillProficiencies' | 'skillExpertise'>, key: string): number {
+  if (ch.skillExpertise?.includes(key)) return 2;
+  if (ch.skillProficiencies.includes(key)) return 1;
+  return 0;
 }
 
 /** Compute base AC from armor type, base AC, and DEX modifier (no item modifiers) */

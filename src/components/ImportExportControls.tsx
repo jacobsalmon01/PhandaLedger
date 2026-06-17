@@ -14,11 +14,13 @@
 import { useRef, useState } from 'react';
 import { type PartyExport, exportParty, parseImportFile, ImportValidationError } from '../utils/importExport';
 import type { Character } from '../types/character';
+import type { InitiativeEntry } from '../types/initiative';
 import { getBattleMapExport } from '../store/useBattleMapStore';
 
 interface Props {
   characters: Character[];
   selectedId: string | null;
+  initiative: InitiativeEntry[];
   onImport: (exported: PartyExport) => void;
 }
 
@@ -27,7 +29,7 @@ interface PendingImport {
   filename: string;
 }
 
-export function ImportExportControls({ characters, selectedId, onImport }: Props) {
+export function ImportExportControls({ characters, selectedId, initiative, onImport }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // A successfully parsed file waiting for user confirmation.
@@ -38,7 +40,7 @@ export function ImportExportControls({ characters, selectedId, onImport }: Props
   // ── Export ──────────────────────────────────────────────────────────────────
 
   function handleExport() {
-    exportParty(characters, selectedId, getBattleMapExport());
+    exportParty(characters, selectedId, initiative, getBattleMapExport());
   }
 
   // ── Import: file selection ──────────────────────────────────────────────────
@@ -136,6 +138,12 @@ export function ImportExportControls({ characters, selectedId, onImport }: Props
                 <div className="lr-modal__warning">
                   Your current party will be lost. Export first if you want to keep it.
                 </div>
+              )}
+              {pending.data.initiative && pending.data.initiative.length > 0 && (
+                <p className="ie-modal-desc" style={{ marginTop: 6 }}>
+                  This save includes a combat roster of{' '}
+                  <strong>{pending.data.initiative.length} combatant{pending.data.initiative.length !== 1 ? 's' : ''}</strong>. It will be restored.
+                </p>
               )}
               {pending.data.battleMap && (
                 <p className="ie-modal-desc" style={{ marginTop: 6 }}>

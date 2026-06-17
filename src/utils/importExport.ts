@@ -9,15 +9,18 @@
  * ────────────────────────
  * The `version` field lets us write migration paths in `migrateCharacters` as
  * the schema evolves, without breaking saves created by older releases.
- * Current format: v1.
+ *   v1 — characters + selectedId
+ *   v2 — adds optional battle map state (tokens, grid, fog, lighting)
+ *   v3 — adds optional combat roster (initiative tracker entries)
  */
 
 import { type Character, createCharacter } from '../types/character';
+import type { InitiativeEntry } from '../types/initiative';
 import type { BattleMapExport } from '../store/useBattleMapStore';
 
 // ── Public types ──────────────────────────────────────────────────────────────
 
-export const CURRENT_EXPORT_VERSION = 2;
+export const CURRENT_EXPORT_VERSION = 3;
 
 /** The shape written to / read from the JSON file. */
 export interface PartyExport {
@@ -25,6 +28,7 @@ export interface PartyExport {
   exportedAt: string;   // ISO-8601 timestamp
   selectedId: string | null;
   characters: Character[];
+  initiative?: InitiativeEntry[];
   battleMap?: BattleMapExport;
 }
 
@@ -88,6 +92,11 @@ export function validatePartyExport(data: unknown): PartyExport {
     characters: obj.characters as Character[],
   };
 
+  // v3+: optional combat roster (initiative tracker entries)
+  if (Array.isArray(obj.initiative)) {
+    result.initiative = obj.initiative as InitiativeEntry[];
+  }
+
   // v2+: optional battle map state
   if (obj.battleMap && typeof obj.battleMap === 'object' && !Array.isArray(obj.battleMap)) {
     result.battleMap = obj.battleMap as BattleMapExport;
@@ -128,6 +137,7 @@ export function migrateCharacters(characters: Character[]): Character[] {
 export function buildExport(
   characters: Character[],
   selectedId: string | null,
+  initiative?: InitiativeEntry[],
   battleMap?: BattleMapExport,
 ): PartyExport {
   const result: PartyExport = {
@@ -136,6 +146,7 @@ export function buildExport(
     selectedId,
     characters,
   };
+  if (initiative && initiative.length > 0) result.initiative = initiative;
   if (battleMap) result.battleMap = battleMap;
   return result;
 }
@@ -165,9 +176,10 @@ export function triggerDownload(filename: string, data: unknown): void {
 export function exportParty(
   characters: Character[],
   selectedId: string | null,
+  initiative?: InitiativeEntry[],
   battleMap?: BattleMapExport,
 ): void {
-  const data = buildExport(characters, selectedId, battleMap);
+  const data = buildExport(characters, selectedId, initiative, battleMap);
   const date = new Date().toISOString().slice(0, 10);
   triggerDownload(`phandaLedger-${date}.json`, data);
 }

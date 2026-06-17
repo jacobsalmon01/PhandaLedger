@@ -2414,6 +2414,25 @@ body::after {
   color: var(--text-gold);
 }
 
+/* Expertise — doubled proficiency (Rogue/Bard). Double-ring dot reads as "twice". */
+.attr-check-row--expert .attr-check-row__dot {
+  background: var(--text-gold);
+  border-color: var(--border-gold);
+  box-shadow:
+    0 0 0 2px var(--bg-deep),
+    0 0 0 3.5px var(--border-gold),
+    0 0 6px rgba(200, 164, 78, 0.6);
+}
+
+.attr-check-row--expert .attr-check-row__name {
+  color: var(--text-parchment);
+}
+
+.attr-check-row--expert .attr-check-row__bonus {
+  color: var(--text-gold);
+  text-shadow: 0 0 6px rgba(200, 164, 78, 0.55);
+}
+
 .ability-card {
   display: flex;
   flex-direction: column;
@@ -6458,6 +6477,133 @@ input[type="number"] { -moz-appearance: textfield; }
 .res-row__count--full .res-row__count-avail {
   color: var(--text-gold);
   text-shadow: 0 0 8px rgba(200, 164, 78, 0.4);
+}
+
+/* ── Numeric tracker — for large point pools (Lay on Hands, Ki, Sorcery Points) ── */
+.res-num {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.res-num__step {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-gold-dim);
+  background: var(--bg-surface);
+  color: var(--text-gold);
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.12s, border-color 0.12s, box-shadow 0.12s, color 0.12s;
+}
+
+.res-num__step:hover:not(:disabled) {
+  border-color: var(--border-gold);
+  background: var(--bg-hover);
+  box-shadow: 0 0 6px rgba(200, 164, 78, 0.4);
+}
+
+.res-num__step:disabled {
+  opacity: 0.3;
+  cursor: default;
+  color: var(--text-dim);
+}
+
+.res-num__readout {
+  display: flex;
+  align-items: baseline;
+  gap: 1px;
+  min-width: 58px;
+  justify-content: center;
+}
+
+.res-num__avail {
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-gold);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
+  outline: none;
+  width: 3ch;
+  text-align: right;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.res-num__avail:focus {
+  border-bottom-color: var(--border-gold-dim);
+}
+
+.res-num__sep {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  padding: 0 2px;
+}
+
+.res-num__max {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.res-num--spent .res-num__avail {
+  color: rgba(180, 80, 80, 0.85);
+}
+
+.res-num--full .res-num__avail {
+  text-shadow: 0 0 8px rgba(200, 164, 78, 0.4);
+}
+
+/* Max editor — hidden until row hover, mirrors the old +/- stepper reveal */
+.res-max-edit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  cursor: text;
+}
+
+.res-row:hover .res-max-edit,
+.res-max-edit:focus-within {
+  opacity: 1;
+}
+
+.res-max-edit__label {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.res-max-edit__input {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-bright);
+  background: var(--bg-deep);
+  border: 1px solid var(--border-inner);
+  border-radius: 2px;
+  outline: none;
+  width: 3.4ch;
+  text-align: center;
+  padding: 2px 3px;
+  transition: border-color 0.12s;
+}
+
+.res-max-edit__input:focus {
+  border-color: var(--border-gold-dim);
 }
 
 .res-row__controls {
@@ -12893,6 +13039,19 @@ input[type="number"] { -moz-appearance: textfield; }
   color: var(--text-gold);
 }
 
+.pv-skill--expert {
+  color: var(--text-parchment);
+}
+
+.pv-skill--expert .pv-skill__dot {
+  color: var(--text-gold);
+  text-shadow: 0 0 5px rgba(200, 164, 78, 0.6);
+}
+
+.pv-skill--expert .pv-skill__bonus {
+  color: var(--text-gold);
+}
+
 .pv-skill__name {
   font-family: var(--font-body);
   flex: 1;
@@ -13481,6 +13640,18 @@ button.pv-inv-item--equipped {
   font-size: 0.55rem;
   color: var(--text-dim);
   margin-top: 2px;
+}
+
+/* Numeric pools (no pips) get a more prominent remaining count */
+.pv-resource__count--numeric {
+  font-size: 0.7rem;
+  margin-top: 4px;
+}
+
+.pv-resource__count-avail {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-gold);
 }
 
 /* ═══ Responsive: Player View ═══ */

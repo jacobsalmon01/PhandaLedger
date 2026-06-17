@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Character } from '../../types/character';
+import { RESOURCE_PIP_LIMIT } from '../../types/character';
 
 interface Props {
   ch: Character;
@@ -35,15 +36,21 @@ export function ResourcesCard({ ch }: Props) {
               {expandedId === r.id && r.description && (
                 <div className="pv-resource__desc">{r.description}</div>
               )}
-              <div className="pv-resource__pips">
-                {Array.from({ length: r.max }, (_, i) => (
-                  <span
-                    key={i}
-                    className={`pv-resource__pip${i < remaining ? ' pv-resource__pip--available' : ''}`}
-                  />
-                ))}
+              {r.max <= RESOURCE_PIP_LIMIT && (
+                <div className="pv-resource__pips">
+                  {Array.from({ length: r.max }, (_, i) => (
+                    <span
+                      key={i}
+                      className={`pv-resource__pip${i < remaining ? ' pv-resource__pip--available' : ''}`}
+                    />
+                  ))}
+                </div>
+              )}
+              <div className={`pv-resource__count${r.max > RESOURCE_PIP_LIMIT ? ' pv-resource__count--numeric' : ''}`}>
+                {r.max > RESOURCE_PIP_LIMIT
+                  ? <><span className="pv-resource__count-avail">{remaining}</span> / {r.max}</>
+                  : <>{remaining} / {r.max}</>}
               </div>
-              <div className="pv-resource__count">{remaining} / {r.max}</div>
             </div>
           );
         })}

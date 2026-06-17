@@ -278,7 +278,7 @@ export function useStore() {
     const safeSelectedId = characters.find((c) => c.id === selectedId)
       ? selectedId
       : characters[0]?.id ?? null;
-    setState(() => ({ characters, selectedId: safeSelectedId, initiative: [] }));
+    setState(() => ({ characters, selectedId: safeSelectedId, initiative: exported.initiative ?? [] }));
   }, []);
 
   // Merge incoming characters into the existing party.

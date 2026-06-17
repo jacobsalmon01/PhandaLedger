@@ -1,5 +1,5 @@
 import type { Character, AbilityScores } from '../../types/character';
-import { abilityMod, profBonus } from '../../types/character';
+import { abilityMod, profBonus, skillProfMult } from '../../types/character';
 
 interface Props {
   ch: Character;
@@ -75,11 +75,15 @@ export function AbilitiesCard({ ch }: Props) {
               {skills.length > 0 && (
                 <div className="pv-ability__skills">
                   {skills.map((sk) => {
-                    const isProf = ch.skillProficiencies.includes(sk.key);
-                    const bonus = mod + (isProf ? pb : 0);
+                    const mult = skillProfMult(ch, sk.key);
+                    const bonus = mod + mult * pb;
+                    const stateClass = mult === 2
+                      ? ' pv-skill--expert'
+                      : mult === 1 ? ' pv-skill--prof' : '';
+                    const dot = mult === 2 ? '\u25c9' : mult === 1 ? '\u25cf' : '\u25cb';
                     return (
-                      <div key={sk.key} className={`pv-skill${isProf ? ' pv-skill--prof' : ''}`}>
-                        <span className="pv-skill__dot">{isProf ? '\u25cf' : '\u25cb'}</span>
+                      <div key={sk.key} className={`pv-skill${stateClass}`} title={mult === 2 ? 'Expertise' : undefined}>
+                        <span className="pv-skill__dot">{dot}</span>
                         <span className="pv-skill__name">{sk.label}</span>
                         <span className="pv-skill__bonus">{signed(bonus)}</span>
                       </div>

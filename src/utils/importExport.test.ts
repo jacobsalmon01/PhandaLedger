@@ -38,6 +38,20 @@ describe('validatePartyExport', () => {
     expect(result.selectedId).toBeNull();
   });
 
+  it('accepts an optional initiative roster', () => {
+    const result = validatePartyExport({
+      ...validPayload(),
+      initiative: [{ id: 'i1', name: 'Goblin', initiative: 12, type: 'npc' }],
+    });
+    expect(result.initiative).toHaveLength(1);
+    expect(result.initiative?.[0].name).toBe('Goblin');
+  });
+
+  it('omits initiative when it is not an array', () => {
+    const result = validatePartyExport({ ...validPayload(), initiative: 'nope' });
+    expect(result.initiative).toBeUndefined();
+  });
+
   it('throws when input is not an object', () => {
     expect(() => validatePartyExport('not an object')).toThrow(ImportValidationError);
     expect(() => validatePartyExport(null)).toThrow(ImportValidationError);
@@ -133,5 +147,18 @@ describe('buildExport', () => {
     const result = buildExport([], null);
     expect(result.characters).toEqual([]);
     expect(result.selectedId).toBeNull();
+  });
+
+  it('includes the initiative roster when provided', () => {
+    const ch = createCharacter('Thorn');
+    const roster = [{ id: 'i1', name: 'Bandit', initiative: 9, type: 'npc' as const }];
+    const result = buildExport([ch], ch.id, roster);
+    expect(result.initiative).toEqual(roster);
+  });
+
+  it('omits an empty initiative roster', () => {
+    const ch = createCharacter('Thorn');
+    const result = buildExport([ch], ch.id, []);
+    expect(result.initiative).toBeUndefined();
   });
 });

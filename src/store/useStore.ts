@@ -2,6 +2,7 @@ import { useSyncExternalStore, useCallback } from 'react';
 import { type Character, createCharacter } from '../types/character';
 import { type InitiativeEntry } from '../types/initiative';
 import { type PartyExport } from '../utils/importExport';
+import { spellEntryByName } from '../data/spells';
 import { uuid } from '../utils/uuid';
 import { isPlayerMode, broadcastState, onStateReceived, isDevPlayerMode } from './wsClient';
 import seedData from '../../our_party_setup_seed.json';
@@ -50,11 +51,22 @@ function migrateState(parsed: AppState): AppState {
     }
     ch.spells = (ch.spells || []).map((s) => {
       const raw = s as unknown as Record<string, unknown>;
-      return {
+      const merged = {
         concentration: false, duration: '', durationRounds: 0,
         castingTime: '1 action', notes: '', description: '', prepared: true, alwaysPrepared: false, fromItem: false, itemChargesEmpty: false, active: false, roundsRemaining: 0,
         ...raw,
-      } as unknown as typeof s;
+      } as Record<string, unknown>;
+      // Backfill structured fields (range/ritual/components/higherLevels) from the
+      // compendium for spells saved before these fields existed.
+      const entry = spellEntryByName(merged.name as string);
+      if (entry) {
+        if (!merged.description) merged.description = entry.description;
+        if (merged.range === undefined) merged.range = entry.range;
+        if (merged.ritual === undefined) merged.ritual = entry.ritual;
+        if (merged.higherLevels === undefined) merged.higherLevels = entry.higherLevels;
+        if (merged.components === undefined) merged.components = { ...entry.components };
+      }
+      return merged as unknown as typeof s;
     });
     ch.weapons = (ch.weapons || []).map((w) => {
       const raw = w as unknown as Record<string, unknown>;

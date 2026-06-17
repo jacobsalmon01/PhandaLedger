@@ -84,6 +84,10 @@ export interface PreparedSpell {
   duration: string;        // display string, e.g. "Concentration, up to 1 minute"
   durationRounds: number;  // 0 = not round-trackable
   castingTime: string;     // "1 action", "Bonus action", etc.
+  range?: string;          // e.g. "60 feet", "Self" — from compendium
+  ritual?: boolean;        // can be cast as a ritual
+  components?: { v: boolean; s: boolean; m: boolean; materials: string }; // V/S/M + material cost
+  higherLevels?: string;   // "At Higher Levels" scaling text (HTML); from compendium
   notes: string;           // quick reference: save DC, damage, etc.
   description: string;     // full spell description (HTML); populated from compendium
   prepared: boolean;       // prepared for the day — only prepared spells can be cast
@@ -287,4 +291,47 @@ export function spellAttackBonus(ch: Pick<Character, 'abilities' | 'level' | 'sp
 /** Spell save DC: 8 + spellcasting ability modifier + proficiency bonus */
 export function spellSaveDC(ch: Pick<Character, 'abilities' | 'level' | 'spellcastingAbility'>): number {
   return 8 + spellAttackBonus(ch);
+}
+
+/** Compact "V · S · M" string for a spell's components (empty if none/unknown). */
+export function formatSpellComponents(c?: { v: boolean; s: boolean; m: boolean }): string {
+  if (!c) return '';
+  const parts: string[] = [];
+  if (c.v) parts.push('V');
+  if (c.s) parts.push('S');
+  if (c.m) parts.push('M');
+  return parts.join(' · ');
+}
+
+/** Attacks per Attack action from class & level (Extra Attack feature). */
+export function attacksPerAction(ch: Pick<Character, 'class' | 'level'>): number {
+  const c = ch.class.toLowerCase();
+  if (c.includes('fighter')) {
+    if (ch.level >= 20) return 4;
+    if (ch.level >= 11) return 3;
+    if (ch.level >= 5) return 2;
+    return 1;
+  }
+  // Barbarian, Monk, Paladin, and Ranger gain a single Extra Attack at level 5.
+  if (/barbarian|monk|paladin|ranger/.test(c) && ch.level >= 5) return 2;
+  return 1;
+}
+
+/** Aura of Protection: a Paladin of level 6+ adds their CHA mod (min +1) to all saving throws. */
+export function auraOfProtectionBonus(ch: Pick<Character, 'class' | 'level' | 'abilities'>): number {
+  if (ch.class.toLowerCase().includes('paladin') && ch.level >= 6) {
+    return Math.max(1, abilityMod(ch.abilities.cha));
+  }
+  return 0;
+}
+
+/**
+ * Scaled damage dice for a cantrip at a given character level (e.g. "2d8" at level 5),
+ * parsed from the SRD scaling clause. Returns '' for cantrips that don't scale by dice.
+ */
+export function cantripScaledDice(description: string, charLevel: number): string {
+  const m = description.match(/increases by 1d(\d+) when you reach 5th level/i);
+  if (!m) return '';
+  const dice = charLevel >= 17 ? 4 : charLevel >= 11 ? 3 : charLevel >= 5 ? 2 : 1;
+  return `${dice}d${m[1]}`;
 }

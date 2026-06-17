@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import type { Character, PreparedSpell } from '../types/character';
-import { abilityMod, profBonus } from '../types/character';
+import { abilityMod, profBonus, auraOfProtectionBonus } from '../types/character';
 import { rollDie } from '../utils/rng';
 
 type Phase = 'choose' | 'rolling' | 'landing' | 'result';
@@ -17,7 +17,7 @@ export function ConcentrationCheckModal({ ch, spell, damage, onBreak, onKeep }: 
   const dc = Math.max(10, Math.floor(damage / 2));
   const conMod = abilityMod(ch.abilities.con);
   const isProficient = ch.saveProficiencies.includes('con');
-  const saveBonus = conMod + (isProficient ? profBonus(ch.level) : 0);
+  const saveBonus = conMod + (isProficient ? profBonus(ch.level) : 0) + auraOfProtectionBonus(ch);
   const bonusStr = saveBonus >= 0 ? `+${saveBonus}` : `${saveBonus}`;
 
   const [phase, setPhase] = useState<Phase>('choose');

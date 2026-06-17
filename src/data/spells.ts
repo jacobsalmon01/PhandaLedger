@@ -90,6 +90,34 @@ export const SPELLS: SpellEntry[] = lines
 /** Unique class names across all spells, sorted */
 export const ALL_CLASSES: string[] = [...new Set(SPELLS.flatMap((s) => s.classes))].sort();
 
+/** Lookup by (case-insensitive) name — used to backfill character spells from the compendium. */
+const SPELLS_BY_NAME = new Map(SPELLS.map((s) => [s._nameLower, s]));
+export function spellEntryByName(name: string): SpellEntry | undefined {
+  return SPELLS_BY_NAME.get(name.trim().toLowerCase());
+}
+
+/** Normalize a class string to a compendium class key, e.g. "Life Cleric" → "cleric" */
+export function normalizeClass(cls: string): string {
+  const lower = cls.toLowerCase();
+  for (const known of ALL_CLASSES) {
+    if (lower.includes(known)) return known;
+  }
+  return '';
+}
+
+/**
+ * Resolve which class's spell list a character draws from for the spell book,
+ * accounting for spellcasting subclasses: Arcane Trickster (Rogue) and
+ * Eldritch Knight (Fighter) both prepare from the wizard list.
+ */
+export function spellListClass(cls: string, subclass = ''): string {
+  const direct = normalizeClass(cls);
+  if (direct) return direct;
+  const text = `${cls} ${subclass}`.toLowerCase();
+  if (text.includes('arcane trickster') || text.includes('eldritch knight')) return 'wizard';
+  return '';
+}
+
 const LEVEL_LABELS = ['Cantrip', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th'];
 export function levelLabel(level: number): string {
   return LEVEL_LABELS[level] ?? `${level}th`;

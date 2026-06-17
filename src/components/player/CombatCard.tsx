@@ -1,5 +1,5 @@
 import type { Character, FightingStyle, Weapon } from '../../types/character';
-import { abilityMod, profBonus } from '../../types/character';
+import { abilityMod, profBonus, attacksPerAction } from '../../types/character';
 
 interface Props {
   ch: Character;
@@ -41,9 +41,16 @@ export function CombatCard({ ch }: Props) {
     );
   }
 
+  const attacks = attacksPerAction(ch);
+
   return (
     <div className="pv-card pv-card--combat">
       <h2 className="pv-card__title">Combat</h2>
+      {attacks > 1 && (
+        <div className="aura-banner aura-banner--pv" title="Extra Attack — attack this many times when you take the Attack action">
+          <span className="aura-banner__icon">⚔</span> Extra Attack: {attacks} attacks per action
+        </div>
+      )}
       <div className="pv-combat__list">
         {ch.weapons.map((w) => {
           const { toHit, dmgBonus, dice } = calcAttack(ch, w, styles);

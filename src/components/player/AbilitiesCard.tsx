@@ -1,5 +1,5 @@
 import type { Character, AbilityScores } from '../../types/character';
-import { abilityMod, profBonus, skillProfMult } from '../../types/character';
+import { abilityMod, profBonus, skillProfMult, auraOfProtectionBonus } from '../../types/character';
 
 interface Props {
   ch: Character;
@@ -50,16 +50,22 @@ function signed(n: number): string {
 
 export function AbilitiesCard({ ch }: Props) {
   const pb = profBonus(ch.level);
+  const aura = auraOfProtectionBonus(ch);
 
   return (
     <div className="pv-card pv-card--abilities">
       <h2 className="pv-card__title">Abilities</h2>
+      {aura > 0 && (
+        <div className="aura-banner aura-banner--pv" title="Aura of Protection — adds your Charisma modifier to all saving throws">
+          <span className="aura-banner__icon">✦</span> Aura of Protection +{aura} to saves
+        </div>
+      )}
       <div className="pv-abilities__grid">
         {ABILITIES.map(([key, abbr]) => {
           const score = ch.abilities[key];
           const mod = abilityMod(score);
           const hasSave = ch.saveProficiencies.includes(key);
-          const saveBonus = mod + (hasSave ? pb : 0);
+          const saveBonus = mod + (hasSave ? pb : 0) + aura;
           const skills = SKILLS_BY_ABILITY[key];
 
           return (

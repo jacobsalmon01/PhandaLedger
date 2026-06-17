@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Fragment } from 'react';
 import type { Character, PreparedSpell, SpellcastingAbility } from '../../types/character';
-import { spellAttackBonus, spellSaveDC, abilityMod, profBonus } from '../../types/character';
+import { spellAttackBonus, spellSaveDC, abilityMod, profBonus, formatSpellComponents, cantripScaledDice } from '../../types/character';
 import { uuid } from '../../utils/uuid';
-import { SpellCompendium, normalizeClass } from '../SpellCompendium';
-import { SPELLS, type SpellEntry } from '../../data/spells';
+import { SpellCompendium } from '../SpellCompendium';
+import { SPELLS, spellListClass, type SpellEntry } from '../../data/spells';
 
 interface Props {
   ch: Character;
@@ -27,6 +27,7 @@ function blankSpell(): Omit<PreparedSpell, 'id'> {
   return {
     name: '', level: 1, concentration: false,
     duration: '', durationRounds: 0, castingTime: '1 action',
+    range: '', ritual: false, components: { v: false, s: false, m: false, materials: '' }, higherLevels: '',
     notes: '', description: '', prepared: true, alwaysPrepared: false, fromItem: false, itemChargesEmpty: false, active: false, roundsRemaining: 0,
   };
 }
@@ -47,6 +48,7 @@ interface FormProps {
 }
 
 function SpellForm({ form, patch, onSave, onCancel }: FormProps) {
+  const comp = form.components ?? { v: false, s: false, m: false, materials: '' };
   return (
     <div className="spell-form">
       <div className="spell-form__row">
@@ -155,6 +157,45 @@ function SpellForm({ form, patch, onSave, onCancel }: FormProps) {
         </label>
       </div>
 
+      <div className="spell-form__row">
+        <label className="spell-form__field">
+          <span className="spell-form__label">Range</span>
+          <input
+            className="spell-form__input spell-form__input--md"
+            value={form.range ?? ''}
+            placeholder="60 feet"
+            onChange={(e) => patch('range', e.target.value)}
+          />
+        </label>
+
+        <div className="spell-form__field">
+          <span className="spell-form__label">Components</span>
+          <div className="spell-form__components">
+            {(['v', 's', 'm'] as const).map((k) => (
+              <label key={k} className="spell-form__comp-toggle">
+                <input
+                  type="checkbox"
+                  checked={comp[k]}
+                  onChange={(e) => patch('components', { ...comp, [k]: e.target.checked })}
+                />
+                {k.toUpperCase()}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <label className="spell-form__field spell-form__field--wide">
+          <span className="spell-form__label">Material</span>
+          <input
+            className="spell-form__input"
+            value={comp.materials}
+            placeholder="a pinch of sulfur and bat guano…"
+            disabled={!comp.m}
+            onChange={(e) => patch('components', { ...comp, materials: e.target.value })}
+          />
+        </label>
+      </div>
+
       <div className="spell-form__row spell-form__row--actions">
         <button
           className="spell-form__save"
@@ -188,7 +229,7 @@ function DmSpellBook({ ch, updateSelected }: Props) {
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
   const [collapsedLevels, setCollapsedLevels] = useState<Set<number>>(() => new Set([0,1,2,3,4,5,6,7,8,9]));
 
-  const normalizedClass = useMemo(() => normalizeClass(ch.class), [ch.class]);
+  const normalizedClass = useMemo(() => spellListClass(ch.class, ch.subclass), [ch.class, ch.subclass]);
 
   const classSpells = useMemo(() => {
     if (!normalizedClass) return [];
@@ -259,6 +300,10 @@ function DmSpellBook({ ch, updateSelected }: Props) {
       duration: entry.duration,
       durationRounds: 0,
       castingTime: entry.castingTime,
+      range: entry.range,
+      ritual: entry.ritual,
+      components: { ...entry.components },
+      higherLevels: entry.higherLevels,
       notes: '',
       description: entry.description,
       prepared: false,
@@ -398,6 +443,10 @@ export function SpellsSection({ ch, updateSelected }: Props) {
       duration: entry.duration,
       durationRounds: 0,
       castingTime: entry.castingTime,
+      range: entry.range,
+      ritual: entry.ritual,
+      components: { ...entry.components },
+      higherLevels: entry.higherLevels,
       notes: '',
       description: entry.description,
       prepared: true,
@@ -417,7 +466,7 @@ export function SpellsSection({ ch, updateSelected }: Props) {
   }
 
   function openAdd() { setForm(blankSpell()); setEditId('new'); }
-  function openEdit(s: PreparedSpell) { setForm({ ...s }); setEditId(s.id); }
+  function openEdit(s: PreparedSpell) { setForm({ ...blankSpell(), ...s }); setEditId(s.id); }
   function cancel() { setEditId(null); }
 
   function saveNew() {
@@ -682,6 +731,10 @@ export function SpellsSection({ ch, updateSelected }: Props) {
                 const canCast = isPrepared && !spell.itemChargesEmpty && (spell.fromItem || hasSlot(ch, level));
                 const expired = spell.active && spell.durationRounds > 0 && spell.roundsRemaining === 0;
                 const isConc = spell.active && spell.concentration;
+                const componentsStr = formatSpellComponents(spell.components);
+                const materials = spell.components?.m ? spell.components.materials : '';
+                const hasDetail = !!(spell.description || spell.higherLevels || spell.range || componentsStr);
+                const cantripDice = spell.level === 0 ? cantripScaledDice(spell.description, ch.level) : '';
 
                 return (
                   <div
@@ -750,10 +803,14 @@ export function SpellsSection({ ch, updateSelected }: Props) {
                           </button>
 
                           <span className="spell-row__name">{spell.name || 'Unnamed'}</span>
-                          {spell.description && (
+                          {cantripDice && (
+                            <span className="spell-cantrip-scale" title={`Cantrip damage at level ${ch.level}`}>{cantripDice}</span>
+                          )}
+                          {spell.ritual && <span className="spell-ritual-badge" title="Can be cast as a ritual">R</span>}
+                          {hasDetail && (
                             <button
                               className={`spell-desc-btn${expandedDescId === spell.id ? ' spell-desc-btn--open' : ''}`}
-                              title={expandedDescId === spell.id ? 'Hide description' : 'Show description'}
+                              title={expandedDescId === spell.id ? 'Hide details' : 'Show details'}
                               aria-expanded={expandedDescId === spell.id}
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -804,36 +861,61 @@ export function SpellsSection({ ch, updateSelected }: Props) {
                           </div>
                         </div>
 
-                        {/* ── Bottom line: meta + notes ── */}
-                        {(spell.castingTime || spell.duration || spell.notes) && (
-                          <div className="spell-row__bottom">
-                            {spell.castingTime && (
-                              <span className="spell-meta__piece">{spell.castingTime}</span>
-                            )}
-                            {spell.duration && (
-                              <>
-                                <span className="spell-meta__dot">·</span>
-                                <span className="spell-meta__piece">{spell.duration}</span>
-                              </>
-                            )}
-                            {spell.notes && (
-                              <>
-                                {(spell.castingTime || spell.duration) && (
-                                  <span className="spell-meta__dot">—</span>
-                                )}
-                                <span className="spell-meta__notes">{spell.notes}</span>
-                              </>
-                            )}
-                          </div>
-                        )}
+                        {/* ── Bottom line: casting time · range · duration · components — notes ── */}
+                        {(() => {
+                          const pieces = [spell.castingTime, spell.range, spell.duration, componentsStr].filter(Boolean) as string[];
+                          if (pieces.length === 0 && !spell.notes) return null;
+                          return (
+                            <div className="spell-row__bottom">
+                              {pieces.map((p, i) => (
+                                <Fragment key={i}>
+                                  {i > 0 && <span className="spell-meta__dot">·</span>}
+                                  <span
+                                    className="spell-meta__piece"
+                                    title={p === componentsStr && materials ? materials : undefined}
+                                  >{p}</span>
+                                </Fragment>
+                              ))}
+                              {spell.notes && (
+                                <>
+                                  {pieces.length > 0 && <span className="spell-meta__dot">—</span>}
+                                  <span className="spell-meta__notes">{spell.notes}</span>
+                                </>
+                              )}
+                            </div>
+                          );
+                        })()}
 
-                        {/* ── Inline description panel ── */}
-                        {spell.description && expandedDescId === spell.id && (
+                        {/* ── Inline detail panel: range · components (+ materials) · description · higher levels ── */}
+                        {hasDetail && expandedDescId === spell.id && (
                           <div className="spell-desc-panel">
-                            <div
-                              className="spell-desc-panel__body"
-                              dangerouslySetInnerHTML={{ __html: spell.description.replace(/<br\s*\/?>/gi, '<br/>') }}
-                            />
+                            {(spell.range || componentsStr) && (
+                              <div className="spell-desc-panel__meta">
+                                {spell.range && (
+                                  <span className="spell-desc-panel__meta-item">
+                                    <span className="spell-desc-panel__meta-label">Range</span> {spell.range}
+                                  </span>
+                                )}
+                                {componentsStr && (
+                                  <span className="spell-desc-panel__meta-item">
+                                    <span className="spell-desc-panel__meta-label">Components</span> {componentsStr}
+                                    {materials && <span className="spell-desc-panel__materials"> — {materials}</span>}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                            {spell.description && (
+                              <div
+                                className="spell-desc-panel__body"
+                                dangerouslySetInnerHTML={{ __html: spell.description.replace(/<br\s*\/?>/gi, '<br/>') }}
+                              />
+                            )}
+                            {spell.higherLevels && (
+                              <div className="spell-desc-panel__higher">
+                                <span className="spell-desc-panel__higher-label">At Higher Levels. </span>
+                                <span dangerouslySetInnerHTML={{ __html: spell.higherLevels.replace(/<br\s*\/?>/gi, '<br/>') }} />
+                              </div>
+                            )}
                           </div>
                         )}
                       </>

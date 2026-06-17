@@ -4041,6 +4041,114 @@ body::after {
   opacity: 0.9;
 }
 
+/* Range / Components header inside the detail panel */
+.spell-desc-panel__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-bottom: 8px;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  color: var(--text-parchment);
+}
+
+.spell-desc-panel__meta-label {
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-gold);
+  margin-right: 4px;
+}
+
+.spell-desc-panel__materials {
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+/* "At Higher Levels" footer — mirrors the compendium detail styling */
+.spell-desc-panel__higher {
+  margin-top: 8px;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--text-dim);
+  border-left: 2px solid var(--border-gold-dim);
+  padding-left: 8px;
+}
+
+.spell-desc-panel__higher-label {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-gold);
+}
+
+/* Ritual badge on the spell row */
+.spell-ritual-badge {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 1px 5px;
+  border: 1px solid var(--border-gold-dim);
+  color: var(--text-gold);
+  opacity: 0.7;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* Cantrip damage-scaling badge (e.g. "2d8" at level 5) */
+.spell-cantrip-scale {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 1px 5px;
+  border-radius: 2px;
+  color: var(--text-gold);
+  background: rgba(200, 164, 78, 0.12);
+  border: 1px solid var(--border-gold-dim);
+  flex-shrink: 0;
+}
+
+/* Feature banners — Aura of Protection (saves) and Extra Attack (weapons) */
+.aura-banner,
+.extra-attack-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 5px 10px;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--text-parchment);
+  background: linear-gradient(90deg, rgba(200, 164, 78, 0.12), rgba(200, 164, 78, 0.02));
+  border: 1px solid var(--border-gold-dim);
+  border-left: 3px solid var(--border-gold);
+  border-radius: 2px;
+}
+
+.aura-banner strong,
+.extra-attack-banner strong {
+  color: var(--text-gold);
+  font-family: var(--font-mono);
+}
+
+.aura-banner__icon,
+.extra-attack-banner__icon {
+  color: var(--text-gold);
+  font-size: 0.9rem;
+}
+
+.aura-banner--pv {
+  font-size: 0.6rem;
+  padding: 3px 7px;
+  margin-bottom: 7px;
+}
+
 .spell-row--active .spell-row__name,
 .spell-row--concentrating .spell-row__name {
   color: var(--text-bright);
@@ -4302,6 +4410,33 @@ body::after {
 
 .spell-form__toggle input[type="checkbox"] {
   accent-color: rgba(74, 143, 168, 0.9);
+  width: 12px;
+  height: 12px;
+  cursor: pointer;
+}
+
+/* Components V/S/M checkbox group in the spell form */
+.spell-form__components {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 4px 0 2px;
+}
+
+.spell-form__comp-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  cursor: pointer;
+  user-select: none;
+}
+
+.spell-form__comp-toggle input[type="checkbox"] {
+  accent-color: var(--text-gold);
   width: 12px;
   height: 12px;
   cursor: pointer;
@@ -13239,6 +13374,36 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .pv-spell-row__desc p { margin: 4px 0; }
 .pv-spell-row__desc strong { color: var(--text-parchment); }
+
+.pv-spell-row__meta {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--text-gold);
+  letter-spacing: 0.03em;
+  margin-bottom: 5px;
+  opacity: 0.85;
+}
+
+.pv-spell-row__materials {
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.pv-spell-row__higher {
+  margin-top: 5px;
+  padding-left: 6px;
+  border-left: 2px solid rgba(200, 164, 78, 0.3);
+}
+
+.pv-spell-row__higher strong { color: var(--text-gold); }
+
+.pv-spell-row__scale {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: var(--text-gold);
+  margin-left: 4px;
+}
 
 /* ── Spell Book Section ── */
 

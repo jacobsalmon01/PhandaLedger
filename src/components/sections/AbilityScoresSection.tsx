@@ -1,5 +1,5 @@
 import type { Character, AbilityScores, StatKey } from '../../types/character';
-import { abilityMod, profBonus, applyModifiers, canHaveExpertise, skillProfMult } from '../../types/character';
+import { abilityMod, profBonus, applyModifiers, canHaveExpertise, skillProfMult, auraOfProtectionBonus } from '../../types/character';
 import { NumericInput } from '../NumericInput';
 
 interface Props {
@@ -45,6 +45,7 @@ const SKILLS_BY_ABILITY: Record<keyof AbilityScores, { key: string; label: strin
 export function AbilityScoresSection({ ch, updateSelected }: Props) {
   const pb = profBonus(ch.level);
   const expertiseAllowed = canHaveExpertise(ch.class);
+  const aura = auraOfProtectionBonus(ch);
 
   function toggleSave(key: keyof AbilityScores) {
     updateSelected((c) => ({
@@ -82,13 +83,19 @@ export function AbilityScoresSection({ ch, updateSelected }: Props) {
   return (
     <section className="section">
       <h2 className="section__heading">Attributes &amp; Skills</h2>
+      {aura > 0 && (
+        <div className="aura-banner" title="Paladin Aura of Protection — adds your Charisma modifier to all saving throws (you and allies within 10 ft)">
+          <span className="aura-banner__icon">✦</span>
+          Aura of Protection: <strong>+{aura}</strong> to all saving throws
+        </div>
+      )}
       <div className="attr-skills-grid">
         {ABILITIES.map(([abilityKey, label]) => {
           const score = ch.abilities[abilityKey];
           const effectiveScore = applyModifiers(score, ch.inventory, `abilities.${abilityKey}` as StatKey);
           const mod = abilityMod(effectiveScore);
           const isSaveProficient = ch.saveProficiencies.includes(abilityKey);
-          const saveBonus = mod + (isSaveProficient ? pb : 0);
+          const saveBonus = mod + (isSaveProficient ? pb : 0) + aura;
           const skills = SKILLS_BY_ABILITY[abilityKey];
 
           return (
@@ -134,7 +141,7 @@ export function AbilityScoresSection({ ch, updateSelected }: Props) {
               <button
                 className={`attr-check-row attr-check-row--save${isSaveProficient ? ' attr-check-row--proficient' : ''}`}
                 onClick={() => toggleSave(abilityKey)}
-                title={`${label} saving throw${isSaveProficient ? ` (proficient, +${pb})` : ' — click to add proficiency'}`}
+                title={`${label} saving throw${isSaveProficient ? ` (proficient, +${pb})` : ' — click to add proficiency'}${aura ? ` · Aura of Protection +${aura}` : ''}`}
               >
                 <span className="attr-check-row__dot attr-check-row__dot--save" />
                 <span className="attr-check-row__name">Save</span>

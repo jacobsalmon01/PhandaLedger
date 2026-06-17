@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Character, FightingStyle, Weapon } from '../../types/character';
-import { abilityMod, profBonus } from '../../types/character';
+import { abilityMod, profBonus, attacksPerAction } from '../../types/character';
 import { uuid } from '../../utils/uuid';
 
 interface Props {
@@ -282,6 +282,13 @@ export function WeaponsSection({ ch, updateSelected }: Props) {
           Sneak Attack
         </button>
       </h2>
+
+      {attacksPerAction(ch) > 1 && (
+        <div className="extra-attack-banner" title="Extra Attack — you can attack this many times whenever you take the Attack action">
+          <span className="extra-attack-banner__icon">⚔</span>
+          Extra Attack: <strong>{attacksPerAction(ch)} attacks</strong> per Attack action
+        </div>
+      )}
 
       <div className="weapons-list">
         {ch.weapons.length === 0 && editId !== 'new' && (

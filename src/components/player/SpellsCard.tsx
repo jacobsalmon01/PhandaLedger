@@ -1,8 +1,7 @@
 import { useState, useMemo } from 'react';
 import type { Character } from '../../types/character';
-import { spellAttackBonus, spellSaveDC } from '../../types/character';
-import { SPELLS, type SpellEntry } from '../../data/spells';
-import { normalizeClass } from '../SpellCompendium';
+import { spellAttackBonus, spellSaveDC, formatSpellComponents, cantripScaledDice } from '../../types/character';
+import { SPELLS, spellListClass, type SpellEntry } from '../../data/spells';
 
 interface Props {
   ch: Character;
@@ -26,7 +25,7 @@ function SpellBook({ ch }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [collapsedLevels, setCollapsedLevels] = useState<Set<number>>(() => new Set([0,1,2,3,4,5,6,7,8,9]));
 
-  const normalizedClass = useMemo(() => normalizeClass(ch.class), [ch.class]);
+  const normalizedClass = useMemo(() => spellListClass(ch.class, ch.subclass), [ch.class, ch.subclass]);
 
   const classSpells = useMemo(() => {
     if (!normalizedClass) return [];
@@ -160,7 +159,7 @@ export function SpellsCard({ ch }: Props) {
   }
 
   const hasSpells = spellsByLevel.size > 0;
-  const hasClassSpells = normalizeClass(ch.class) !== '';
+  const hasClassSpells = spellListClass(ch.class, ch.subclass) !== '';
 
   if (!hasSpells && ch.spellSlots.every((s) => s.max === 0) && !hasClassSpells) {
     return (
@@ -224,24 +223,46 @@ export function SpellsCard({ ch }: Props) {
               .map(([level, spells]) => (
                 <div key={level} className="pv-spells__group">
                   <div className="pv-spells__group-header">{LEVEL_LABELS[level]}</div>
-                  {spells.map((s) => (
-                    <div key={s.id} className="pv-spell-row">
-                      <button
-                        className="pv-spell-row__name"
-                        onClick={() => setExpandedId(expandedId === s.id ? null : s.id)}
-                      >
-                        {s.active && <span className="pv-spell-row__active">{'\u25c6'}</span>}
-                        {s.name}
-                        {s.concentration && <span className="pv-spell-row__conc">C</span>}
-                      </button>
-                      {expandedId === s.id && s.description && (
-                        <div
-                          className="pv-spell-row__desc"
-                          dangerouslySetInnerHTML={{ __html: s.description }}
-                        />
-                      )}
-                    </div>
-                  ))}
+                  {spells.map((s) => {
+                    const componentsStr = formatSpellComponents(s.components);
+                    const materials = s.components?.m ? s.components.materials : '';
+                    const metaPieces = [s.castingTime, s.range, s.duration, componentsStr].filter(Boolean);
+                    const hasDetail = !!(s.description || s.higherLevels || metaPieces.length);
+                    const cantripDice = s.level === 0 ? cantripScaledDice(s.description, ch.level) : '';
+                    return (
+                      <div key={s.id} className="pv-spell-row">
+                        <button
+                          className="pv-spell-row__name"
+                          onClick={() => setExpandedId(expandedId === s.id ? null : s.id)}
+                        >
+                          {s.active && <span className="pv-spell-row__active">{'\u25c6'}</span>}
+                          {s.name}
+                          {cantripDice && <span className="pv-spell-row__scale">{cantripDice}</span>}
+                          {s.concentration && <span className="pv-spell-row__conc">C</span>}
+                          {s.ritual && <span className="pv-spell-row__conc">R</span>}
+                        </button>
+                        {expandedId === s.id && hasDetail && (
+                          <div className="pv-spell-row__desc">
+                            {metaPieces.length > 0 && (
+                              <div className="pv-spell-row__meta">
+                                {metaPieces.join(' \u00b7 ')}
+                                {materials && <span className="pv-spell-row__materials"> \u2014 {materials}</span>}
+                              </div>
+                            )}
+                            {s.description && (
+                              <div dangerouslySetInnerHTML={{ __html: s.description }} />
+                            )}
+                            {s.higherLevels && (
+                              <div className="pv-spell-row__higher">
+                                <strong>At Higher Levels.</strong>{' '}
+                                <span dangerouslySetInnerHTML={{ __html: s.higherLevels }} />
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               ))}
           </div>

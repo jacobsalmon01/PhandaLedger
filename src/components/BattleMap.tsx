@@ -806,6 +806,7 @@ export function BattleMap() {
   const [projectorControlMode, setProjectorControlMode] = useState(false);
   const savedDmViewportRef = useRef<{ zoom: number; panX: number; panY: number } | null>(null);
   const lastProjectorViewportRef = useRef<ProjectorViewport | null>(null);
+  const lastProjectorEmitRef = useRef(0);
 
   // ── Projector receiving (projector side) ──
   const hasReceivedProjectorViewportRef = useRef(false);
@@ -916,17 +917,29 @@ export function BattleMap() {
   }, []);
 
   // ── DM: broadcast viewport to projector when in control mode ──
+  // Throttled (leading + trailing, ~50ms) rather than debounced, so the
+  // projector receives a steady stream of updates *during* a pan/zoom and can
+  // animate smoothly between them — instead of only catching the final frame.
   useEffect(() => {
     if (!projectorControlMode) return;
-    const timer = setTimeout(() => {
+    const PROJECTOR_EMIT_MS = 50;
+    function emit() {
       if (!viewportRef.current) return;
       const rect = viewportRef.current.getBoundingClientRect();
       const centerWorldX = (rect.width / 2 - panX) / zoom;
       const centerWorldY = (rect.height / 2 - panY) / zoom;
       const vp: ProjectorViewport = { zoom, centerWorldX, centerWorldY, selectedTokenId };
       lastProjectorViewportRef.current = vp;
+      lastProjectorEmitRef.current = performance.now();
       broadcastProjectorViewport(vp);
-    }, 60);
+    }
+    const elapsed = performance.now() - lastProjectorEmitRef.current;
+    if (elapsed >= PROJECTOR_EMIT_MS) {
+      emit();
+      return;
+    }
+    // Schedule the trailing edge so the final position always lands.
+    const timer = setTimeout(emit, PROJECTOR_EMIT_MS - elapsed);
     return () => clearTimeout(timer);
   }, [projectorControlMode, zoom, panX, panY, selectedTokenId]);
 

@@ -14251,6 +14251,13 @@ body.projector-mode {
   cursor: default;
 }
 
+/* Projector eases between the streamed viewport updates so the DM's pan/zoom
+   renders as smooth motion instead of snapping to each frame. Scoped to the
+   projector only — the DM's own view stays transition-free (no input lag). */
+.bm-viewport--projector .bm-world {
+  transition: transform 0.12s linear;
+}
+
 .bm-projector-indicator {
   position: absolute;
   top: 42px;

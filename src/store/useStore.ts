@@ -61,6 +61,9 @@ function migrateState(parsed: AppState): AppState {
       const entry = spellEntryByName(merged.name as string);
       if (entry) {
         if (!merged.description) merged.description = entry.description;
+        // Refresh casting time from the compendium when it's empty or the legacy
+        // default, so action-economy info (action/bonus/reaction) is accurate.
+        if (!merged.castingTime || merged.castingTime === '1 action') merged.castingTime = entry.castingTime;
         if (merged.range === undefined) merged.range = entry.range;
         if (merged.ritual === undefined) merged.ritual = entry.ritual;
         if (merged.higherLevels === undefined) merged.higherLevels = entry.higherLevels;

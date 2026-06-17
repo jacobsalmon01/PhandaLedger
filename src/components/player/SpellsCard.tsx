@@ -13,6 +13,15 @@ function signed(n: number): string {
 
 const LEVEL_LABELS = ['Cantrips', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th'];
 
+/** Short action-economy label from a spell's casting time, e.g. "Action", "Bonus Action", "Reaction". */
+function castActionLabel(castingTime: string): string {
+  const c = (castingTime || '').toLowerCase();
+  if (c.includes('bonus')) return 'Bonus Action';
+  if (c.includes('reaction')) return 'Reaction';
+  if (c.includes('action')) return 'Action';
+  return (castingTime || '').trim(); // longer casts (e.g. "1 Minute", "Ritual") shown verbatim
+}
+
 type SpellStatus = 'prepared' | 'learned' | 'available';
 
 interface BookEntry {
@@ -229,6 +238,7 @@ export function SpellsCard({ ch }: Props) {
                     const metaPieces = [s.castingTime, s.range, s.duration, componentsStr].filter(Boolean);
                     const hasDetail = !!(s.description || s.higherLevels || metaPieces.length);
                     const cantripDice = s.level === 0 ? cantripScaledDice(s.description, ch.level) : '';
+                    const castLabel = castActionLabel(s.castingTime);
                     return (
                       <div key={s.id} className="pv-spell-row">
                         <button
@@ -240,6 +250,7 @@ export function SpellsCard({ ch }: Props) {
                           {cantripDice && <span className="pv-spell-row__scale">{cantripDice}</span>}
                           {s.concentration && <span className="pv-spell-row__conc">C</span>}
                           {s.ritual && <span className="pv-spell-row__conc">R</span>}
+                          {castLabel && <span className="pv-spell-row__cast">{castLabel}</span>}
                         </button>
                         {expandedId === s.id && hasDetail && (
                           <div className="pv-spell-row__desc">

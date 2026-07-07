@@ -203,6 +203,19 @@ export function CharacterHeader({ ch, updateSelected }: Props) {
         </div>
 
         <div className="char-header-badges">
+          <button
+            className={`insp-badge${ch.inspiration ? ' insp-badge--active' : ''}`}
+            title={ch.inspiration ? 'Inspired — click to remove Inspiration' : 'Grant Inspiration'}
+            onClick={() => updateSelected((c) => ({ ...c, inspiration: !c.inspiration }))}
+          >
+            <svg className="insp-badge__svg" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M24 3 L29.2 17.4 L44.5 18 L32.6 27.4 L36.8 42.1 L24 33.7 L11.2 42.1 L15.4 27.4 L3.5 18 L18.8 17.4 Z"
+                className="insp-badge__star"
+                strokeWidth="1.5"
+              />
+            </svg>
+          </button>
           <div className="gold-coin-badge" title="Gold Pieces held">
             <span className="gold-coin__label">GP</span>
             <NumericInput

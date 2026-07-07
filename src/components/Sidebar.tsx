@@ -147,6 +147,9 @@ export function Sidebar({ open, onNavigate, showBattleMap, onSetView }: SidebarP
             <div className="pc-item__info">
               <span className="pc-item__name">
                 {ch.dead && <span className="pc-item__dead-skull">☠</span>}
+                {!ch.dead && ch.inspiration && (
+                  <span className="pc-item__insp-star" title="Inspired">★</span>
+                )}
                 {ch.name || 'Unnamed'}
               </span>
               <span className="pc-item__meta">

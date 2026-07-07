@@ -52,6 +52,9 @@ export function PartyStrip({ characters, selectedId, onSelect }: Props) {
                 </span>
               )}
             </div>
+            {ch.inspiration && !ch.dead && (
+              <span className="pv-party-pip__insp" title="Inspired">{'\u2605'}</span>
+            )}
           </button>
         );
       })}

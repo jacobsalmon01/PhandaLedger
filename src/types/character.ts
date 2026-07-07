@@ -178,6 +178,7 @@ export interface Character {
   portraitCrop: PortraitCrop;
   deathSaves: DeathSaves;
   dead: boolean;
+  inspiration: boolean;
 }
 
 export function createCharacter(name = ''): Character {
@@ -223,6 +224,7 @@ export function createCharacter(name = ''): Character {
     portraitCrop: { scale: 1, offsetX: 0, offsetY: 0 },
     deathSaves: { successes: 0, failures: 0 },
     dead: false,
+    inspiration: false,
   };
 }
 

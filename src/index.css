@@ -2527,6 +2527,44 @@ body::after {
   flex-shrink: 0;
 }
 
+/* ── Inspiration Badge (star toggle) ── */
+.insp-badge {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  filter: drop-shadow(0 2px 6px rgba(200, 164, 78, 0.12));
+  transition: filter 0.2s, transform 0.12s;
+}
+
+.insp-badge:hover {
+  filter: drop-shadow(0 3px 12px rgba(200, 164, 78, 0.35));
+  transform: scale(1.06);
+}
+
+.insp-badge__svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.insp-badge__star {
+  fill: var(--bg-deep);
+  stroke: var(--border-gold-dim);
+}
+
+.insp-badge--active .insp-badge__star {
+  fill: var(--text-gold);
+  stroke: var(--text-gold);
+}
+
+.insp-badge--active {
+  filter: drop-shadow(0 0 8px rgba(200, 164, 78, 0.65));
+}
+
 .gold-coin-badge {
   flex-shrink: 0;
   width: 54px;
@@ -9150,6 +9188,13 @@ input[type="number"] { -moz-appearance: textfield; }
   vertical-align: middle;
 }
 
+.pc-item__insp-star {
+  font-size: 0.65rem;
+  margin-right: 4px;
+  color: var(--text-gold);
+  vertical-align: middle;
+}
+
 /* ── Short Rest HP Recovery Modal ── */
 
 .sr-hp-modal {
@@ -12150,6 +12195,17 @@ input[type="number"] { -moz-appearance: textfield; }
   color: var(--accent-red);
 }
 
+.pv-party-pip__insp {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  font-size: 0.6rem;
+  line-height: 1;
+  color: var(--text-gold);
+  text-shadow: 0 0 4px rgba(200, 164, 78, 0.8);
+  z-index: 3;
+}
+
 /* ═══ Hero Card — Ornate Wood Frame ═══ */
 
 .pv-hero {
@@ -12600,6 +12656,18 @@ input[type="number"] { -moz-appearance: textfield; }
 .pv-badge--spd svg { width: 70px; height: 46px; }
 .pv-badge--pp svg { width: 60px; height: 38px; }
 .pv-badge--dv svg { width: 56px; height: 46px; }
+.pv-badge--insp svg { width: 44px; height: 44px; }
+
+.pv-badge__star {
+  fill: var(--bg-deep);
+  stroke: var(--border-gold-dim);
+}
+
+.pv-badge--insp-active .pv-badge__star {
+  fill: var(--text-gold);
+  stroke: var(--text-gold);
+  filter: drop-shadow(0 0 6px rgba(200, 164, 78, 0.7));
+}
 
 .pv-badge__label {
   font-family: var(--font-display);

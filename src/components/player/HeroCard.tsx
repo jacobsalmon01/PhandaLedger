@@ -218,6 +218,19 @@ export function HeroCard({ ch }: Props) {
 
       {/* ── Stat Badges ── */}
       <div className="pv-hero__badges">
+        <div
+          className={`pv-badge pv-badge--insp${ch.inspiration ? ' pv-badge--insp-active' : ''}`}
+          title={ch.inspiration ? 'Inspired' : 'No Inspiration'}
+        >
+          <svg viewBox="0 0 48 48" fill="none">
+            <path
+              d="M24 3 L29.2 17.4 L44.5 18 L32.6 27.4 L36.8 42.1 L24 33.7 L11.2 42.1 L15.4 27.4 L3.5 18 L18.8 17.4 Z"
+              className="pv-badge__star"
+              strokeWidth="1.5"
+            />
+          </svg>
+        </div>
+
         <div className="pv-badge pv-badge--ac" title={`AC ${ac}`}>
           <svg viewBox="0 0 48 58" fill="none">
             <path d="M 1,1 L 47,1 L 47,33 C 47,50 24,57 24,57 C 24,57 1,50 1,33 Z"
